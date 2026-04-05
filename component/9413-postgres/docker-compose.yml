@@ -1,0 +1,12 @@
+services:
+  frostbite-9413-postgres:
+    container_name: frostbite-9413-postgres
+    image: postgres:17.4
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - 9413:5432
+    environment:
+      - POSTGRES_PASSWORD=***REMOVED***
+      - POSTGRES_USER=frostbite
+      - POSTGRES_DB=frostbite
