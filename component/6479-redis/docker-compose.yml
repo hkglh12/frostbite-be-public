@@ -1,10 +1,10 @@
 version: "3.3"
 services:
-  frostbite-6974-redis:
-    container_name: frostbite-6974-redis
+  frostbite-6479-redis:
+    container_name: frostbite-6479-redis
     image: redis:8.4.0
     ports:
-      - 6974:6379
+      - 6479:6379
     volumes:
       - ./data:/data
       - ./conf:/usr/local/etc/redis
