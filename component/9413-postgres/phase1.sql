@@ -1,6 +1,5 @@
 -- 실 사용시, FK 제약은 모두 해제한다. Application Level에서 정합성/무결성 검증을 수행한다. (DROP CASCADE 등 제어가 복잡해지기 때문)
 
-create EXTENSION IF NOT EXISTS "uuid-ossp";
 
 create table user_tb(
                         user_id serial primary key ,
@@ -10,8 +9,8 @@ create table user_tb(
                         phone_number varchar(14),
                         birth date,
                         create_date date,
-                        uuid uuid default uuid_generate_v4(),
-                        is_delete smallint
+                        uuid varchar(50),
+                        status smallint
 );
 
 comment on table user_tb is '사용자';
@@ -23,15 +22,15 @@ comment on column user_tb.phone_number is '휴대전화번호';
 comment on column user_tb.birth is '생년월일';
 comment on column user_tb.create_date is '가입날짜';
 comment on column user_tb.uuid is '사용자 UUID';
-comment on column user_tb.is_delete is '삭제여부';
+comment on column user_tb.status is '계정상태';
 
 create table team_tb(
                         team_id serial primary key ,
                         name varchar(256),
                         create_time timestamp,
                         create_user int,
-                        uuid uuid default uuid_generate_v4(),
-                        is_delete smallint
+                        uuid varchar(50),
+                        status smallint
 );
 
 alter table team_tb add constraint team_tb_user_fk foreign key (create_user) references user_tb (user_id);
@@ -42,7 +41,7 @@ comment on column team_tb.name is '팀 이름';
 comment on column team_tb.create_time is '생성시각';
 comment on column team_tb.create_user is '생성자';
 comment on column team_tb.uuid is '팀 UUID';
-comment on column team_tb.is_delete is '삭제여부';
+comment on column team_tb.status is '팀상태';
 
 create table rel_user_team(
                               rel_id serial primary key ,
@@ -50,7 +49,7 @@ create table rel_user_team(
                               team_id int,
                               create_user int,
                               join_time timestamp,
-                              is_delete smallint
+                              status smallint
 );
 
 alter table rel_user_team add constraint rel_user_team_user_fk foreign key (user_id) references user_tb (user_id);
@@ -63,7 +62,7 @@ comment on column rel_user_team.user_id is '사용자 식별자';
 comment on column rel_user_team.create_user is '초대자';
 comment on column rel_user_team.team_id is '팀 식별자';
 comment on column rel_user_team.join_time is '합류시각';
-comment on column rel_user_team.is_delete is '삭제여부';
+comment on column rel_user_team.status is '관계상태';
 
 create table role_tb(
                         role_id serial primary key ,

@@ -10,17 +10,34 @@
   - 단순 변경/삭제 일경우 useCase별 xml 활용, service layer에서는 식별자만 전달
   - 복합 변경/삭제일 경우 useCase별 Command 활용
   - Record-Mybatis 활용은 Mybatis^3.5. Record는 getter가 getXXX가 아니라 필드명이 되는데, mybatis ^3.5에서 record Accessor 인식됨
-- Projection : 불변, 읽기전용, 단, Class를 활용하며, @NoArgs + @Getter + @Setter 조합 사용 (추후 테스트코드에서 필요하면 @AllArgs 추가). 단 Projection에 대한 코드 상 Setter 호출 금지
+- Projection : 코드 내에서 약속 상 읽기전용, @NoArgs + @Getter + @Setter 조합 사용 (추후 테스트코드에서 필요하면 @AllArgs 추가). 단 Projection에 대한 코드 상 Setter 호출 금지
   - mybatis가 getInstance + setter 로 처리하는 케이스에 대해 -> Lombok @Value(final임) 활용 불가
   - mybatis xml 내 resultMap 매핑 후 constructor 선언 -> @Value는 쓸수있게되나 constructor 인자 순서가 select와 일치해야하는 제약발생 -> name 선언으로 매핑이 가능하지만 컴파일 인자값이 추가되어야하고 상당히 번거로울 수 있음
-  - @NoArgs 기반이면 mybatis가 Setter 기반으로 호출하므로 별도의 순서의존성이 발생하지 않으므로 해당 방식 채용
+  - @NoArgs 기반이면 mybatis가 Setter 기반으로 호출하므로 별도의 순서의존성이 발생하지 않으므로 해당 방식 채용 = 코드내에서 setter 호출 금지
 - ResponseDTO : 사용자 응답 제출 최종형태. UseCase별로 관리
 - Draft : 단순 정제는 변수로 처리하되, 여러 단계에 걸쳐서 값이 연동되어 전달됨과 동시에 누적정제가 발생할 때 활용. 이때 Draft는 원본의 상태나 필드를 누적정제하고있다면 원본객체와 연결짓기 위해 식별자 필요
 
+### DTO의 폴더 관리
+- 내부전용 VO (외부 노출 안되는 계층간 이동 VO) 의 경우 interalvo 패키지에 선언한다
+- 외부노출 VO (외부에 노출되는 DTO)의 경우 dto 패키지에 선언한다
+- 도메인 엔티티의 경우 domain 패키지에 선언한다.
+
+### 도메인 엔티티의 생성
+- 이 문서상에서 엔티티는 DB에 저장 가능한 상태로써, 하나의 객체로 표현될 수 있는 값과 상태의 집합체를 의미한다.
+- 이 문서상에서 도메인은 엔티티의 비즈니스 규칙과 상태변화, 행위를 포함한다. 
+- 이 문서상에서 도메인 엔티티는 규칙과 행위를 준수헤 생성 및 변경이 통제되는 엔티티를 의미한다. 
+- 필수값이 명확하며, 그 비즈니스 플로우 상 도메인 엔티티로 취급하기 위한 유효한 값이 모두 제공된경우 Factory 패턴을 적극 사용해 엔티티로 전환한다.
+- Draft를 사용하는 상황일 경우(누적정제가 있을경우) 유연성을 더하기 위해 builder패턴을 사용해 엔티티로 전환한다.
+
+### 도메인 엔티티 생성 컨벤션 이유
+- 팩토리패턴을 사용함으로써, 중간상태값을 가지는 도메인 엔티티 생성을 방지
+- 팩토리패턴을 사용함으로써, 해당 비즈니스플로우에서 필수값이 null인 객체의 생성을 방지하고, 도메인 엔티티 전환 시 필수값 검증을 위한 if문을 최대한 캡슐화
+- 빌더패턴을 사용함으로써, Draft등 누적정제가 필요한 상황이었음을 알리는 컨벤션 용도로 사용
+
 ### 비즈니스 플로우 별 각 레이어 진입/진출 시 컨벤션
 1. 사용자 요청 -> Controller : RequestDTO/Condition 으로 Accept, Validation 적극활용
-2. Controller -> Service : DTO/Condition로 전달, Service 진입 직후 아래의 경우를 활용
-   CASE1. 생성 비즈니스 로직, Domain Entity로 전환. 행위기반 메서드명으로 변경 통제. 추가 누적 변경 및 상태누적관리가 필요할경우 Draft로 처리
+2. Controller -> Service : DTO/Condition로 전달, Service 진입 후 아래의 경우를 활용
+   CASE1. 생성 비즈니스 로직, 행위기반 메서드명으로 변경 통제. 추가 누적 변경 및 상태누적관리가 필요할경우 Draft로 처리. 단일변경이나 단순정제면 지역변수로 처리 정제 완료시 Domain Entity로 전환.
    CASE2. 수정 비즈니스 로직, 비즈니스 로직 내에서 누적정제는 변수/Draft 적극활용 후 Command로 최종전환
    CASE3. 삭제 비즈니스 로직, 단순삭제일경우 식별자전달, 복합삭제일경우 Command로 전환
    CASE4. 조회 비즈니스 로직, Condition으로 유지
@@ -35,6 +52,10 @@
 6. Service -> Controller : 진출 직전에 ResponseDto로 전환. 만약 Draft가 있었다면 Draft를 해당 단계에서 활용, 
 7. Controller -> 사용자 : ResponseDto로 제출
 
+### 엔티티와 DTO의 변환
+- 엔티티 클래스는 가능한 한 인스턴스 생성과 상태 보존 및 상태 변경 행위에 집중한다.
+- 엔티티 클래스는 DTO를 알지 않으며, DTO 변환 책임을 가지지 않는다.
+- 엔티티와 DTO 간 변환은 서비스 레이어를 중심으로 수행하며, 필요 시 별도의 변환 책임 객체로 분리할 수 있다.
 
 ### Draft 사용 예시
 
@@ -44,4 +65,4 @@
 - DB에는 전처리 완료된 문서만 저장 (그럴일은없겠지만 예를들면)
 
 - 즉 여러단계에 걸쳐서 MAP으로 관리할 만한 것들을 모두 draft로 관리. (Get 시점 컴파일에러 스킵 방지 및 타입안정성 체크)
-- 무분별한 draft 생성 전, 단순정제 -> 지역변수 / Entity 값변경, 상태변경을 통한 흡수 가능 -> entity 활용 / 외부결과 조합 -> factory / 단순 값 변경 -> helper 활용을 우선적으로 생각할것
+- 무분별한 draft 생성 전, 단순정제 -> 지역변수 / Entity 값변경, 상태변경을 통한 흡수 가능 -> entity 활용 / 외부결과 조합 -> `factory` / 단순 값 변경 -> helper 활용을 우선적으로 생각할것

@@ -1,7 +1,12 @@
 package com.uruz.frostbite.domain;
 
+import com.uruz.frostbite.enums.UserStatus;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -35,5 +40,34 @@ public class User {
     private UUID uuid;
 
     /** 삭제여부 */
-    private Short isDelete;
+    private UserStatus status;
+
+    private User(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid, UserStatus status){
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.birth = birth;
+        this.createDate = createDate;
+        this.uuid = uuid;
+        this.status = status;
+    }
+    public static User create(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid){
+        if(name.length() < 2 || name.length() > 20){
+            throw new IllegalArgumentException("Name constraint violated");
+        }
+        if(!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new IllegalArgumentException("Email constraint violdated");
+        }
+        if(password == null){
+            throw new IllegalArgumentException("Password not passed");
+        }
+        if(!phoneNumber.matches("(01[016789])(\\d{3,4})(\\d{4})")) {
+            throw new IllegalArgumentException("Phone number malformed");
+        }
+
+        return new User(
+            name, email, password, phoneNumber, birth,createDate, uuid, UserStatus.AWAITS
+        );
+    }
 }

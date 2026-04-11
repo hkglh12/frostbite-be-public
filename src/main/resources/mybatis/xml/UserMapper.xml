@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.uruz.frostbite.mapper.UserMapper">
+
+    <!-- selectKey Before실행 -> POJO 값 바인드 -> 그 POJO로 <tag> 실행-->
+    <!-- selectKey 사용시 useGeneratedKeys 불필요, 사용하려면 values에 PK가 안들어가고, useGeneratedKeys + KeyProperty -->
+    <insert id="insertUser" parameterType="User" keyProperty="userId">
+        /* userMapper.xml#insertUser */
+        <selectKey keyProperty="userId" resultType="int" order="BEFORE">
+            SELECT nextval('user_tb_user_id_seq')
+        </selectKey>
+
+        INSERT INTO USER_TB (user_id, name, email, password, phone_number, birth, create_date, uuid, status)
+        VALUES (#{userId}, #{name}, #{email}, #{password}, #{phoneNumber}, #{birth}, #{createDate}, #{uuid}, #{status})
+
+    </insert>
+
+    <select id="selectSelfUser" parameterType="UserSelfQueryCondition" resultType="UserDetailProjection">
+        SELECT name, email, phone_number, birth, create_date, uuid
+        FROM user_tb
+        <where>
+            <choose>
+                <when test="uuid != null">
+                    uuid = #{uuid}
+                </when>
+                <when test="email != null and email != ''">
+                    email = #{email}
+                </when>
+                <when test="name != null and name != ''">
+                    name = #{name}
+                </when>
+            </choose>
+        </where>
+    </select>
+
+    <update id="softDeleteUser">
+        UPDATE
+            user_tb
+        SET
+            status = #{status}
+        WHERE
+            uuid = #{uuid}
+    </update>
+</mapper>
