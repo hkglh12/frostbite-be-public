@@ -2,7 +2,9 @@ package com.uruz.frostbite.enums;
 
 public enum ErrorApiResponseCode implements ResponseCode{
 
-    NOF_FOUND("E00001", "Unable to find request target");
+    UNRECOGNIZED("EU0000", "Unrecognized error occurred"),
+    UNSATISFIED("EE0000", "Required parameter not satisfied"),
+    NOT_FOUND("EN0001", "Unable to find request target");
 
     private final String code;
     private final String message;

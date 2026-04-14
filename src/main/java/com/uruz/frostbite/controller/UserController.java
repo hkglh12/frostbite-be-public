@@ -4,7 +4,7 @@ import com.uruz.frostbite.dto.UserJoinRequest;
 import com.uruz.frostbite.dto.UserJoinResponse;
 import com.uruz.frostbite.dto.UserSelfQueryCondition;
 import com.uruz.frostbite.dto.UserSelfQueryResponse;
-import com.uruz.frostbite.dto.wrapper.ApiResponse;
+import com.uruz.frostbite.dto.wrapper.ApiSucceedResponse;
 import com.uruz.frostbite.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,10 +25,10 @@ public class UserController {
         this.userService = userService;
     }
     @PostMapping(value="/")
-    public ResponseEntity<ApiResponse<UserJoinResponse>> postUser(@Validated @RequestBody UserJoinRequest createRequest){
+    public ResponseEntity<ApiSucceedResponse<UserJoinResponse>> postUser(@Validated @RequestBody UserJoinRequest createRequest){
 
         UserJoinResponse response = userService.createUser(createRequest);
-        return ResponseEntity.ok(new ApiResponse<>(response));
+        return ResponseEntity.ok(new ApiSucceedResponse<>(response));
     }
 
     @GetMapping(value="/")
@@ -39,7 +39,7 @@ public class UserController {
     ){
         UserSelfQueryResponse response = userService.getSelfUesr(userReadCondition);
 
-        return ResponseEntity.ok(new ApiResponse<>(response));
+        return ResponseEntity.ok(new ApiSucceedResponse<>(response));
     }
 
     @DeleteMapping(value="/")
