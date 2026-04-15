@@ -87,21 +87,22 @@ comment on column rel_user_role_tb.rel_id is '관계 식별자';
 comment on column rel_user_role_tb.user_id is '사용자 식별자';
 comment on column rel_user_role_tb.role_id is '역할 식별자';
 
+
 -- 폴더의 삭제는 "수정"으로 처리할 예정
 create table folder_tb(
                           folder_id bigserial primary key,
                           name varchar(512),
-                          owner_type varchar(256), -- team || private (개인폴더일경우 user, 팀일경우 team),
-                          owner_id int, -- ownertype이 team이면 tema_id가, private 일경우 user_id로
                           create_user int,
                           create_time timestamp,
                           modify_user int,
                           modify_time timestamp,
+                         -- 폴더의 소유형태를 결정한다. private = 개인폴더 -> team = 팀폴더
                           folder_type int,  -- private || team
+                          owner_id int, -- ownertype이 team이면 tema_id가, private 일경우 user_id로
                           parent_id bigint,
                           render_sequence int,
-                          uuid uuid default uuid_generate_v4(),
-                          is_delete smallint,
+                          uuid varchar(50),
+                          status smallint
 
 );
 -- folder_type은 ENUM으로 1 -> private, 2-> team 으로 추후 구성
@@ -113,15 +114,14 @@ alter table folder_tb add constraint folder_tb_folder_parent_fk foreign key (par
 comment on table folder_tb is '폴더';
 comment on column folder_tb.folder_id is '폴더 식별자';
 comment on column folder_tb.name is '폴더명';
-comment on column folder_tb.owner_type is '종속종류';
 comment on column folder_tb.owner_id is '피종속 자원 식별자';
 comment on column folder_tb.create_user is '폴더 생성자';
 comment on column folder_tb.create_time is '생성시각';
-comment on column folder_tb.folder_type is '폴더종류'
+comment on column folder_tb.folder_type is '폴더종류';
 comment on column folder_tb.parent_id is '부모 폴더 식별자';
 comment on column folder_tb.render_sequence is '출력순서';
 comment on column folder_tb.uuid is 'uuid';
-comment on column folder_tb.is_delete is '삭제여부';
+comment on column folder_tb.status is '폴더상태';
 
 create table folder_tb_ver(
                               folder_ver_id bigserial primary key,
