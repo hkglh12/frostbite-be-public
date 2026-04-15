@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.uruz.frostbite.mapper.FolderMapper">
+
+    <!-- selectKey Before실행 -> POJO 값 바인드 -> 그 POJO로 <tag> 실행-->
+    <!-- selectKey 사용시 useGeneratedKeys 불필요, 사용하려면 values에 PK가 안들어가고, useGeneratedKeys + KeyProperty -->
+    <insert id = "insertRootFolder" parameterType="Folder" keyProperty="folderId">
+        /* folderMapper insertRootFolder */
+        <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
+            SELECT nextval('folder_tb_folder_id_seq')
+        </selectKey>
+        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user, create_time, modify_user, modify_time,
+                               parent_id, render_sequence, uuid, status)
+            VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUser}, #{createTime}, #{modifyUser}, #{modifyTime},
+                #{parentId}, #{renderSequence}, #{uuid}, #{status})
+    </insert>
+</mapper>
