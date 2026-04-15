@@ -4,7 +4,8 @@ public enum ErrorApiResponseCode implements ResponseCode{
 
     UNRECOGNIZED("EU0000", "Unrecognized error occurred"),
     UNSATISFIED("EE0000", "Required parameter not satisfied"),
-    NOT_FOUND("EN0001", "Unable to find request target");
+    NOT_FOUND("EN0001", "Unable to find request target"),
+    INTERNAL_ERROR("EI0001", "Unrecognized Internal Error");
 
     private final String code;
     private final String message;

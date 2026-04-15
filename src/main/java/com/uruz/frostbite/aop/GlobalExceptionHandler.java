@@ -28,6 +28,13 @@ public class GlobalExceptionHandler {
                 .body(new ApiErrorResponse(GE.getCode(), GE.getMessage()));
     }
     @ExceptionHandler({
+            IllegalStateException.class
+    })
+    protected ResponseEntity<ApiErrorResponse> handleIllegalState(IllegalStateException GE){
+        return ResponseEntity.internalServerError()
+                .body(new ApiErrorResponse(ErrorApiResponseCode.INTERNAL_ERROR, GE.getMessage()));
+    }
+    @ExceptionHandler({
             Exception.class
     })
     protected ResponseEntity<ApiErrorResponse> handleGeneral(Exception E){
