@@ -17,7 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
+
+import static com.uruz.frostbite.enums.ErrorApiResponseCode.NOT_FOUND;
 
 @Service
 @Slf4j
@@ -68,12 +71,15 @@ public class UserService {
                 .email(user.getEmail())
                 .name(user.getName())
                 .createDate(user.getCreateDate())
+                .status(user.getStatus())
                 .build();
     }
 
     /** 사용자 본인 정보 조회 (자기자신 정보만 조회 가능) */
-    public UserSelfQueryResponse getSelfUesr(UserSelfQueryCondition getUserCondition){
-        UserDetailProjection detailProjc = userMapper.selectSelfUser(getUserCondition);
+    public UserSelfQueryResponse getSelfUesr(UserSelfQueryCondition condition){
+        UserDetailProjection detailProjc = userMapper.selectSelfUser(condition).orElseThrow(
+                () -> new GeneralCustomException(NOT_FOUND, "USER NOT FOUND")
+        );
 
         return UserSelfQueryResponse.builder().uuid(detailProjc.getUuid())
                 .phoneNumber(detailProjc.getPhoneNumber())
