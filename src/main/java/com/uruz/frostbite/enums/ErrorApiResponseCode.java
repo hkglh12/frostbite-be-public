@@ -1,5 +1,7 @@
 package com.uruz.frostbite.enums;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum ErrorApiResponseCode implements ResponseCode{
 
     UNRECOGNIZED("EU0000", "Unrecognized error occurred"),
@@ -21,6 +23,12 @@ public enum ErrorApiResponseCode implements ResponseCode{
 
     @Override
     public String getMessage() {
+        return message;
+    }
+
+
+    @JsonValue
+    public String toJson() {
         return message;
     }
 }
