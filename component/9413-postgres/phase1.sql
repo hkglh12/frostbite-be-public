@@ -245,14 +245,14 @@ create table folder_acl_tb(
                               acl_id bigserial primary key ,
                               user_id int,
                               folder_id bigint,
-                              effect_type int, -- ALLOW || DENY (범위 공유 시, 명시적 거부대상 선언이 필요할경우 활용)
-                              subject_type int, -- 대상 종류 (팀 || 사용자)
+                              effect_type smallint, -- ALLOW || DENY (범위 공유 시, 명시적 거부대상 선언이 필요할경우 활용)
+                              subject_type smallint, -- 대상 종류 (팀 || 사용자)
                               subject_id int, -- 대상의 PK
-                              permission int,-- - READ, CREATE(==update 포함), DELETE, SAHRE 등등 가능한 기능과 권한에 대해 서술, ENUM으로 관리
+                              permission_bit_mask smallint,-- - READ, CREATE(==update 포함), DELETE, SAHRE 등등 가능한 기능과 권한에 대해 서술, ENUM으로 관리
                               is_shared smallint,
                               create_time timestamp,
                               create_user int, -- 이 권한을 생성한 사람
-                              is_delete smallint
+                              status smallint
 );
 
 alter table folder_acl_tb add constraint folder_acl_tb_folder_fk foreign key (folder_id) references folder_tb(folder_id);
@@ -266,11 +266,11 @@ comment on column folder_acl_tb.folder_id is '접근제어 폴더 식별자';
 comment on column folder_acl_tb.effect_type is '접근제어 종류';
 comment on column folder_acl_tb.subject_type is '피접근제어 종류';
 comment on column folder_acl_tb.subject_id is '피 접근제어 식별자';
-comment on column folder_acl_tb.permission is '제약 권한';
+comment on column folder_acl_tb.permission_bit_mask is '제약 권한';
 comment on column folder_acl_tb.is_shared is '공유로 생성된 제약 여부';
 comment on column folder_acl_tb.create_time is '접근제어 생성시각';
 comment on column folder_acl_tb.create_user is '제약 생성자';
-comment on column folder_acl_tb.is_delete is '삭제여부';
+comment on column folder_acl_tb.status is '삭제여부';
 
 -- 파일 접근권한 : file acl 검사 전, folder acl 검사, ->  해당 폴더에 접근권한이 있으면 직접 접근권한이 있는검임. 즉 file_acl 은 "공유" 로만 유효한 값을 가지게 될거임
 

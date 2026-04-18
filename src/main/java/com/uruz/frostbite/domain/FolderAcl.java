@@ -1,5 +1,9 @@
 package com.uruz.frostbite.domain;
 
+import com.uruz.frostbite.enums.AclEffectType;
+import com.uruz.frostbite.enums.AclStatus;
+import com.uruz.frostbite.enums.AclSubjectType;
+import com.uruz.frostbite.enums.PermissionBitMask;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,19 +23,19 @@ public class FolderAcl {
     private Long folderId;
 
     /** 접근제어 종류 (ALLOW || DENY) */
-    private Integer effectType;
+    private AclEffectType effectType;
 
     /** 피접근제어 종류 (팀 || 사용자) */
-    private Integer subjectType;
+    private AclSubjectType subjectType;
 
     /** 피접근제어 식별자 */
     private Integer subjectId;
 
     /** 제약 권한 (READ, CREATE, DELETE, SHARE 등 ENUM) */
-    private Integer permission;
+    private PermissionBitMask permissionBitMask;
 
     /** 공유로 생성된 제약 여부 */
-    private Short isShared;
+    private boolean isShared;
 
     /** 접근제어 생성시각 */
     private LocalDateTime createTime;
@@ -40,5 +44,5 @@ public class FolderAcl {
     private Integer createUser;
 
     /** 삭제여부 */
-    private Short isDelete;
+    private AclStatus status;
 }

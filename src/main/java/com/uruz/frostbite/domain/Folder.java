@@ -21,8 +21,13 @@ public class Folder {
     /** 폴더명 */
     private String name;
 
+    /** 폴더종류 (1: private, 2: team) */
+    private FolderType folderType;
 
-    /** 피종속 자원 식별자 */
+    /** 해당 폴더의 피종속 자원 식별자
+     * folderType : private -> userid
+     * folderType : team -> teamid
+     * */
     private Integer ownerId;
 
     /** 폴더 생성자 (user_id) */
@@ -37,8 +42,6 @@ public class Folder {
     /** 수정시각 */
     private LocalDateTime modifyTime;
 
-    /** 폴더종류 (1: private, 2: team) */
-    private FolderType folderType;
 
     /** 부모 폴더 식별자 */
     private Long parentId;
@@ -59,7 +62,7 @@ public class Folder {
             throw new IllegalArgumentException("Name constraint violated");
         }
 
-        return new Folder(null, name, ownerId, ownerId, LocalDateTime.now(),
-                ownerId, LocalDateTime.now(), folderType, 0L, 0, UUID.randomUUID(), FolderStatus.ACTIVE);
+        return new Folder(null, name, folderType, ownerId, ownerId, LocalDateTime.now(),
+                ownerId, LocalDateTime.now(), null, 0, UUID.randomUUID(), FolderStatus.ACTIVE);
     }
 }
