@@ -18,22 +18,11 @@
 
     </insert>
 
-    <select id="selectSelfUser" parameterType="UserSelfQueryCondition" resultType="UserDetailProjection">
+    <select id="selectSelfUser" parameterType="String" resultType="UserDetailProjection">
         SELECT name, email, phone_number, birth, create_date, uuid, account_type
         FROM user_tb
-        <where>
-            <choose>
-                <when test="uuid != null">
-                    uuid = #{uuid}
-                </when>
-                <when test="email != null and email != ''">
-                    email = #{email}
-                </when>
-                <when test="name != null and name != ''">
-                    name = #{name}
-                </when>
-            </choose>
-        </where>
+        WHERE
+            uuid = #{uuid}
     </select>
 
     <update id="softDeleteUser">

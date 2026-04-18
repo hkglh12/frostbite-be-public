@@ -17,7 +17,7 @@ public interface UserMapper {
     public int insertUser(User user);
     // 추후 기본 CRUD , Count들은 모두 공통 mapper로 올리는 방안도 고민
 
-    public Optional<UserDetailProjection> selectSelfUser(UserSelfQueryCondition userSelfQueryCondition);
+    public Optional<UserDetailProjection> selectSelfUser(String uuid);
 
     public int softDeleteUser(UUID uuid, UserStatus status);
 }

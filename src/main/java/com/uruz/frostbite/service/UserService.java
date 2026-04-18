@@ -78,8 +78,8 @@ public class UserService {
     }
 
     /** 사용자 본인 정보 조회 (자기자신 정보만 조회 가능) */
-    public UserSelfQueryResponse getSelfUesr(UserSelfQueryCondition condition){
-        UserDetailProjection detailProjc = userMapper.selectSelfUser(condition).orElseThrow(
+    public UserSelfQueryResponse getSelfUesr(String uuid){
+        UserDetailProjection detailProjc = userMapper.selectSelfUser(uuid).orElseThrow(
                 () -> new GeneralCustomException(NOT_FOUND, "USER NOT FOUND")
         );
 

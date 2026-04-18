@@ -105,9 +105,9 @@ public class UserController {
     @Operation(summary="사용자 본인 정보조회", description="사용자 본인 정보조회")
     public ResponseEntity<?> getSelfUser(
             // 추후 JWT 기반으로 전환 예정, 이 시점부터 JWT로부터 사용자 정보 취득(RedisMapping) -> SecurityCTX에서 값을 뽑아서 조회하는 방식으로 변경 예정
-            @Validated UserSelfQueryCondition userReadCondition
+            @RequestParam(name="uuid") String uuid
     ){
-        UserSelfQueryResponse response = userService.getSelfUesr(userReadCondition);
+        UserSelfQueryResponse response = userService.getSelfUesr(uuid);
 
         return ResponseEntity.ok(new ApiSucceedResponse<>(response));
     }
