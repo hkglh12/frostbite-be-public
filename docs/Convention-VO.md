@@ -47,8 +47,10 @@
    CASE3. Read/Listing의 경우 condition으로 진입
    CASE4. Delete의 경우 단순 삭제일경우 식별자전달, 복합삭제일경우 command로 진입
 4. Mapper -> Service : USECASE에 따라 아래와 같이 따른다
-   CASE1. 리스트조회/객체조회 구분 없이 Projection으로 진출. Projection의 경우, UseCase별로 객체를 별도로 준비한다.
-5. Service -> Controller : 진출 직전에 ResponseDto로 전환. 만약 Draft가 있었다면 Draft를 해당 단계에서 활용, 
+   CASE1. 일반적으로 ResponseDto로 제출
+   CASE2. 후속 정제과정이 있거나, 수평 레이어 이동이 예상되는경우 리스트조회/객체조회 구분 없이 Projection으로 진출. Projection의 경우, UseCase별로 객체를 별도로 준비한다.
+   
+5. Service -> Controller : Projection 활용중이었을 경우 진출 직전에 ResponseDto로 전환. 만약 Draft가 있었다면 Draft를 해당 단계에서 활용, 
 6. Controller -> 사용자 : ResponseDto로 제출
 * Insert/Update의 경우 최종 형태 (도메인엔티티) 값을 이미 코드에서 알고 있을 경우 그대로 활용, 별도 조회가 필요하다면 조회 후 엔티티 형태로 코드에서 활용한다.
 
