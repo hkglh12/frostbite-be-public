@@ -46,26 +46,28 @@ comment on column team_tb.create_user is '생성자';
 comment on column team_tb.uuid is '팀 UUID';
 comment on column team_tb.status is '팀상태';
 
-create table rel_user_team(
+create table rel_user_team_tb(
                               rel_id serial primary key ,
                               user_id int,
                               team_id int,
                               create_user int,
                               join_time timestamp,
+                              role smallint,
                               status smallint
 );
 
--- alter table rel_user_team add constraint rel_user_team_user_fk foreign key (user_id) references user_tb (user_id);
--- alter table rel_user_team add constraint rel_user_team_create_user_fk foreign key (user_id) references user_tb (user_id);
--- alter table rel_user_team add constraint rel_user_team_team_fk foreign key (team_id) references team_tb (team_id);
+-- alter table rel_user_team_tb add constraint rel_user_team_tb_user_fk foreign key (user_id) references user_tb (user_id);
+-- alter table rel_user_team_tb add constraint rel_user_team_tb_create_user_fk foreign key (user_id) references user_tb (user_id);
+-- alter table rel_user_team_tb add constraint rel_user_team_tb_team_fk foreign key (team_id) references team_tb (team_id);
 
-comment on table rel_user_team is '사용자-팀 관계';
-comment on column rel_user_team.rel_id is '사용자-팀 관계식별자';
-comment on column rel_user_team.user_id is '사용자 식별자';
-comment on column rel_user_team.create_user is '초대자';
-comment on column rel_user_team.team_id is '팀 식별자';
-comment on column rel_user_team.join_time is '합류시각';
-comment on column rel_user_team.status is '관계상태';
+comment on table rel_user_team_tb is '사용자-팀 관계';
+comment on column rel_user_team_tb.rel_id is '사용자-팀 관계식별자';
+comment on column rel_user_team_tb.user_id is '사용자 식별자';
+comment on column rel_user_team_tb.create_user is '초대자';
+comment on column rel_user_team_tb.team_id is '팀 식별자';
+comment on column rel_user_team_tb.join_time is '합류시각';
+comment on column rel_user_team_tb.role is '팀 내 역할';
+comment on column rel_user_team_tb.status is '관계상태';
 
 create table role_tb(
                         role_id serial primary key ,

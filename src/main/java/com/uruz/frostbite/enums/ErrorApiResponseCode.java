@@ -7,7 +7,16 @@ public enum ErrorApiResponseCode implements ResponseCode{
     UNRECOGNIZED("EU0000", "Unrecognized error occurred"),
     UNSATISFIED("EE0000", "Required parameter not satisfied"),
     NOT_FOUND("EN0001", "Unable to find request target"),
-    INTERNAL_ERROR("EI0001", "Unrecognized Internal Error");
+    INTERNAL_ERROR("EI0001", "Unrecognized Internal Error"),
+
+    /** USER */
+    USER_EMAIL_OR_PHONE_ALREADY_EXISTS("EN0001", "Email or Phonenumber already exists"),
+
+
+
+
+    /** TEAM */
+    ;
 
     private final String code;
     private final String message;

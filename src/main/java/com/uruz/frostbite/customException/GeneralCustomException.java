@@ -15,6 +15,10 @@ public class GeneralCustomException extends RuntimeException{
         super(message);
         this.code = code;
     }
+    public GeneralCustomException(ResponseCode code){
+        super(code.getMessage());
+        this.code = code;
+    }
     public GeneralCustomException(String message){
         super(message);
         this.code = ErrorApiResponseCode.UNRECOGNIZED;
