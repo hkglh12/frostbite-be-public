@@ -187,7 +187,7 @@ alter table file_tb add constraint file_tb_modify_user_fk foreign key (modify_us
 -- 사실 한개 폴더 내 동일한 파일명일 때 버전관리가 가능할것임. "폴더 단위로 이동이 발생"은 관리하지 않을예정
 -- 단, 파일명이 변경된다면 -> 그건 버전관리로 관리되어야 함
 create table file_tb_ver(
-                            file_vier_id bigserial primary key ,
+                            file_ver_id bigserial primary key ,
                             file_id bigint,
                             file_name varchar(1024),
                             file_size bigint,
@@ -195,7 +195,7 @@ create table file_tb_ver(
                             mount_point varchar(512),
                             file_path varchar(1024),
                             modify_user int,
-                            modify_time timestamp,
+                            modify_time timestamp
 );
 alter table file_tb_ver add constraint file_tb_ver_modify_user_fk foreign key (modify_user) references user_tb(user_id);
 alter table file_tb_ver add constraint file_tb_ver_file_fk foreign key (file_id) references file_tb(file_id);
