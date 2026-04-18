@@ -11,7 +11,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Constraint(validatedBy = UserReadConditionRequireOneProvider.class)
+@Deprecated(forRemoval = true)
+//@Constraint(validatedBy = UserReadConditionRequireOneProvider.class)
 public @interface UserReadConditionRequireOne {
     String message() default "UUID or username must be provided";
 

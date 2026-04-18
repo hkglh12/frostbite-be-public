@@ -10,6 +10,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@Deprecated(forRemoval = true)
 public class UserDetailProjection {
 
     /** 사용자 UUID */

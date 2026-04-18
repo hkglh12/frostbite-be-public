@@ -18,7 +18,7 @@
 
     </insert>
 
-    <select id="selectSelfUser" parameterType="String" resultType="UserDetailProjection">
+    <select id="selectSelfUser" parameterType="String" resultType="UserSelfQueryResponse">
         SELECT name, email, phone_number, birth, create_date, uuid, account_type
         FROM user_tb
         WHERE
@@ -33,4 +33,20 @@
         WHERE
             uuid = #{uuid}
     </update>
+
+    <select id="selectUserExistsByNameAndPhoneNumber" resultType="boolean">
+        SELECT EXISTS(
+            SELECT user_id
+            FROM USER_TB
+            WHERE
+                email = #{email}
+            OR
+                phone_number = #{phoneNumber}
+        )
+    </select>
+    <select id="selectUser" resultType="User">
+        SELECT user_id, name, email, account_type, uuid
+        FROM user_tb
+        WHERE uuid = #{uuid}
+    </select>
 </mapper>

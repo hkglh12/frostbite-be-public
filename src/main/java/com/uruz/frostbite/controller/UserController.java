@@ -3,7 +3,6 @@ package com.uruz.frostbite.controller;
 import com.uruz.frostbite.configuration.SwaggerExamples;
 import com.uruz.frostbite.dto.UserJoinRequest;
 import com.uruz.frostbite.dto.UserJoinResponse;
-import com.uruz.frostbite.dto.UserSelfQueryCondition;
 import com.uruz.frostbite.dto.UserSelfQueryResponse;
 import com.uruz.frostbite.dto.wrapper.ApiErrorResponse;
 import com.uruz.frostbite.dto.wrapper.ApiSucceedResponse;

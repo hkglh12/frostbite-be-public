@@ -4,12 +4,11 @@ import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.User;
 import com.uruz.frostbite.dto.UserJoinRequest;
 import com.uruz.frostbite.dto.UserJoinResponse;
-import com.uruz.frostbite.dto.UserSelfQueryCondition;
 import com.uruz.frostbite.dto.UserSelfQueryResponse;
+import com.uruz.frostbite.dto.wrapper.ApiErrorResponse;
 import com.uruz.frostbite.enums.AccountType;
 import com.uruz.frostbite.enums.ErrorApiResponseCode;
 import com.uruz.frostbite.enums.UserStatus;
-import com.uruz.frostbite.internalvo.UserDetailProjection;
 import com.uruz.frostbite.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,16 +41,20 @@ public class UserService {
 
     /** 사용자 추가 */
     @Transactional
-    public UserJoinResponse createUser(UserJoinRequest createRequest) throws GeneralCustomException {
-        String encPassword = bcryptor.encode(createRequest.getPassword());
+    public UserJoinResponse createUser(UserJoinRequest request) throws GeneralCustomException {
+        String encPassword = bcryptor.encode(request.getPassword());
         LocalDate createDate = LocalDate.now();
 
+        boolean isExists = userMapper.selectUserExistsByNameAndPhoneNumber(request.getEmail(), request.getPhoneNumber());
+        if(isExists){
+            throw new GeneralCustomException(ErrorApiResponseCode.USER_EMAIL_OR_PHONE_ALREADY_EXISTS);
+        }
         User user = User.create(
-                createRequest.getName(),
-                createRequest.getEmail(),
+                request.getName(),
+                request.getEmail(),
                 encPassword,
-                createRequest.getPhoneNumber(),
-                createRequest.getBirth(),
+                request.getPhoneNumber(),
+                request.getBirth(),
                 createDate,
                 UUID.randomUUID(),
                 AccountType.USER
@@ -79,21 +82,21 @@ public class UserService {
 
     /** 사용자 본인 정보 조회 (자기자신 정보만 조회 가능) */
     public UserSelfQueryResponse getSelfUesr(String uuid){
-        UserDetailProjection detailProjc = userMapper.selectSelfUser(uuid).orElseThrow(
+        UserSelfQueryResponse userSelfQueryResponse = userMapper.selectSelfUser(uuid).orElseThrow(
                 () -> new GeneralCustomException(NOT_FOUND, "USER NOT FOUND")
         );
 
-        return UserSelfQueryResponse.builder().uuid(detailProjc.getUuid())
-                .phoneNumber(detailProjc.getPhoneNumber())
-                .name(detailProjc.getName())
-                .email(detailProjc.getEmail())
-                .birth(detailProjc.getBirth())
-                .createDate(detailProjc.getCreateDate()).build();
+        return userSelfQueryResponse;
     }
 
     public boolean removeUser(UUID uuid){
 
         return userMapper.softDeleteUser(uuid, UserStatus.DELETED) == 1 ? true : false;
+    }
+
+    /** 타 메서드 헬퍼 */
+    public User getUser(String uuid){
+        return userMapper.selectUser(uuid);
     }
 
 }
