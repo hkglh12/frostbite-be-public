@@ -65,7 +65,7 @@ public class UserController {
     })
     @PostMapping(value="/")
     @Operation(summary="사용자 회원가입", description="사용자 회원가입")
-    public ResponseEntity<ApiSucceedResponse<UserJoinResponse>> postUser(@Validated @RequestBody UserJoinRequest createRequest){
+    public ResponseEntity<ApiSucceedResponse<UserJoinResponse>> createUser(@Validated @RequestBody UserJoinRequest createRequest){
 
         UserJoinResponse response = userService.createUser(createRequest);
         return ResponseEntity.ok(new ApiSucceedResponse<>(response));
