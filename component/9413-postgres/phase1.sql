@@ -10,6 +10,7 @@ create table user_tb(
                         birth date,
                         create_date date,
                         uuid varchar(50),
+                        account_type smallint,
                         status smallint
 );
 
@@ -22,6 +23,7 @@ comment on column user_tb.phone_number is '휴대전화번호';
 comment on column user_tb.birth is '생년월일';
 comment on column user_tb.create_date is '가입날짜';
 comment on column user_tb.uuid is '사용자 UUID';
+comment on column user_tb.account_type is '계정 권한 종류[관리자||사용자]';
 comment on column user_tb.status is '계정상태';
 
 create table team_tb(
@@ -64,6 +66,9 @@ comment on column rel_user_team.team_id is '팀 식별자';
 comment on column rel_user_team.join_time is '합류시각';
 comment on column rel_user_team.status is '관계상태';
 
+/* 원래 전역 역할을 표현하기 위함이었으나, ADMIN과 USER밖에 없음
+   굳이 테이블을 나누어서 표현하는건 과하다고 판단, ENUM으로 전환 */
+/*
 create table role_tb(
                         role_id serial primary key ,
                         role_name varchar(256)
@@ -87,6 +92,7 @@ comment on column rel_user_role_tb.rel_id is '관계 식별자';
 comment on column rel_user_role_tb.user_id is '사용자 식별자';
 comment on column rel_user_role_tb.role_id is '역할 식별자';
 
+ */
 
 -- 폴더의 삭제는 "수정"으로 처리할 예정
 create table folder_tb(
@@ -198,7 +204,6 @@ comment on table file_tb_ver is '파일 변경이력';
 comment on column file_tb_ver.file_ver_id is '파일 변경이력 식별자';
 comment on column file_tb_ver.file_name is '파일명';
 comment on column file_tb_ver.file_size is '파일크기';
-comment on column file_tb_ver.folder_id is '부모 폴더 식별자';
 comment on column file_tb_ver.modify_user is '수정자';
 comment on column file_tb_ver.modify_time is '수정시각';
 

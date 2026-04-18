@@ -11,6 +11,7 @@ create table user_tb(
                         birth date,
                         create_date date,
                         uuid varchar(50),
+                        account_type smallint,
                         status smallint
 );
 
@@ -23,6 +24,7 @@ comment on column user_tb.phone_number is '휴대전화번호';
 comment on column user_tb.birth is '생년월일';
 comment on column user_tb.create_date is '가입날짜';
 comment on column user_tb.uuid is '사용자 UUID';
+comment on column user_tb.account_type is '계정 권한 종류[관리자||사용자]';
 comment on column user_tb.status is '계정상태';
 
 create table team_tb(

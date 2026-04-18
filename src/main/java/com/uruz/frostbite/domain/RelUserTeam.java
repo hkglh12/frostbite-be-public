@@ -1,5 +1,6 @@
 package com.uruz.frostbite.domain;
 
+import com.uruz.frostbite.enums.TeamRole;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,4 +27,6 @@ public class RelUserTeam {
 
     /** 삭제여부 */
     private Short isDelete;
+    /** 팀 내 역할 */
+    private TeamRole teamRole;
 }

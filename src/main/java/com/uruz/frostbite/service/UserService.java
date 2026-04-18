@@ -6,6 +6,7 @@ import com.uruz.frostbite.dto.UserJoinRequest;
 import com.uruz.frostbite.dto.UserJoinResponse;
 import com.uruz.frostbite.dto.UserSelfQueryCondition;
 import com.uruz.frostbite.dto.UserSelfQueryResponse;
+import com.uruz.frostbite.enums.AccountType;
 import com.uruz.frostbite.enums.ErrorApiResponseCode;
 import com.uruz.frostbite.enums.UserStatus;
 import com.uruz.frostbite.internalvo.UserDetailProjection;
@@ -52,7 +53,8 @@ public class UserService {
                 createRequest.getPhoneNumber(),
                 createRequest.getBirth(),
                 createDate,
-                UUID.randomUUID()
+                UUID.randomUUID(),
+                AccountType.USER
         );
 
         userMapper.insertUser(user);

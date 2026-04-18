@@ -13,13 +13,13 @@
             SELECT nextval('user_tb_user_id_seq')
         </selectKey>
 
-        INSERT INTO USER_TB (user_id, name, email, password, phone_number, birth, create_date, uuid, status)
-        VALUES (#{userId}, #{name}, #{email}, #{password}, #{phoneNumber}, #{birth}, #{createDate}, #{uuid}, #{status})
+        INSERT INTO USER_TB (user_id, name, email, password, phone_number, birth, create_date, uuid, account_type, status)
+        VALUES (#{userId}, #{name}, #{email}, #{password}, #{phoneNumber}, #{birth}, #{createDate}, #{uuid}, #{accountType}, #{status})
 
     </insert>
 
     <select id="selectSelfUser" parameterType="UserSelfQueryCondition" resultType="UserDetailProjection">
-        SELECT name, email, phone_number, birth, create_date, uuid
+        SELECT name, email, phone_number, birth, create_date, uuid, account_type
         FROM user_tb
         <where>
             <choose>

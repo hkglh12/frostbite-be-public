@@ -1,12 +1,9 @@
 package com.uruz.frostbite.domain;
 
+import com.uruz.frostbite.enums.AccountType;
 import com.uruz.frostbite.enums.UserStatus;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -39,10 +36,13 @@ public class User {
     /** 사용자 UUID */
     private UUID uuid;
 
+    /** 계정 종류 */
+    private AccountType accountType;
+
     /** 삭제여부 */
     private UserStatus status;
 
-    private User(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid, UserStatus status){
+    private User(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid, AccountType accountType, UserStatus status){
         this.name = name;
         this.email = email;
         this.password = password;
@@ -51,8 +51,9 @@ public class User {
         this.createDate = createDate;
         this.uuid = uuid;
         this.status = status;
+        this.accountType = accountType;
     }
-    public static User create(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid){
+    public static User create(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid, AccountType accountType){
         if(name.length() < 2 || name.length() > 20){
             throw new IllegalArgumentException("Name constraint violated");
         }
@@ -67,7 +68,7 @@ public class User {
         }
 
         return new User(
-            name, email, password, phoneNumber, birth,createDate, uuid, UserStatus.AWAITS
+            name, email, password, phoneNumber, birth,createDate, uuid, accountType, UserStatus.ACTIVE
         );
     }
 }
