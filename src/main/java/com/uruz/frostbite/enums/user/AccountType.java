@@ -1,4 +1,4 @@
-package com.uruz.frostbite.enums;
+package com.uruz.frostbite.enums.user;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -37,6 +37,6 @@ public enum AccountType {
     }
 
     public SimpleGrantedAuthority toSimpleGrantedAuthority(){
-        return new SimpleGrantedAuthority("ROLE_"+name);
+        return new SimpleGrantedAuthority(name);
     }
 }

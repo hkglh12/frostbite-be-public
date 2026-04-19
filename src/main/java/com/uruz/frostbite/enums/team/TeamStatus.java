@@ -1,4 +1,4 @@
-package com.uruz.frostbite.enums;
+package com.uruz.frostbite.enums.team;
 
 public enum TeamStatus {
     AWAITS(0),

@@ -1,7 +1,6 @@
 package com.uruz.frostbite.typehandler;
 
 import com.uruz.frostbite.enums.AclSubjectType;
-import com.uruz.frostbite.enums.PermissionBitMask;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;

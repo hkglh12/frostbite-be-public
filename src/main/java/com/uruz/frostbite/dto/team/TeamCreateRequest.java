@@ -1,4 +1,4 @@
-package com.uruz.frostbite.dto;
+package com.uruz.frostbite.dto.team;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;

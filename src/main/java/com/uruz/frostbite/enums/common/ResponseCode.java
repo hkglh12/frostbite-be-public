@@ -1,4 +1,4 @@
-package com.uruz.frostbite.enums;
+package com.uruz.frostbite.enums.common;
 
 public interface ResponseCode {
     String getCode();

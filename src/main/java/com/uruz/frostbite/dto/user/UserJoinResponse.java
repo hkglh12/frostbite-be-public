@@ -1,7 +1,7 @@
-package com.uruz.frostbite.dto;
+package com.uruz.frostbite.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.uruz.frostbite.enums.AccountType;
+import com.uruz.frostbite.enums.user.UserStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,13 +14,9 @@ import java.util.UUID;
 @Setter
 @Builder
 @Schema(
-        description = "사용자 본인정보 조회 결과"
+        description = "사용자 회원가입 결과 응답"
 )
-public class UserSelfQueryResponse {
-    @Schema(
-            description = "사용자 UUID(식별자)"
-    )
-    private UUID uuid;
+public class UserJoinResponse {
     @Schema(
             description = "사용자 이름"
     )
@@ -43,6 +39,12 @@ public class UserSelfQueryResponse {
     )
     @JsonFormat(pattern = "yyyy-MM-dd", shape=JsonFormat.Shape.STRING)
     private LocalDate createDate;
-
-    private AccountType account_type;
+    @Schema(
+            description = "사용자 UUID, 식별자"
+    )
+    private UUID uuid;
+    @Schema(
+            description = "사용자 계정상태"
+    )
+    private UserStatus status;
 }

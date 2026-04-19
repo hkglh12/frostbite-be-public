@@ -1,9 +1,8 @@
-package com.uruz.frostbite.dto;
+package com.uruz.frostbite.dto.team;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.uruz.frostbite.enums.TeamStatus;
+import com.uruz.frostbite.enums.team.TeamStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jdk.jshell.Snippet;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

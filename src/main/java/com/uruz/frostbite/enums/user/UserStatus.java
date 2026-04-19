@@ -1,10 +1,11 @@
-package com.uruz.frostbite.enums;
+package com.uruz.frostbite.enums.user;
 
 public enum UserStatus {
     AWAITS(0),
     ACTIVE(1),
     LOCKED(2),
-    DELETED(3);
+    EXPIRED(3),
+    DELETED(4);
 
     private final int value;
 

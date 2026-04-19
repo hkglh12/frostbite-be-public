@@ -1,4 +1,4 @@
-package com.uruz.frostbite.dto;
+package com.uruz.frostbite.dto.user;
 
 import com.uruz.frostbite.validator.annotation.PhoneNumber;
 import io.swagger.v3.oas.annotations.media.Schema;

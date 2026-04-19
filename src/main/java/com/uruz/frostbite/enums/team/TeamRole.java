@@ -1,4 +1,4 @@
-package com.uruz.frostbite.enums;
+package com.uruz.frostbite.enums.team;
 
 public enum TeamRole {
     /** 팀 내 역할을 표현하기 위한 도메인 역할

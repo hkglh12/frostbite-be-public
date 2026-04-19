@@ -1,7 +1,6 @@
-package com.uruz.frostbite.typehandler;
+package com.uruz.frostbite.typehandler.user;
 
-import com.uruz.frostbite.enums.AccountType;
-import com.uruz.frostbite.enums.FolderStatus;
+import com.uruz.frostbite.enums.user.AccountType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;

@@ -1,7 +1,6 @@
-package com.uruz.frostbite.typehandler;
+package com.uruz.frostbite.typehandler.common;
 
-import com.uruz.frostbite.enums.GeneralRelationStatus;
-import com.uruz.frostbite.enums.TeamStatus;
+import com.uruz.frostbite.enums.common.GeneralRelationStatus;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
