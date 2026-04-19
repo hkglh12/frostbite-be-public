@@ -18,9 +18,24 @@
         FROM team_tb team
         JOIN user_tb user
         ON user.user_id = team.create_user
-        WHERE team.uuid = #{uuid}
+        WHERE team.uuid = #{teamUuid}
     </select>
 
+    <select id="selectTeamsByUserId" resultType="TeamDetailResponse">
+        SELECT team.name, team.create_time, team.uuid, team.status,
+               user.name as createUser
+        FROM team_tb team
+                 JOIN user_tb user
+        ON user.user_id = team.create_user
+        WHERE EXISTS(
+            SELECT 1
+            FROM rel_user_role_tb relation
+            WHERE
+                relation.team_id = team.team_id
+            AND
+                relation.user_id = #{userId}
+            )
+    </select>
 
     <insert id="insertUserTeamRelation" parameterType="Team" keyProperty="teamId">
         /* INSERT ID = 'insertUserTeamRelation*/

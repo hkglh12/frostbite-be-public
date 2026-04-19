@@ -1,7 +1,7 @@
 package com.uruz.frostbite.domain;
 
-import com.uruz.frostbite.enums.GeneralRelationStatus;
-import com.uruz.frostbite.enums.TeamRole;
+import com.uruz.frostbite.enums.common.GeneralRelationStatus;
+import com.uruz.frostbite.enums.team.TeamRole;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -4,20 +4,19 @@ import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.RelUserTeam;
 import com.uruz.frostbite.domain.Team;
 import com.uruz.frostbite.domain.User;
-import com.uruz.frostbite.dto.TeamCreateRequest;
-import com.uruz.frostbite.dto.TeamDetailResponse;
-import com.uruz.frostbite.dto.UserSelfQueryResponse;
-import com.uruz.frostbite.enums.ErrorApiResponseCode;
-import com.uruz.frostbite.enums.GeneralRelationStatus;
-import com.uruz.frostbite.enums.TeamRole;
+import com.uruz.frostbite.dto.team.TeamCreateRequest;
+import com.uruz.frostbite.dto.team.TeamDetailResponse;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
+import com.uruz.frostbite.enums.common.GeneralRelationStatus;
+import com.uruz.frostbite.enums.team.TeamRole;
 import com.uruz.frostbite.mapper.TeamMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.undo.CannotUndoException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -37,20 +36,14 @@ public class TeamService {
 
     // 팀 생성 및 팀 Relation 추가
     @Transactional
-    public TeamDetailResponse createTeam(TeamCreateRequest request) throws GeneralCustomException {
-        String uuid = "dummy";
-        User createUser = userService.getUser(uuid);
-
-        if(createUser == null){
-            throw new GeneralCustomException(ErrorApiResponseCode.NOT_FOUND, "USER NOT FOUND");
-        }
-
+    public TeamDetailResponse createTeam(UUID createUserUuid, TeamCreateRequest request) throws GeneralCustomException {
+        User createUser = userService.getUser(createUserUuid);
 
         Team team = Team.create(request.getName(), LocalDateTime.now(), createUser.getUserId(), UUID.randomUUID());
         teamMapper.insertTeam(team);
 
         if(team.getTeamId() == null){
-            throw new GeneralCustomException(ErrorApiResponseCode.INTERNAL_ERROR, "TEAM CREATION FAILED");
+            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "TEAM CREATION FAILED");
         }
 
         RelUserTeam relation = self.createUserTeamRelation(createUser.getUserId(), team.getTeamId());
@@ -64,15 +57,21 @@ public class TeamService {
                 .status(team.getStatus())
                 .build();
     }
-    public TeamDetailResponse getTeam(String uuid){
+    public TeamDetailResponse getTeam(UUID teamUuid){
 
-        TeamDetailResponse teamDetailResponse = teamMapper.selectTeam(uuid).orElseThrow(
-                () ->  new GeneralCustomException(ErrorApiResponseCode.NOT_FOUND, "team not found")
+        TeamDetailResponse teamDetailResponse = teamMapper.selectTeam(teamUuid).orElseThrow(
+                () ->  new GeneralCustomException(ApiErrorCode.NOT_FOUND, "team not found")
         );
 
         return teamDetailResponse;
     }
 
+    public List<TeamDetailResponse> getTeams (UUID userUuid){
+        User targetUser = userService.getUser(userUuid);
+
+        return teamMapper.selectTeamsByUserId(targetUser.getUserId());
+
+    }
     public RelUserTeam createUserTeamRelation(Integer userId, Integer teamId){
         RelUserTeam relation = RelUserTeam.create(userId, teamId, userId, LocalDateTime.now(), TeamRole.HEAD, GeneralRelationStatus.ACTIVE);
 

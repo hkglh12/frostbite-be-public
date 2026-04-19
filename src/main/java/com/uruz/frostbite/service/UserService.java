@@ -2,13 +2,12 @@ package com.uruz.frostbite.service;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.User;
-import com.uruz.frostbite.dto.UserJoinRequest;
-import com.uruz.frostbite.dto.UserJoinResponse;
-import com.uruz.frostbite.dto.UserSelfQueryResponse;
-import com.uruz.frostbite.dto.wrapper.ApiErrorResponse;
-import com.uruz.frostbite.enums.AccountType;
-import com.uruz.frostbite.enums.ErrorApiResponseCode;
-import com.uruz.frostbite.enums.UserStatus;
+import com.uruz.frostbite.dto.user.UserJoinRequest;
+import com.uruz.frostbite.dto.user.UserJoinResponse;
+import com.uruz.frostbite.dto.user.UserSelfQueryResponse;
+import com.uruz.frostbite.enums.user.AccountType;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
+import com.uruz.frostbite.enums.user.UserStatus;
 import com.uruz.frostbite.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.UUID;
 
-import static com.uruz.frostbite.enums.ErrorApiResponseCode.NOT_FOUND;
+import static com.uruz.frostbite.enums.common.ApiErrorCode.NOT_FOUND;
 
 @Service
 @Slf4j
@@ -47,7 +45,7 @@ public class UserService {
 
         boolean isExists = userMapper.selectUserExistsByNameAndPhoneNumber(request.getEmail(), request.getPhoneNumber());
         if(isExists){
-            throw new GeneralCustomException(ErrorApiResponseCode.USER_EMAIL_OR_PHONE_ALREADY_EXISTS);
+            throw new GeneralCustomException(ApiErrorCode.USER_EMAIL_OR_PHONE_ALREADY_EXISTS);
         }
         User user = User.create(
                 request.getName(),
@@ -95,8 +93,11 @@ public class UserService {
     }
 
     /** 타 메서드 헬퍼 */
-    public User getUser(String uuid){
-        return userMapper.selectUser(uuid);
+    public User getUser(UUID uuid) throws GeneralCustomException{
+        return userMapper.selectUser(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
     }
+
+    /** UserDetailsService에서 사용할 Password 포함 리턴 메서드*/
+    public User loadUserByEmail(String email){return userMapper.selectUserByEmail(email);}
 
 }

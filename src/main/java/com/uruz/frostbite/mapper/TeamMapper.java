@@ -2,10 +2,11 @@ package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.RelUserTeam;
 import com.uruz.frostbite.domain.Team;
-import com.uruz.frostbite.dto.TeamDetailResponse;
+import com.uruz.frostbite.dto.team.TeamDetailResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,5 +21,7 @@ public interface TeamMapper {
     /** 팀 권한 생성*/
     public int insertUserTeamRelation(RelUserTeam relation);
 
-    public Optional<TeamDetailResponse> selectTeam(String uuid);
+    public Optional<TeamDetailResponse> selectTeam(UUID teamUuid);
+
+    public List<TeamDetailResponse> selectTeamsByUserId(Integer userId);
 }

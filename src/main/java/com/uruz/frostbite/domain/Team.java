@@ -1,10 +1,9 @@
 package com.uruz.frostbite.domain;
 
-import com.uruz.frostbite.enums.TeamStatus;
+import com.uruz.frostbite.enums.team.TeamStatus;
 import io.micrometer.common.util.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;

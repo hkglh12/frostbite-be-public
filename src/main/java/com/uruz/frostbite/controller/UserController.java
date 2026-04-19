@@ -1,9 +1,9 @@
 package com.uruz.frostbite.controller;
 
 import com.uruz.frostbite.configuration.SwaggerExamples;
-import com.uruz.frostbite.dto.UserJoinRequest;
-import com.uruz.frostbite.dto.UserJoinResponse;
-import com.uruz.frostbite.dto.UserSelfQueryResponse;
+import com.uruz.frostbite.dto.user.UserJoinRequest;
+import com.uruz.frostbite.dto.user.UserJoinResponse;
+import com.uruz.frostbite.dto.user.UserSelfQueryResponse;
 import com.uruz.frostbite.dto.wrapper.ApiErrorResponse;
 import com.uruz.frostbite.dto.wrapper.ApiSucceedResponse;
 import com.uruz.frostbite.service.UserService;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/v1/api/user")
 @Tag(name="일반 사용자 사용자 관련 API", description = "일반 사용자의 본인 정보 조회/수정/삭제 및 가입")
 public class UserController {
 

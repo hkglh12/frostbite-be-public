@@ -1,16 +1,15 @@
 package com.uruz.frostbite.dto.wrapper;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.uruz.frostbite.enums.ErrorApiResponseCode;
-import com.uruz.frostbite.enums.ResponseCode;
-import com.uruz.frostbite.enums.SucceedApiResponseCode;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
+import com.uruz.frostbite.enums.common.ResponseCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
-public class ApiErrorResponse<T> {
+public class ApiErrorResponse {
     @Schema(description = "실패시 응답 메시지 (내부용)")
     private String message;
     @Schema(description = "실패시 코드 메시지 (출력용)")
@@ -22,7 +21,7 @@ public class ApiErrorResponse<T> {
     private LocalDateTime timestamp;
 
     public ApiErrorResponse(String message){
-        this.code = ErrorApiResponseCode.UNRECOGNIZED;
+        this.code = ApiErrorCode.UNRECOGNIZED;
         this.codeMessage = this.code.getMessage();
         this.message = message;
         this.timestamp = LocalDateTime.now();

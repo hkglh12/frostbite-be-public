@@ -1,9 +1,8 @@
 package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.User;
-import com.uruz.frostbite.dto.UserSelfQueryResponse;
-import com.uruz.frostbite.enums.UserStatus;
-import com.uruz.frostbite.internalvo.UserDetailProjection;
+import com.uruz.frostbite.dto.user.UserSelfQueryResponse;
+import com.uruz.frostbite.enums.user.UserStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -21,7 +20,9 @@ public interface UserMapper {
 
     public int softDeleteUser(UUID uuid, UserStatus status);
 
-    public User selectUser(String uuid);
+    public Optional<User> selectUser(UUID uuid);
 
-    public boolean selectUserExistsByNameAndPhoneNumber(String email, String phoneNumber);
+    public boolean selectUserExistsByNameAndPhoneNumber(@Param("email") String email, @Param("phoneNumber")String phoneNumber);
+
+    public User selectUserByEmail(String email);
 }
