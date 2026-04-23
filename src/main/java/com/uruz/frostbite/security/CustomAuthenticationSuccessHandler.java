@@ -30,9 +30,10 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
+        CustomUserDetails inSecurityCtx =  ((CustomUserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         ResponseEntity<ApiSucceedResponse<SecurityContextUserContext>> entity = ResponseEntity.ok().body(
                 new ApiSucceedResponse<>(new SecurityContextUserContext(
-                        SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString()
+                       inSecurityCtx.getEmail(), inSecurityCtx.getUuid()
                 ))
         );
         response.setStatus(HttpStatus.OK.value());

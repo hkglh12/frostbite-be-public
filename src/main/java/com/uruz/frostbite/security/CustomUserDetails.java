@@ -2,12 +2,14 @@ package com.uruz.frostbite.security;
 
 import com.uruz.frostbite.domain.User;
 import com.uruz.frostbite.enums.user.UserStatus;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
 
+@Getter
 public class CustomUserDetails implements UserDetails {
     private String email;
     private String password;

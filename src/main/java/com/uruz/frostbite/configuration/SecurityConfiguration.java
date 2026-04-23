@@ -2,6 +2,7 @@ package com.uruz.frostbite.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uruz.frostbite.security.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +23,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -36,6 +38,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@Slf4j
 public class SecurityConfiguration {
 
     @Bean
@@ -77,6 +80,7 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> {
                     session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
                 })
+
                 .addFilterAt(filter, UsernamePasswordAuthenticationFilter.class);
 
         return security.build();
@@ -160,7 +164,8 @@ public class SecurityConfiguration {
             @Autowired CustomAuthenticationSuccessHandler customSuccessHandler,
             @Autowired ObjectMapper mapper
             ){
-        CustomUsernamePasswordAuthenticationFilter filter = new CustomUsernamePasswordAuthenticationFilter(mapper, authenticationManager);
+        CustomUsernamePasswordAuthenticationFilter filter = new CustomUsernamePasswordAuthenticationFilter(mapper, authenticationManager,
+                new HttpSessionSecurityContextRepository());
         filter.setUsernameParameter("email");
         filter.setFilterProcessesUrl("/v1/login");
 
