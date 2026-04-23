@@ -18,7 +18,7 @@
 
     </insert>
 
-    <select id="selectSelfUser" parameterType="String" resultType="UserSelfQueryResponse">
+    <select id="selectSelfUser" resultType="UserSelfQueryResponse">
         SELECT name, email, phone_number, birth, create_date, uuid, account_type
         FROM user_tb
         WHERE

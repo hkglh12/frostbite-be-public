@@ -3,19 +3,19 @@ package com.uruz.frostbite.dto.user;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.uruz.frostbite.enums.user.AccountType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
 @Setter
-@Builder
 @Schema(
         description = "사용자 본인정보 조회 결과"
 )
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserSelfQueryResponse {
     @Schema(
             description = "사용자 UUID(식별자)"

@@ -79,7 +79,7 @@ public class UserService {
     }
 
     /** 사용자 본인 정보 조회 (자기자신 정보만 조회 가능) */
-    public UserSelfQueryResponse getSelfUesr(String uuid){
+    public UserSelfQueryResponse getSelfUesr(UUID uuid){
         UserSelfQueryResponse userSelfQueryResponse = userMapper.selectSelfUser(uuid).orElseThrow(
                 () -> new GeneralCustomException(NOT_FOUND, "USER NOT FOUND")
         );
