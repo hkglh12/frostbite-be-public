@@ -2,8 +2,9 @@ package com.uruz.frostbite.aop;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.dto.wrapper.ApiErrorResponse;
-import com.uruz.frostbite.enums.ErrorApiResponseCode;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,8 +19,15 @@ public class GlobalExceptionHandler {
     })
     protected ResponseEntity<ApiErrorResponse> handleArguments(Exception IAE){
             return ResponseEntity.badRequest()
-                    .body(new ApiErrorResponse(ErrorApiResponseCode.UNSATISFIED, IAE.getMessage()));
+                    .body(new ApiErrorResponse(ApiErrorCode.UNSATISFIED, IAE.getMessage()));
     }
+    @ExceptionHandler({
+            UsernameNotFoundException.class
+    })
+    protected  ResponseEntity<ApiErrorResponse> handleUserNotFound(Exception UNF){
+        return ResponseEntity.badRequest().body(new ApiErrorResponse(ApiErrorCode.NOT_FOUND, UNF.getMessage()));
+    }
+
     @ExceptionHandler({
             GeneralCustomException.class
     })
@@ -32,14 +40,14 @@ public class GlobalExceptionHandler {
     })
     protected ResponseEntity<ApiErrorResponse> handleIllegalState(IllegalStateException GE){
         return ResponseEntity.internalServerError()
-                .body(new ApiErrorResponse(ErrorApiResponseCode.INTERNAL_ERROR, GE.getMessage()));
+                .body(new ApiErrorResponse(ApiErrorCode.INTERNAL_ERROR, GE.getMessage()));
     }
     @ExceptionHandler({
             Exception.class
     })
     protected ResponseEntity<ApiErrorResponse> handleGeneral(Exception E){
         return ResponseEntity.internalServerError()
-                .body(new ApiErrorResponse(ErrorApiResponseCode.UNRECOGNIZED, E.getMessage()));
+                .body(new ApiErrorResponse(ApiErrorCode.UNRECOGNIZED, E.getMessage()));
     }
 
 }

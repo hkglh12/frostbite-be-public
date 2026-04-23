@@ -49,4 +49,11 @@
         FROM user_tb
         WHERE uuid = #{uuid}
     </select>
+
+    <select id="selectUserByEmail" resultType="User">
+        /** selectUserByEmail */
+        SELECT email, password, account_type, status, uuid
+        FROM user_tb
+        WHERE email = #{email}
+    </select>
 </mapper>

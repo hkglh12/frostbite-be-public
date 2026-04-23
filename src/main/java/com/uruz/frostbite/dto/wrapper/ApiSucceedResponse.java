@@ -1,14 +1,12 @@
 package com.uruz.frostbite.dto.wrapper;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.uruz.frostbite.enums.ResponseCode;
-import com.uruz.frostbite.enums.SucceedApiResponseCode;
+import com.uruz.frostbite.enums.common.ResponseCode;
+import com.uruz.frostbite.enums.common.ApiSucceedCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Getter
 public class ApiSucceedResponse<T>{
@@ -24,7 +22,7 @@ public class ApiSucceedResponse<T>{
 
     public ApiSucceedResponse(T result){
         this.result = result;
-        this.code = SucceedApiResponseCode.SUCCEED;
+        this.code = ApiSucceedCode.SUCCEED;
         this.message = this.code.getMessage();
         this.timestamp = LocalDateTime.now();
     }

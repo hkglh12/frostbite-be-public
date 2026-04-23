@@ -1,15 +1,15 @@
-package com.uruz.frostbite.enums;
+package com.uruz.frostbite.enums.common;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum SucceedApiResponseCode implements ResponseCode{
+public enum ApiSucceedCode implements ResponseCode{
 
     SUCCEED("S00000", "SUCCEED");
 
     private final String code;
     private final String message;
 
-    SucceedApiResponseCode(String code, String message){
+    ApiSucceedCode(String code, String message){
         this.code = code;
         this.message = message;
     }
@@ -23,9 +23,4 @@ public enum SucceedApiResponseCode implements ResponseCode{
         return message;
     }
 
-
-    @JsonValue
-    public String toJson() {
-        return message;
-    }
 }

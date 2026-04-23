@@ -1,12 +1,8 @@
 package com.uruz.frostbite.customException;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.uruz.frostbite.enums.ErrorApiResponseCode;
-import com.uruz.frostbite.enums.ResponseCode;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
+import com.uruz.frostbite.enums.common.ResponseCode;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Getter
 public class GeneralCustomException extends RuntimeException{
@@ -21,6 +17,6 @@ public class GeneralCustomException extends RuntimeException{
     }
     public GeneralCustomException(String message){
         super(message);
-        this.code = ErrorApiResponseCode.UNRECOGNIZED;
+        this.code = ApiErrorCode.UNRECOGNIZED;
     }
 }
