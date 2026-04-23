@@ -1,4 +1,4 @@
-package com.uruz.frostbite.enums.team;
+package com.uruz.frostbite.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

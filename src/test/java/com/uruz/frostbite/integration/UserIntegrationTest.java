@@ -1,7 +1,7 @@
 package com.uruz.frostbite.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.uruz.frostbite.dto.UserJoinRequest;
+import com.uruz.frostbite.dto.user.UserJoinRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

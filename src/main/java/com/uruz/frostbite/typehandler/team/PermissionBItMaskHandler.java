@@ -1,6 +1,6 @@
 package com.uruz.frostbite.typehandler.team;
 
-import com.uruz.frostbite.enums.team.PermissionBitMask;
+import com.uruz.frostbite.enums.PermissionBitMask;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
