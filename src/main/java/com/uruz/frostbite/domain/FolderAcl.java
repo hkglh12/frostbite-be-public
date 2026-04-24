@@ -16,19 +16,16 @@ public class FolderAcl {
     /** 접근제어 식별자 */
     private Long aclId;
 
-    /** 피접근제어 대상 (user_id) */
-    private Integer userId;
-
-    /** 접근제어 폴더 식별자 */
+    /** 접근제어 보호대상 Object (폴더) 식별자 */
     private Long folderId;
 
     /** 접근제어 종류 (ALLOW || DENY) */
     private AclEffectType effectType;
 
-    /** 피접근제어 종류 (팀 || 사용자) */
+    /** 접근제어 주체 종류 (팀 || 사용자) */
     private AclSubjectType subjectType;
 
-    /** 피접근제어 식별자 */
+    /** 접근제어 주체 식별자 */
     private Integer subjectId;
 
     /** 제약 권한 (READ, CREATE, DELETE, SHARE 등 ENUM) */
