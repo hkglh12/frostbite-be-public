@@ -1,21 +1,21 @@
 package com.uruz.frostbite.controller;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
-import com.uruz.frostbite.domain.Team;
 import com.uruz.frostbite.dto.team.TeamCreateRequest;
 import com.uruz.frostbite.dto.team.TeamDetailResponse;
+import com.uruz.frostbite.dto.team.TeamModifyRequest;
 import com.uruz.frostbite.dto.wrapper.ApiSucceedResponse;
 import com.uruz.frostbite.security.CustomUserDetails;
 import com.uruz.frostbite.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,7 +48,7 @@ public class TeamController {
     public ResponseEntity<?> getTeams(
             @AuthenticationPrincipal CustomUserDetails details
     ){
-        List<TeamDetailResponse> teams = teamService.getTeams(details.getUuid());
+        List<TeamDetailResponse> teams = teamService.getTeamsByUserUuid(details.getUuid());
         return ResponseEntity.ok(new ApiSucceedResponse<>(teams));
     }
 
@@ -57,14 +57,17 @@ public class TeamController {
     public ResponseEntity<?> getTeam(
             @RequestParam(name="uuid") UUID teamUuid
     ){
-        TeamDetailResponse team = teamService.getTeam(teamUuid);
+        TeamDetailResponse team = teamService.getTeamDetail(teamUuid);
         return ResponseEntity.ok(new ApiSucceedResponse<TeamDetailResponse>(team));
     }
 
     @PutMapping("/")
     @Operation(summary = "팀 상세정보 수정", description = "본인이 가입한 팀 중 특정 팀 상세정보 수정")
-    public ResponseEntity<?> updateTeam(){
+    public ResponseEntity<?> updateTeam(
+            @Valid TeamModifyRequest modifyRequest
+            ){
 
+        TeamDetailResponse team = teamService.modifyTeam(modifyRequest);
         return null;
     }
 

@@ -12,14 +12,44 @@
             VALUES (#{teamId}, #{name}. #{createTime}, #{createUser}, #{uuid}, #{status})
     </insert>
 
-    <select id="selectTeam" resultType="TeamDetailResponse">
-        SELECT team.name, team.create_time, team.uuid, team.status,
-               user.name as createUser
+    <select id="selectTeamProjection" resultType="TeamProjection">
+        SELECT team.teamId, team.name, team.createTime, team.createUser, team.uuid,
+               team.status, user.name as createUserName
         FROM team_tb team
         JOIN user_tb user
         ON user.user_id = team.create_user
         WHERE team.uuid = #{teamUuid}
     </select>
+
+    <select id="selectTeam" resultType="Team">
+        SELECT team.teamId, team.name, team.createTime, team.createUser, team.uuid,
+               team.status, user.userId as createUser
+        FROM team_tb team
+                 JOIN user_tb user
+        ON user.user_id = team.create_user
+        WHERE team.uuid = #{teamUuid}
+    </select>
+
+    <update id="updateTeam" parameterType="TeamModifyCommand">
+        UPDATE
+            team_tb
+        SET
+            name = #{name},
+            modify_time = #{currentTime}
+        WHERE
+            uuid = #{uuid}
+    </update>
+
+    <update id="updateTeamStatus" parameterType="TeamModifyCommand">
+        UPDATE
+            team_tb
+        SET
+            status = #{teamStatus},
+            modify_time = #{currentTime}
+        WHERE
+            uuid = #{uuid}
+    </update>
+
 
     <select id="selectTeamsByUserId" resultType="TeamDetailResponse">
         SELECT team.name, team.create_time, team.uuid, team.status,

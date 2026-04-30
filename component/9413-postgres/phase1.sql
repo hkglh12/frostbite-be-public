@@ -31,6 +31,8 @@ create table team_tb(
                         name varchar(256),
                         create_time timestamp,
                         create_user int,
+                        modify_time timestamp,
+                        modify_user int,
                         uuid varchar(50),
                         status smallint
 );
