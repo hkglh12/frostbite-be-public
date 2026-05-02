@@ -28,8 +28,16 @@ public class TeamProjection {
     /** 생성자 (user_id) */
     private Integer createUser;
 
+    /** 생성시각 */
+    private LocalDateTime modifyTime;
+
+    /** 생성자 (user_id) */
+    private Integer modifyUser;
+
     /** 팀 생성자 이름 */
     private String createUserName;
+
+    private String modifyUserName;
 
     /** 팀 UUID */
     private UUID uuid;

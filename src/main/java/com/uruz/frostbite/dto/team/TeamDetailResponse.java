@@ -17,15 +17,11 @@ import java.util.UUID;
 )
 public class TeamDetailResponse {
 
-        @Schema(
-                description = "팀 이름"
-        )
+        @Schema(description = "팀 이름")
         /** 팀 이름 */
         private String name;
 
-        @Schema(
-                description = "팀 생성시각"
-        )
+        @Schema(description = "팀 생성시각")
         @JsonFormat(pattern = "yyyy-MM-dd", shape=JsonFormat.Shape.STRING)
         /** 생성시각 */
         private LocalDateTime createTime;
@@ -35,20 +31,22 @@ public class TeamDetailResponse {
          * Team Projection으로부터 user_id를 뽑아내서 User 객체를 받아오는것은 접근낭비라 판단,
          * Join절로 Mybatis에서 바로 가져오는 방향으로 수행
          * */
-        @Schema(
-                description = "팀 생성자 이름"
-        )
+        @Schema(description = "팀 생성자 이름")
         private String createUserName;
 
-        @Schema(
-                description = "팀 UUID"
-        )
+        @Schema(description = "팀 수정시각")
+        @JsonFormat(pattern = "yyyy-MM-dd", shape=JsonFormat.Shape.STRING)
+
+        private LocalDateTime modifyTime;
+
+        @Schema(description = "팀 수정자 이름")
+        private String modifyUserName;
+
+        @Schema(description = "팀 UUID")
         /** 팀 UUID */
         private UUID uuid;
 
-        @Schema(
-                description = "팀 상태"
-        )
+        @Schema(description = "팀 상태")
         /** 삭제여부 */
         private TeamStatus status;
 

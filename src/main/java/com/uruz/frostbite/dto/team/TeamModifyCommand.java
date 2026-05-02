@@ -22,7 +22,11 @@ public class TeamModifyCommand {
 
     /**수정 명령서 생성시간*/
     private LocalDateTime currentTime;
-    public static TeamModifyCommand of(UUID uuid, String name) {
-        return new TeamModifyCommand(uuid, name, LocalDateTime.now());
+
+    /** 요청자 UUID */
+    private Integer requestUserId;
+
+    public static TeamModifyCommand of(UUID uuid, String name, Integer requestUserId) {
+        return new TeamModifyCommand(uuid, name, LocalDateTime.now(), requestUserId);
     }
 }

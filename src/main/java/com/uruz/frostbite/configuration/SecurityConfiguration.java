@@ -102,7 +102,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public CorsConfigurationSource customCorsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
         // 프리플라이트 허용 URL

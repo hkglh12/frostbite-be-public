@@ -21,7 +21,10 @@ public class TeamStatusChangeCommand {
     private TeamStatus status;
     /**수정 명령서 생성시간*/
     private LocalDateTime currentTime;
-    public static TeamStatusChangeCommand of(UUID uuid, TeamStatus status) {
-        return new TeamStatusChangeCommand(uuid, status, LocalDateTime.now());
+
+    private Integer requestUserId;
+
+    public static TeamStatusChangeCommand of(UUID uuid, TeamStatus status, Integer requestUserId) {
+        return new TeamStatusChangeCommand(uuid, status, LocalDateTime.now(), requestUserId);
     }
 }

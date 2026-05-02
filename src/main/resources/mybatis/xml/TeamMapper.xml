@@ -13,17 +13,20 @@
     </insert>
 
     <select id="selectTeamProjection" resultType="TeamProjection">
-        SELECT team.teamId, team.name, team.createTime, team.createUser, team.uuid,
-               team.status, user.name as createUserName
+        SELECT team.team_id, team.name, team.create_time, team.create_user, team.uuid,
+               team.status, creator.name as createUserName, team.modify_user,
+               modifier.name as modifyUserName
         FROM team_tb team
-        JOIN user_tb user
-        ON user.user_id = team.create_user
+        JOIN user_tb creator
+        ON creator.user_id = team.create_user
+        LEFT JOIN user_tb modifier
+        on modifier.user_id = team.modify_user
         WHERE team.uuid = #{teamUuid}
     </select>
 
     <select id="selectTeam" resultType="Team">
-        SELECT team.teamId, team.name, team.createTime, team.createUser, team.uuid,
-               team.status, user.userId as createUser
+        SELECT team.team_id, team.name, team.create_time, team.create_user as createUser, team.modify_time, team.modify_user, team.uuid,
+               team.status,
         FROM team_tb team
                  JOIN user_tb user
         ON user.user_id = team.create_user
@@ -40,7 +43,7 @@
             uuid = #{uuid}
     </update>
 
-    <update id="updateTeamStatus" parameterType="TeamModifyCommand">
+    <update id="updateTeamStatus" parameterType="TeamStatusChangeCommand">
         UPDATE
             team_tb
         SET

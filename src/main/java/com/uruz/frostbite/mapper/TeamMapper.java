@@ -5,6 +5,7 @@ import com.uruz.frostbite.domain.Team;
 import com.uruz.frostbite.dto.team.TeamDetailResponse;
 import com.uruz.frostbite.dto.team.TeamModifyCommand;
 import com.uruz.frostbite.dto.team.TeamProjection;
+import com.uruz.frostbite.dto.team.TeamStatusChangeCommand;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -24,6 +25,8 @@ public interface TeamMapper {
     public Optional<TeamProjection> selectTeamProjection(UUID teamUuid);
     /** 팀 정보 수정*/
     public int updateTeam(TeamModifyCommand command);
+    /** 팀 softdelete */
+    public void updateTeamStatus(TeamStatusChangeCommand command);
     /** 팀 엔티티 조회*/
     public Optional<Team> selectTeam(UUID teamUuid);
 
