@@ -4,11 +4,11 @@ import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.RelUserTeam;
 import com.uruz.frostbite.domain.Team;
 import com.uruz.frostbite.domain.User;
-import com.uruz.frostbite.dto.team.TeamCreateRequest;
-import com.uruz.frostbite.dto.team.TeamDetailResponse;
+import com.uruz.frostbite.dto.team.*;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.enums.common.GeneralRelationStatus;
 import com.uruz.frostbite.enums.team.TeamRole;
+import com.uruz.frostbite.enums.team.TeamStatus;
 import com.uruz.frostbite.mapper.TeamMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -35,6 +35,7 @@ public class TeamService {
     }
 
     // 팀 생성 및 팀 Relation 추가
+    /** 팀 생성 및 관계추가*/
     @Transactional
     public TeamDetailResponse createTeam(UUID createUserUuid, TeamCreateRequest request) throws GeneralCustomException {
         User createUser = userService.getUser(createUserUuid);
@@ -49,35 +50,105 @@ public class TeamService {
         RelUserTeam relation = self.createUserTeamRelation(createUser.getUserId(), team.getTeamId());
 
 
+        // TODO 팀 최상위 폴더 자동생성 및 ACL 추가 필요
         return TeamDetailResponse.builder()
                 .name(team.getName())
                 .createTime(team.getCreateTime())
                 .createUserName(createUser.getName())
+                .modifyTime(null)
+                .modifyUserName(null)
                 .uuid(team.getUuid())
                 .status(team.getStatus())
                 .build();
     }
-    public TeamDetailResponse getTeam(UUID teamUuid){
+    /** 팀 상세정보 조회*/
+    public TeamDetailResponse getTeamDetail(UUID teamUuid, UUID userUuid) throws GeneralCustomException{
 
-        TeamDetailResponse teamDetailResponse = teamMapper.selectTeam(teamUuid).orElseThrow(
-                () ->  new GeneralCustomException(ApiErrorCode.NOT_FOUND, "team not found")
+        //TODO 추후 팀 소속 검증 필요, ACL 추가 후 where절에 추가하고 별도의 서비스 메서드 호출로 처리 필요
+        TeamProjection teamProjection = teamMapper.selectTeamProjection(teamUuid).orElseThrow(
+                () ->  new GeneralCustomException(ApiErrorCode.NOT_FOUND, "TEAM INFORMATION NOTFOUND")
         );
 
-        return teamDetailResponse;
+        return TeamDetailResponse.builder()
+                .name(teamProjection.getName())
+                .createTime(teamProjection.getCreateTime())
+                .createUserName(teamProjection.getCreateUserName())
+                .modifyTime(teamProjection.getModifyTime())
+                .modifyUserName(teamProjection.getModifyUserName())
+                .uuid(teamProjection.getUuid())
+                .status(teamProjection.getStatus())
+                .build();
     }
 
-    public List<TeamDetailResponse> getTeams (UUID userUuid){
+    /** 팀 정보 수정 및 기록 관리*/
+    public TeamDetailResponse modifyTeam(TeamModifyRequest request, UUID requestUserUuid) throws GeneralCustomException{
+        User user = userService.getUser(requestUserUuid);
+
+        // TODO 추후 권한 검증 필요 (소속여부, 권한부여여부)
+        TeamProjection teamProjection = teamMapper.selectTeamProjection(request.getUuid()).orElseThrow(
+                () ->  new GeneralCustomException(ApiErrorCode.NOT_FOUND, "TEAM INFORMATION NOTFOUND")
+        );
+        TeamModifyCommand command = TeamModifyCommand.of(
+                request.getUuid(),
+                request.getName(),
+                user.getUserId()
+        );
+        int affectedRow = teamMapper.updateTeam(command);
+
+        if(affectedRow == 0){
+            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "TEAM INFORMATION UPDATE FAILED");
+        }
+
+
+        return TeamDetailResponse.builder()
+                .name(request.getName())
+                .createTime(teamProjection.getCreateTime())
+                .createUserName(teamProjection.getCreateUserName())
+                .modifyUserName(user.getName())
+                .modifyTime(command.getCurrentTime())
+                .status(teamProjection.getStatus())
+                .build();
+    }
+
+    public void softDeleteTeam(UUID teamUuid, UUID userUuid) throws GeneralCustomException{
+        Team team = getTeam(teamUuid);
+        User user = userService.getUser(userUuid);
+
+        TeamStatusChangeCommand command = TeamStatusChangeCommand.of(
+                teamUuid,
+                TeamStatus.DELETED,
+                user.getUserId()
+        );
+
+
+        teamMapper.updateTeamStatus(command);
+    }
+
+    /** 사용자 UUID로부터 가입환 팀 목록 조회 */
+    public List<TeamDetailResponse> getTeamsByUserUuid(UUID userUuid){
         User targetUser = userService.getUser(userUuid);
 
         return teamMapper.selectTeamsByUserId(targetUser.getUserId());
 
     }
+
+    /** 사용자 팀 관계 생성*/
     public RelUserTeam createUserTeamRelation(Integer userId, Integer teamId){
         RelUserTeam relation = RelUserTeam.create(userId, teamId, userId, LocalDateTime.now(), TeamRole.HEAD, GeneralRelationStatus.ACTIVE);
 
         teamMapper.insertUserTeamRelation(relation);
 
         return relation;
+    }
+
+
+
+    /** 팀 엔티티 조회 헬퍼 메서드 */
+    public Team getTeam(UUID uuid) throws GeneralCustomException{
+
+        return teamMapper.selectTeam(uuid).orElseThrow(
+                () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "TEAM INFORMATION NOTFOUND")
+        );
     }
 
     public RelUserTeam createUserTeamRelation(Integer userId, Integer teamId, Integer inviterId){

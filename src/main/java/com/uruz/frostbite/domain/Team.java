@@ -26,6 +26,12 @@ public class Team {
     /** 생성자 (user_id) */
     private Integer createUser;
 
+    /** 수정시각 */
+    private LocalDateTime modifyTime;
+
+    /** 수정자 */
+    private Integer modifyUser;
+
     /** 팀 UUID */
     private UUID uuid;
 
