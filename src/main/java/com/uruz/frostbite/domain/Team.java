@@ -4,6 +4,7 @@ import com.uruz.frostbite.enums.team.TeamStatus;
 import io.micrometer.common.util.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class Team {
 
     /** 팀 식별자 */
@@ -24,13 +25,13 @@ public class Team {
     private LocalDateTime createTime;
 
     /** 생성자 (user_id) */
-    private Integer createUser;
+    private Integer createUserId;
 
     /** 수정시각 */
     private LocalDateTime modifyTime;
 
     /** 수정자 */
-    private Integer modifyUser;
+    private Integer modifyUserId;
 
     /** 팀 UUID */
     private UUID uuid;
@@ -38,20 +39,20 @@ public class Team {
     /** 삭제여부 */
     private TeamStatus status;
 
-    private Team(String name, LocalDateTime createTime, Integer createUser, UUID uuid, TeamStatus status){
+    private Team(String name, LocalDateTime createTime, Integer createUserId, UUID uuid, TeamStatus status){
         this.name = name;
         this.createTime = createTime;
-        this.createUser= createUser;
+        this.createUserId= createUserId;
         this.uuid = uuid;
         this.status = status;
     }
 
-    public static Team create(String name, LocalDateTime createTime, Integer createUser, UUID uuid){
+    public static Team create(String name, LocalDateTime createTime, Integer createUserId, UUID uuid){
         if(StringUtils.isEmpty(name) || name.length() > 256){
             throw new IllegalArgumentException("Name constraint violated");
         }
         return new Team(
-                name, createTime, createUser, uuid, TeamStatus.ACTIVE
+                name, createTime, createUserId, uuid, TeamStatus.ACTIVE
         );
     }
 }
