@@ -31,9 +31,9 @@ create table team_tb(
                         team_id serial primary key ,
                         name varchar(256),
                         create_time timestamp,
-                        create_user int,
+                        create_user_id int,
                         modify_time timestamp,
-                        modify_user int,
+                        modify_user_id int,
                         uuid varchar(50),
                         status smallint
 );
@@ -44,7 +44,9 @@ comment on table team_tb is '팀';
 comment on column team_tb.team_id is '팀 식별자';
 comment on column team_tb.name is '팀 이름';
 comment on column team_tb.create_time is '생성시각';
-comment on column team_tb.create_user is '생성자';
+comment on column team_tb.create_user_id is '생성자';
+comment on column team_tb.modify_time is '생성시각';
+comment on column team_tb.modify_user_id is '생성자';
 comment on column team_tb.uuid is '팀 UUID';
 comment on column team_tb.status is '팀상태';
 
@@ -52,7 +54,7 @@ create table rel_user_team_tb(
                               rel_id serial primary key ,
                               user_id int,
                               team_id int,
-                              create_user int,
+                              create_user_id int,
                               join_time timestamp,
                               role smallint,
                               status smallint
@@ -98,14 +100,14 @@ comment on column rel_user_role_tb.role_id is '역할 식별자';
 create table folder_tb(
                           folder_id bigserial primary key,
                           name varchar(512),
-                          create_user int,
+                          create_user_id int,
                           create_time timestamp,
-                          modify_user int,
+                          modify_user_id int,
                           modify_time timestamp,
     -- 폴더의 소유형태를 결정한다. private = 개인폴더 -> team = 팀폴더
                           folder_type int,  -- private || team
                           owner_id int, -- ownertype이 team이면 tema_id가, private 일경우 user_id로
-                          parent_id bigint,
+                          parent_folder_id bigint,
                           render_sequence int,
                           uuid varchar(50),
                           status smallint
@@ -121,10 +123,12 @@ comment on table folder_tb is '폴더';
 comment on column folder_tb.folder_id is '폴더 식별자';
 comment on column folder_tb.name is '폴더명';
 comment on column folder_tb.owner_id is '피종속 자원 식별자';
-comment on column folder_tb.create_user is '폴더 생성자';
+comment on column folder_tb.create_user_id is '폴더 생성자';
 comment on column folder_tb.create_time is '생성시각';
+comment on column folder_tb.modify_user_id is '폴더 생성자';
+comment on column folder_tb.modify_time is '생성시각';
 comment on column folder_tb.folder_type is '폴더종류';
-comment on column folder_tb.parent_id is '부모 폴더 식별자';
+comment on column folder_tb.parent_folder_id is '부모 폴더 식별자';
 comment on column folder_tb.render_sequence is '출력순서';
 comment on column folder_tb.uuid is 'uuid';
 comment on column folder_tb.status is '폴더상태';
