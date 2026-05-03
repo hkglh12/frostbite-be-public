@@ -64,7 +64,7 @@ public class UserService {
             log.error(String.format("User creation failed. Parameters, {}, {}"), user.getName(), user.getEmail());
             throw new IllegalStateException("User creation failed");
         }
-        folderService.createInitialRootPrivateFolder(user.getName()+"의 개인폴더", user.getUserId());
+        folderService.createEntryPrivateFolder(user.getName()+"의 개인폴더", user.getUserId());
 
 
         return UserJoinResponse.builder()

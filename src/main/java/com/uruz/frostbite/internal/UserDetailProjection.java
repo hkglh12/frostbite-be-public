@@ -1,4 +1,4 @@
-package com.uruz.frostbite.internalvo;
+package com.uruz.frostbite.internal;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -4,6 +4,7 @@ import com.uruz.frostbite.enums.user.AccountType;
 import com.uruz.frostbite.enums.user.UserStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -11,7 +12,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class User {
 
     /** 사용자 식별자 */
@@ -44,9 +45,12 @@ public class User {
     /** 삭제여부 */
     private UserStatus status;
 
+    /*
     public User(String email, String password, AccountType accountType, UserStatus status, UUID uuid){
 
     }
+
+     */
 
     private User(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid, AccountType accountType, UserStatus status){
         this.name = name;
