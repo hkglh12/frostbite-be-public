@@ -20,8 +20,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/v1/api/user")
 @Tag(name="일반 사용자 사용자 관련 API", description = "일반 사용자의 본인 정보 조회/수정/삭제 및 가입")
@@ -105,19 +103,20 @@ public class UserController {
     @Operation(summary="사용자 본인 정보조회", description="사용자 본인 정보조회")
     public ResponseEntity<?> getSelfUser(
             // 추후 JWT 기반으로 전환 예정, 이 시점부터 JWT로부터 사용자 정보 취득(RedisMapping) -> SecurityCTX에서 값을 뽑아서 조회하는 방식으로 변경 예정
-            @AuthenticationPrincipal(expression = "uuid") UUID uuid
+            @AuthenticationPrincipal(expression = "userId") Integer userId
     ){
-        UserSelfQueryResponse response = userService.getSelfUesr(uuid);
+        UserSelfQueryResponse response = userService.getSelfUesr(userId);
 
         return ResponseEntity.ok(new ApiSucceedResponse<>(response));
     }
 
+    /** 사용자 탈퇴 */
     @DeleteMapping(value="/")
     public ResponseEntity<?> removeUser(
             // 추후 JWT 기반으로 전환 예정, 이 시점부터 JWT로부터 사용자 정보 취득(RedisMapping) -> SecurityCTX에서 값을 뽑아서 조회하는 방식으로 변경 예정
-            @RequestParam(name="uuid", required = true) UUID uuid
+            @AuthenticationPrincipal(expression = "userId") Integer userId
     ){
-        boolean result = userService.removeUser(uuid);
+        boolean result = userService.removeSelfUser(userId);
         return null;
     }
 

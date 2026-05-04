@@ -18,7 +18,7 @@ public class UserResolverService {
         this.userMapper  = userMapper;
     }
     public User getUser(UUID uuid) throws GeneralCustomException {
-        return userMapper.selectUser(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
+        return userMapper.selectUserByUuid(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
     }
 
 }
