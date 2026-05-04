@@ -54,6 +54,8 @@ class TeamServiceTest {
     private static final String TEST_TEAM_NAME          = "service-test-team";
     private static final String TEST_TEAM_NAME_MODIFIED = "service-test-team-modified";
 
+    private static final Integer TEAM_USER_ID = 0;
+
     /**
      * Controller 레이어 테스트 시 @AuthenticationPrincipal CustomUserDetails 가 필요한 경우
      * 아래 더미 details를 참고하여 사용한다. (서비스 레이어 테스트에서는 사용하지 않음)
@@ -85,7 +87,7 @@ class TeamServiceTest {
     void createTeam_returns_team_with_requested_name() throws Exception {
         TeamCreateRequest request = buildCreateRequest(TEST_TEAM_NAME);
 
-        TeamDetailResponse response = teamService.createTeam(TEST_USER_UUID, request);
+        TeamDetailResponse response = teamService.createTeam(TEAM_USER_ID, request);
 
         assertNotNull(response,                         "응답이 null이어서는 안 됩니다");
         assertEquals(TEST_TEAM_NAME, response.getName(),"팀 이름이 요청과 일치해야 합니다");
@@ -98,9 +100,9 @@ class TeamServiceTest {
     @Test
     @DisplayName("[getTeamDetail] 팀 생성 후 상세 조회 시 동일한 팀 정보가 반환된다")
     void getTeamDetail_returns_same_info_as_created() throws Exception {
-        TeamDetailResponse created = teamService.createTeam(TEST_USER_UUID, buildCreateRequest(TEST_TEAM_NAME));
+        TeamDetailResponse created = teamService.createTeam(TEAM_USER_ID, buildCreateRequest(TEST_TEAM_NAME));
 
-        TeamDetailResponse detail = teamService.getTeamDetail(created.getUuid(), TEST_USER_UUID);
+        TeamDetailResponse detail = teamService.getTeamDetail(created.getUuid());
 
         assertNotNull(detail,                                              "응답이 null이어서는 안 됩니다");
         assertEquals(created.getName(),           detail.getName(),       "팀 이름이 생성 시와 일치해야 합니다");
@@ -112,14 +114,14 @@ class TeamServiceTest {
     @Test
     @DisplayName("[modifyTeam] 팀 이름 수정 요청 시 수정된 이름과 수정 감사정보가 반환된다")
     void modifyTeam_returns_updated_name_and_audit_info() throws Exception {
-        TeamDetailResponse created = teamService.createTeam(TEST_USER_UUID, buildCreateRequest(TEST_TEAM_NAME));
+        TeamDetailResponse created = teamService.createTeam(TEAM_USER_ID, buildCreateRequest(TEST_TEAM_NAME));
 
         TeamModifyRequest modifyRequest = TeamModifyRequest.builder()
                 .uuid(created.getUuid())
                 .name(TEST_TEAM_NAME_MODIFIED)
                 .build();
 
-        TeamDetailResponse modified = teamService.modifyTeam(modifyRequest, TEST_USER_UUID);
+        TeamDetailResponse modified = teamService.modifyTeam(modifyRequest, TEAM_USER_ID);
 
         assertNotNull(modified,                                                "응답이 null이어서는 안 됩니다");
         assertEquals(TEST_TEAM_NAME_MODIFIED, modified.getName(),             "수정된 팀 이름이 반환되어야 합니다");
@@ -132,10 +134,10 @@ class TeamServiceTest {
     @Test
     @DisplayName("[softDeleteTeam] 팀 삭제 요청 시 팀 상태가 DELETED로 변경된다")
     void softDeleteTeam_changes_team_status_to_deleted() throws Exception {
-        TeamDetailResponse created = teamService.createTeam(TEST_USER_UUID, buildCreateRequest(TEST_TEAM_NAME));
+        TeamDetailResponse created = teamService.createTeam(TEAM_USER_ID, buildCreateRequest(TEST_TEAM_NAME));
         assertEquals(TeamStatus.ACTIVE, created.getStatus(), "삭제 전 상태는 ACTIVE여야 합니다");
 
-        teamService.softDeleteTeam(created.getUuid(), TEST_USER_UUID);
+        teamService.softDeleteTeam(created.getUuid(), TEAM_USER_ID);
 
         Team deletedTeam = teamService.getTeam(created.getUuid());
         assertNotNull(deletedTeam,                                            "삭제 후에도 레코드는 존재해야 합니다");

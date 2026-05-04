@@ -71,11 +71,11 @@ public class TeamController {
     @PostMapping("/")
     @Operation(summary = "팀 생성", description = "팀 생성 + 자동 팀 폴더 생성, 생성자는 팀 리더")
     public ResponseEntity<?> createTeam(
-            @AuthenticationPrincipal(expression = "uuid") UUID createUserUuid,
+            @AuthenticationPrincipal(expression = "userId") Integer createUserId,
             @Validated @RequestBody TeamCreateRequest request
             ) throws GeneralCustomException {
 
-        TeamDetailResponse team = teamService.createTeam(createUserUuid, request);
+        TeamDetailResponse team = teamService.createTeam(createUserId, request);
         return ResponseEntity.ok(new ApiSucceedResponse<TeamDetailResponse>(team));
     }
 
@@ -112,9 +112,9 @@ public class TeamController {
     @GetMapping("/list")
     @Operation(summary = "가입한 팀 리스트 조회", description = "사용자 본인 가입 팀 리스트 조회")
     public ResponseEntity<?> getTeams(
-            @AuthenticationPrincipal CustomUserDetails details
+            @AuthenticationPrincipal (expression = "userId") Integer userId
     ){
-        List<TeamDetailResponse> teams = teamService.getTeamsByUserUuid(details.getUuid());
+        List<TeamDetailResponse> teams = teamService.getTeamsByUserId(userId);
         return ResponseEntity.ok(new ApiSucceedResponse<>(teams));
     }
 
@@ -152,9 +152,9 @@ public class TeamController {
     @Operation(summary = "팀 상세정보 조회", description = "본인이 가입한 팀 중 특정 팀 상세정보 조회")
     public ResponseEntity<?> getTeam(
             @RequestParam(name="uuid") UUID teamUuid,
-            @AuthenticationPrincipal CustomUserDetails details
+            @AuthenticationPrincipal (expression = "userId") Integer userId
     ){
-        TeamDetailResponse team = teamService.getTeamDetail(teamUuid, details.getUuid());
+        TeamDetailResponse team = teamService.getTeamDetail(teamUuid);
         return ResponseEntity.ok(new ApiSucceedResponse<TeamDetailResponse>(team));
     }
 
@@ -192,10 +192,10 @@ public class TeamController {
     @Operation(summary = "팀 상세정보 수정", description = "본인이 가입한 팀 중 특정 팀 상세정보 수정")
     public ResponseEntity<?> updateTeam(
             @Valid @RequestBody TeamModifyRequest modifyRequest,
-            @AuthenticationPrincipal CustomUserDetails details
+            @AuthenticationPrincipal (expression = "userId") Integer modifyUserId
             ){
 
-        TeamDetailResponse team = teamService.modifyTeam(modifyRequest, details.getUuid());
+        TeamDetailResponse team = teamService.modifyTeam(modifyRequest, modifyUserId);
         return ResponseEntity.ok(new ApiSucceedResponse<TeamDetailResponse>(team));
     }
 
@@ -233,9 +233,9 @@ public class TeamController {
     @Operation(summary = "팀 폐쇄", description = "팀 폐쇄 (soft delete)")
     public ResponseEntity<?> removeTeam(
             @RequestParam(name = "uuid") UUID teamUuid,
-            @AuthenticationPrincipal CustomUserDetails details
+            @AuthenticationPrincipal (expression = "userId") Integer userId
     ){
-        teamService.softDeleteTeam(teamUuid, details.getUuid());
+        teamService.softDeleteTeam(teamUuid, userId);
         return ResponseEntity.ok(new ApiSucceedResponse<>(null));
     }
 

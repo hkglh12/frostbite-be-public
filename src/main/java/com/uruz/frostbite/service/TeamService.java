@@ -37,17 +37,19 @@ public class TeamService {
     // 팀 생성 및 팀 Relation 추가
     /** 팀 생성 및 관계추가*/
     @Transactional
-    public TeamDetailResponse createTeam(UUID createUserUuid, TeamCreateRequest request) throws GeneralCustomException {
-        User createUser = userService.getUser(createUserUuid);
+    public TeamDetailResponse createTeam(Integer createUserId, TeamCreateRequest request) throws GeneralCustomException {
+        // 사용자 UUID가 유효한가? 와 동시에 Team detail DTO 생성을 위한 데이터 조회가 주 목적
+        // authenticationprincipal에서 pk를 가져다 쓰므로, User domain 데이터 조회 목적만 수행하면 됨
+        User createUser = userService.getUserByUserId(createUserId);
 
-        Team team = Team.create(request.getName(), LocalDateTime.now(), createUser.getUserId(), UUID.randomUUID());
+        Team team = Team.create(request.getName(), LocalDateTime.now(), createUserId, UUID.randomUUID());
         teamMapper.insertTeam(team);
 
         if(team.getTeamId() == null){
             throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "TEAM CREATION FAILED");
         }
 
-        RelUserTeam relation = self.createUserTeamRelation(createUser.getUserId(), team.getTeamId());
+        RelUserTeam relation = self.createUserTeamRelation(createUserId, team.getTeamId());
 
 
         // TODO 팀 최상위 폴더 자동생성 및 ACL 추가 필요
@@ -62,7 +64,7 @@ public class TeamService {
                 .build();
     }
     /** 팀 상세정보 조회*/
-    public TeamDetailResponse getTeamDetail(UUID teamUuid, UUID userUuid) throws GeneralCustomException{
+    public TeamDetailResponse getTeamDetail(UUID teamUuid) throws GeneralCustomException{
 
         //TODO 추후 팀 소속 검증 필요, ACL 추가 후 where절에 추가하고 별도의 서비스 메서드 호출로 처리 필요
         TeamProjection teamProjection = teamMapper.selectTeamProjection(teamUuid).orElseThrow(
@@ -81,8 +83,8 @@ public class TeamService {
     }
 
     /** 팀 정보 수정 및 기록 관리*/
-    public TeamDetailResponse modifyTeam(TeamModifyRequest request, UUID requestUserUuid) throws GeneralCustomException{
-        User user = userService.getUser(requestUserUuid);
+    public TeamDetailResponse modifyTeam(TeamModifyRequest request, Integer userId) throws GeneralCustomException{
+        User user = userService.getUserByUserId(userId);
 
         // TODO 추후 권한 검증 필요 (소속여부, 권한부여여부)
         TeamProjection teamProjection = teamMapper.selectTeamProjection(request.getUuid()).orElseThrow(
@@ -110,9 +112,9 @@ public class TeamService {
                 .build();
     }
 
-    public void softDeleteTeam(UUID teamUuid, UUID userUuid) throws GeneralCustomException{
+    public void softDeleteTeam(UUID teamUuid,Integer userId) throws GeneralCustomException{
         Team team = getTeam(teamUuid);
-        User user = userService.getUser(userUuid);
+        User user = userService.getUserByUserId(userId);
 
         TeamStatusChangeCommand command = TeamStatusChangeCommand.of(
                 teamUuid,
@@ -126,10 +128,13 @@ public class TeamService {
 
     /** 사용자 UUID로부터 가입환 팀 목록 조회 */
     public List<TeamDetailResponse> getTeamsByUserUuid(UUID userUuid){
-        User targetUser = userService.getUser(userUuid);
+        User targetUser = userService.getUserByUuid(userUuid);
 
         return teamMapper.selectTeamsByUserId(targetUser.getUserId());
+    }
 
+    public List<TeamDetailResponse> getTeamsByUserId(Integer userId){
+        return teamMapper.selectTeamsByUserId(userId);
     }
 
     /** 사용자 팀 관계 생성*/

@@ -5,11 +5,11 @@
 
 <mapper namespace="com.uruz.frostbite.mapper.TeamMapper">
     <insert id="insertTeam" parameterType="Team" keyProperty="teamId">
-        <selectKey keyProperty="teamId" resultType="long" order="BEFORE">
+        <selectKey keyProperty="teamId" resultType="int" order="BEFORE">
             SELECT nextval('team_tb_team_id_seq')
         </selectKey>
             INSERT INTO TEAM_TB(team_id, name, create_time, create_user_id, uuid, status)
-            VALUES (#{teamId}, #{name}. #{createTime}, #{createUserId}, #{uuid}, #{status})
+            VALUES (#{teamId}, #{name}, #{createTime}, #{createUserId}, #{uuid}, #{status})
     </insert>
 
     <select id="selectTeamProjection" resultType="TeamProjection">
@@ -70,12 +70,12 @@
             )
     </select>
 
-    <insert id="insertUserTeamRelation" parameterType="Team" keyProperty="teamId">
+    <insert id="insertUserTeamRelation" parameterType="RelUserTeam" keyProperty="teamId">
         /* INSERT ID = 'insertUserTeamRelation*/
         <selectKey keyProperty="relId" resultType="integer" order="BEFORE">
-            SELECT nextval('rel_user_team_rel_id')
+            SELECT nextval('rel_user_team_tb_rel_id_seq')
         </selectKey>
-        INSERT INTO rel_user_team(rel_id, user_id, team_id, create_user_id, join_time, role, status)
+        INSERT INTO rel_user_team_tb(rel_id, user_id, team_id, create_user_id, join_time, role, status)
         VALUES (#{relId}, #{userId}, #{teamId}, #{createUser}, #{joinTime}, #{role}, #{status})
     </insert>
 </mapper>
