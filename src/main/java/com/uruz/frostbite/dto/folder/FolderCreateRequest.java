@@ -16,6 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Schema(description = "비 ROOT 폴더 생성 요청")
 public class FolderCreateRequest {
+
     @NotEmpty
     @Size(max = 256)
     @Schema(description = "폴더 이름")
@@ -25,7 +26,4 @@ public class FolderCreateRequest {
     @Schema(description = "부모폴더 UUID")
     private UUID parentFolderUuid;
 
-    @NotNull
-    @Schema(description = "폴더 타입")
-    private FolderType folderType;
 }

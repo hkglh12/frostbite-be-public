@@ -32,6 +32,18 @@ public class FolderService {
         this.userResolverService = userResolverService;
     }
 
+    /** 최초 사용자 가입 시 개인폴더 할당 */
+    public void createEntryPrivateFolder(String initialFolderName, Integer userId){
+        // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
+        // 따라서 별도 메서드로 처리
+
+        // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
+        Folder initialPrivateRootFolder = Folder.createEntryFolder(initialFolderName, userId, FolderType.PRIVATE);
+        folderMapper.insertEntryFolder(initialPrivateRootFolder);
+        // TODO : 폴더 생성 후 ACL 제어 추가 필요
+
+    }
+
     /** 사용자 UUID로 부터 개인 엔트리폴더 아래 루트폴더 생성 */
     public Folder createPrivateRootFolder(UUID userUuid, String folderName){
 
@@ -63,20 +75,26 @@ public class FolderService {
     }
 
     /** 부모 폴더 UUID로부터 서브폴더 생성 */
-    public Folder createSubFolder(UUID userUuid, FolderCreateRequest request) {
+    public Folder createFolder(Integer userId, FolderCreateRequest request) {
         Folder parentFolder = getSimpleFolder(request.getParentFolderUuid());
-        User user = userResolverService.getUser(userUuid);
-
+        // 폴더타입은 이미 Context 상 부모폴더에 있음.
+        FolderType folderType = parentFolder.getFolderType();
         Folder newFolder = null;
-        if(request.getFolderType().equals(FolderType.PRIVATE)){
-            newFolder = Folder.createPrivateSubFolder(request.getName(), parentFolder.getFolderId(), user.getUserId());
+        if(folderType.equals(FolderType.PRIVATE)){
+            newFolder = Folder.createPrivateSubFolder(request.getName(), parentFolder.getFolderId(),userId);
         } else {
-            newFolder = Folder.createTeamSubFolder(request.getName(), parentFolder.getFolderId(), parentFolder.getOwnerId(), user.getUserId());
+            newFolder = Folder.createTeamSubFolder(request.getName(), parentFolder.getFolderId(), parentFolder.getOwnerId(),userId);
         }
 
         folderMapper.insertSubFolder(newFolder);
         return newFolder;
     }
+
+    /** 사용자 ID를 통한 ROOT Folder 조회 */
+    // INPUT : 사용자PK
+    // Process : 사용자 PK로부터 개인 Entry Folder조회 -> 해당 값으로 ROOT 폴더 조회
+    // OUTPUT : List<Folder>
+
 
     /** Sub폴더 이동
      * 1. Sub폴더만 이동 가능
@@ -151,15 +169,5 @@ public class FolderService {
 
     }
 
-    /** 최초 사용자 가입 시 개인폴더 할당 */
-    public void createEntryPrivateFolder(String initialFolderName, Integer userId){
-        // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
-        // 따라서 별도 메서드로 처리
 
-        // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
-        Folder initialPrivateRootFolder = Folder.createEntryFolder(initialFolderName, userId, FolderType.PRIVATE);
-        folderMapper.insertEntryFolder(initialPrivateRootFolder);
-        // TODO : 폴더 생성 후 ACL 제어 추가 필요
-
-    }
 }

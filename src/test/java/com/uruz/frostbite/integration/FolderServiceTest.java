@@ -72,8 +72,8 @@ class FolderServiceTest {
     // ── TODO: [성능테스트] 파라미터를 직접 채워 넣으세요 ─────────────────────────
     // 전제: folder_tb 에 해당 UUID 의 폴더가 이미 존재해야 한다.
     // 주의: 생성되는 폴더 수 ≈ 3,495,250개. 데이터 정리 후 실행할 것.
-    private static final UUID       TEST_PERF_USER_UUID    = UUID.fromString("0f450c53-31b4-457e-80a0-a7cd2ffc32c3"); // 요청 유저 UUID
-    private static final UUID       TEST_PERF_ROOT_UUID    = UUID.fromString("859737b6-54d6-4796-984d-7a747ab4a3ec"); // 트리 루트 폴더 UUID
+    private static final UUID       TEST_PERF_USER_UUID    = UUID.fromString("cb548410-c81f-4c82-8ebb-299eaeff8362"); // 요청 유저 UUID
+    private static final UUID       TEST_PERF_ROOT_UUID    = UUID.fromString("1fd80a6e-5d6d-4b4f-b97d-f2a16de39c43"); // 트리 루트 폴더 UUID
     private static final FolderType TEST_PERF_FOLDER_TYPE  = FolderType.PRIVATE;
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -83,9 +83,9 @@ class FolderServiceTest {
     //   - TEST_MOVE_TARGET_UUID   : 이동할 SubFolder UUID (parent_id IS NOT NULL, ROOT/ENTRY 아님)
     //   - TEST_MOVE_DEST_UUID     : 이동 목적지 부모폴더 UUID
     //                               (targetFolder 와 folderType·ownerId 가 동일해야 함)
-    private static final Integer TEST_MOVE_USER_ID      = 4;                                              // TODO
-    private static final UUID    TEST_MOVE_TARGET_UUID  = UUID.fromString("4671bb17-ac48-414a-bbd1-adb95e5b295f"); // TODO
-    private static final UUID    TEST_MOVE_DEST_UUID    = UUID.fromString("adb9116e-266c-4ae7-ae8d-98f07b29cc00"); // TODO
+    private static final Integer TEST_MOVE_USER_ID      = 7;                                              // TODO
+    private static final UUID    TEST_MOVE_TARGET_UUID  = UUID.fromString("2a90c5a5-522b-422f-bf90-4fe3f60678c4"); // TODO
+    private static final UUID    TEST_MOVE_DEST_UUID    = UUID.fromString("c9cd5947-6607-4e5d-8713-5af41b50cd15"); // TODO
     // ─────────────────────────────────────────────────────────────────────────
 
     // ── TODO: [moveSubFolder - FolderType 불일치] 파라미터를 직접 채워 넣으세요 ──
@@ -159,7 +159,7 @@ class FolderServiceTest {
         request.setParentFolderUuid(TEST_PRIVATE_SUB_PARENT_FOLDER_UUID);
         request.setFolderType(FolderType.PRIVATE);
 
-        Folder result = folderService.createSubFolder(TEST_PRIVATE_SUB_USER_UUID, request);
+        Folder result = folderService.createFolder(TEST_PRIVATE_SUB_USER_UUID, request);
 
 
         assertNotNull(result,                                          "생성된 폴더 객체가 반환되어야 합니다");
@@ -182,7 +182,7 @@ class FolderServiceTest {
         request.setParentFolderUuid(TEST_TEAM_SUB_PARENT_FOLDER_UUID);
         request.setFolderType(FolderType.TEAM);
 
-        Folder result = folderService.createSubFolder(TEST_TEAM_SUB_USER_UUID, request);
+        Folder result = folderService.createFolder(TEST_TEAM_SUB_USER_UUID, request);
 
         assertNotNull(result,                                        "생성된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_TEAM_SUB_FOLDER_NAME, result.getName(),   "폴더명이 요청과 일치해야 합니다");
@@ -212,7 +212,7 @@ class FolderServiceTest {
     void createFolderTree_10depth_dummy_data_for_performance() {
         final int DEPTH_1_COUNT  = 10;
         final int CHILD_PER_NODE = 4;
-        final int MAX_DEPTH      = 10;
+        final int MAX_DEPTH      = 6;
         final int BATCH_SIZE     = 200;  // 한 배치에서 처리할 부모 수
 
         List<UUID> currentLevel = new ArrayList<>(DEPTH_1_COUNT);
@@ -220,7 +220,7 @@ class FolderServiceTest {
 
         // ── Depth 1: 지정 루트 폴더 하위에 10개 ──────────────────────────────
         for (int i = 1; i <= DEPTH_1_COUNT; i++) {
-            Folder created = folderService.createSubFolder(
+            Folder created = folderService.createFolder(
                     TEST_PERF_USER_UUID, buildPerfRequest("d1-" + i, TEST_PERF_ROOT_UUID));
             currentLevel.add(created.getUuid());
         }
@@ -238,7 +238,7 @@ class FolderServiceTest {
 
                 for (UUID parentUuid : batch) {
                     for (int c = 1; c <= CHILD_PER_NODE; c++) {
-                        Folder created = folderService.createSubFolder(
+                        Folder created = folderService.createFolder(
                                 TEST_PERF_USER_UUID, buildPerfRequest("d" + depth + "-" + c, parentUuid));
                         if (!isLastDepth) nextLevel.add(created.getUuid());
                         depthCreated++;

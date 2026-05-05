@@ -7,8 +7,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+/** FILEACL은 공유 / DENY 경우에 활용, 일반적 경우 폴더권한으로 처리 필요*/
 public class FileAcl {
-
+    
     /** 접근제어 식별자 */
     private Long aclId;
 
