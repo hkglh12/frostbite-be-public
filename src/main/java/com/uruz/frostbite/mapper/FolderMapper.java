@@ -1,7 +1,9 @@
 package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.Folder;
+import com.uruz.frostbite.dto.folder.MovedSubFolderPathCommand;
 import com.uruz.frostbite.dto.folder.internal.PrivateEntryFolderCondition;
+import com.uruz.frostbite.dto.folder.internal.SubFolderMoveCommand;
 import com.uruz.frostbite.dto.folder.internal.TeamEntryFolderCondition;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
@@ -21,8 +23,12 @@ public interface FolderMapper {
     Optional<Folder> selectPrivateEntryFolder(PrivateEntryFolderCondition condition);
     Optional<Folder> selectTeamEntryFolder(TeamEntryFolderCondition condition);
 
-    Folder selectFolderDetailByUuid(UUID folderUuid);
+    //Folder selectFolderDetailByUuid(UUID folderUuid);
     Optional<Folder> selectFolderSimpleByUuid(UUID folderUuid);
+
+    int updateSubFolderParent(SubFolderMoveCommand command);
+
+    int updateSubFolderPath(MovedSubFolderPathCommand pathCommand);
 
     Folder selectFolderDetailByFolderId(Long folderId);
 

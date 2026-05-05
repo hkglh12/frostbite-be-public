@@ -7,7 +7,6 @@ import com.uruz.frostbite.dto.user.UserJoinResponse;
 import com.uruz.frostbite.dto.user.UserSelfQueryResponse;
 import com.uruz.frostbite.enums.user.AccountType;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
-import com.uruz.frostbite.enums.user.UserStatus;
 import com.uruz.frostbite.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,7 @@ public class UserService {
             log.error(String.format("User creation failed. Parameters, {}, {}"), user.getName(), user.getEmail());
             throw new IllegalStateException("User creation failed");
         }
-        folderService.createEntryPrivateFolder(user.getName()+"의 개인폴더", user.getUserId());
+        //folderService.createEntryPrivateFolder(user.getName()+"의 개인폴더", user.getUserId());
 
 
         return UserJoinResponse.builder()
@@ -79,22 +78,26 @@ public class UserService {
     }
 
     /** 사용자 본인 정보 조회 (자기자신 정보만 조회 가능) */
-    public UserSelfQueryResponse getSelfUesr(UUID uuid){
-        UserSelfQueryResponse userSelfQueryResponse = userMapper.selectSelfUser(uuid).orElseThrow(
+    public UserSelfQueryResponse getSelfUesr(Integer userId){
+        UserSelfQueryResponse userSelfQueryResponse = userMapper.selectSelfUser(userId).orElseThrow(
                 () -> new GeneralCustomException(NOT_FOUND, "USER NOT FOUND")
         );
 
         return userSelfQueryResponse;
     }
 
-    public boolean removeUser(UUID uuid){
+    public boolean removeSelfUser(Integer userId){
 
-        return userMapper.softDeleteUser(uuid, UserStatus.DELETED) == 1 ? true : false;
+        return userMapper.softDeleteSelfUser(userId) == 1 ? true : false;
     }
 
     /** 타 메서드 헬퍼 */
-    public User getUser(UUID uuid) throws GeneralCustomException{
-        return userMapper.selectUser(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
+    public User getUserByUuid(UUID uuid) throws GeneralCustomException{
+        return userMapper.selectUserByUuid(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
+    }
+
+    public User getUserByUserId(Integer userId) throws GeneralCustomException{
+        return userMapper.selectUserByUserId(userId).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
     }
 
     /** UserDetailsService에서 사용할 Password 포함 리턴 메서드*/

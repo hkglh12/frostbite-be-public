@@ -8,6 +8,7 @@ public enum ApiErrorCode implements ResponseCode{
     UNSATISFIED("EE0000", "Required parameter not satisfied"),
     NOT_FOUND("EN0001", "Unable to find request target"),
     INTERNAL_ERROR("EI0001", "Unrecognized Internal Error"),
+    BAD_REQUEST("EE0001", "Constraint not complied"),
 
 
     ACCESS_DENIED("EG0001", "Not enough role authority"),

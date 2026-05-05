@@ -5,31 +5,31 @@
 
 <mapper namespace="com.uruz.frostbite.mapper.TeamMapper">
     <insert id="insertTeam" parameterType="Team" keyProperty="teamId">
-        <selectKey keyProperty="teamId" resultType="long" order="BEFORE">
+        <selectKey keyProperty="teamId" resultType="int" order="BEFORE">
             SELECT nextval('team_tb_team_id_seq')
         </selectKey>
-            INSERT INTO TEAM_TB(team_id, name, create_time, create_user, uuid, status)
-            VALUES (#{teamId}, #{name}. #{createTime}, #{createUser}, #{uuid}, #{status})
+            INSERT INTO TEAM_TB(team_id, name, create_time, create_user_id, uuid, status)
+            VALUES (#{teamId}, #{name}, #{createTime}, #{createUserId}, #{uuid}, #{status})
     </insert>
 
     <select id="selectTeamProjection" resultType="TeamProjection">
-        SELECT team.team_id, team.name, team.create_time, team.create_user, team.uuid,
-               team.status, creator.name as createUserName, team.modify_user,
+        SELECT team.team_id, team.name, team.create_time, team.create_user_id, team.uuid,
+               team.status, creator.name as createUserName, team.modify_user_id,
                modifier.name as modifyUserName
         FROM team_tb team
         JOIN user_tb creator
-        ON creator.user_id = team.create_user
+        ON creator.user_id = team.create_user_id
         LEFT JOIN user_tb modifier
         on modifier.user_id = team.modify_user
         WHERE team.uuid = #{teamUuid}
     </select>
 
     <select id="selectTeam" resultType="Team">
-        SELECT team.team_id, team.name, team.create_time, team.create_user as createUser, team.modify_time, team.modify_user, team.uuid,
+        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user, team.uuid,
                team.status,
         FROM team_tb team
                  JOIN user_tb user
-        ON user.user_id = team.create_user
+        ON user.user_id = team.create_user_id
         WHERE team.uuid = #{teamUuid}
     </select>
 
@@ -59,7 +59,7 @@
                user.name as createUser
         FROM team_tb team
                  JOIN user_tb user
-        ON user.user_id = team.create_user
+        ON user.user_id = team.create_user_id
         WHERE EXISTS(
             SELECT 1
             FROM rel_user_role_tb relation
@@ -70,12 +70,12 @@
             )
     </select>
 
-    <insert id="insertUserTeamRelation" parameterType="Team" keyProperty="teamId">
+    <insert id="insertUserTeamRelation" parameterType="RelUserTeam" keyProperty="teamId">
         /* INSERT ID = 'insertUserTeamRelation*/
         <selectKey keyProperty="relId" resultType="integer" order="BEFORE">
-            SELECT nextval('rel_user_team_rel_id')
+            SELECT nextval('rel_user_team_tb_rel_id_seq')
         </selectKey>
-        INSERT INTO rel_user_team(rel_id, user_id, team_id, create_user, join_time, role, status)
+        INSERT INTO rel_user_team_tb(rel_id, user_id, team_id, create_user_id, join_time, role, status)
         VALUES (#{relId}, #{userId}, #{teamId}, #{createUser}, #{joinTime}, #{role}, #{status})
     </insert>
 </mapper>

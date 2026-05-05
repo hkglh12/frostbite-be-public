@@ -19,8 +19,7 @@ public interface TeamMapper {
 
     /** 팀 생성 */
     public int insertTeam(Team team);
-    /** 팀 권한 생성*/
-    public int insertUserTeamRelation(RelUserTeam relation);
+
     /** 팀 상세정보 조회 (프로젝션)*/
     public Optional<TeamProjection> selectTeamProjection(UUID teamUuid);
     /** 팀 정보 수정*/
@@ -31,4 +30,8 @@ public interface TeamMapper {
     public Optional<Team> selectTeam(UUID teamUuid);
 
     public List<TeamDetailResponse> selectTeamsByUserId(Integer userId);
+
+    /** 팀 권한 생성*/
+    public int insertUserTeamRelation(RelUserTeam relation);
+
 }

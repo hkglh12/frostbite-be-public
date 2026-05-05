@@ -1,7 +1,9 @@
 package com.uruz.frostbite.integration;
 
+import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.dto.folder.FolderCreateRequest;
+import com.uruz.frostbite.dto.folder.SubFolderMoveRequest;
 import com.uruz.frostbite.dto.folder.TeamRootFolderCreateRequest;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
@@ -70,9 +72,34 @@ class FolderServiceTest {
     // ── TODO: [성능테스트] 파라미터를 직접 채워 넣으세요 ─────────────────────────
     // 전제: folder_tb 에 해당 UUID 의 폴더가 이미 존재해야 한다.
     // 주의: 생성되는 폴더 수 ≈ 3,495,250개. 데이터 정리 후 실행할 것.
-    private static final UUID       TEST_PERF_USER_UUID    = UUID.fromString("cb548410-c81f-4c82-8ebb-299eaeff8362"); // 요청 유저 UUID
-    private static final UUID       TEST_PERF_ROOT_UUID    = UUID.fromString("1fd80a6e-5d6d-4b4f-b97d-f2a16de39c43"); // 트리 루트 폴더 UUID
+    private static final UUID       TEST_PERF_USER_UUID    = UUID.fromString("0f450c53-31b4-457e-80a0-a7cd2ffc32c3"); // 요청 유저 UUID
+    private static final UUID       TEST_PERF_ROOT_UUID    = UUID.fromString("859737b6-54d6-4796-984d-7a747ab4a3ec"); // 트리 루트 폴더 UUID
     private static final FolderType TEST_PERF_FOLDER_TYPE  = FolderType.PRIVATE;
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── TODO: [moveSubFolder - 정상] 파라미터를 직접 채워 넣으세요 ─────────────
+    // 전제:
+    //   - TEST_MOVE_USER_ID       : 요청 유저의 Integer PK (user_tb.user_id)
+    //   - TEST_MOVE_TARGET_UUID   : 이동할 SubFolder UUID (parent_id IS NOT NULL, ROOT/ENTRY 아님)
+    //   - TEST_MOVE_DEST_UUID     : 이동 목적지 부모폴더 UUID
+    //                               (targetFolder 와 folderType·ownerId 가 동일해야 함)
+    private static final Integer TEST_MOVE_USER_ID      = 4;                                              // TODO
+    private static final UUID    TEST_MOVE_TARGET_UUID  = UUID.fromString("4671bb17-ac48-414a-bbd1-adb95e5b295f"); // TODO
+    private static final UUID    TEST_MOVE_DEST_UUID    = UUID.fromString("adb9116e-266c-4ae7-ae8d-98f07b29cc00"); // TODO
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── TODO: [moveSubFolder - FolderType 불일치] 파라미터를 직접 채워 넣으세요 ──
+    // 전제: target 과 destination 의 folderType 이 달라야 한다 (예: PRIVATE vs TEAM)
+    private static final Integer TEST_MOVE_TYPE_MISMATCH_USER_ID     = 0;                                              // TODO
+    private static final UUID    TEST_MOVE_TYPE_MISMATCH_TARGET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000"); // TODO
+    private static final UUID    TEST_MOVE_TYPE_MISMATCH_DEST_UUID   = UUID.fromString("00000000-0000-0000-0000-000000000000"); // TODO
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── TODO: [moveSubFolder - Owner 불일치] 파라미터를 직접 채워 넣으세요 ────────
+    // 전제: target 과 destination 의 folderType 은 같지만 ownerId 가 달라야 한다
+    private static final Integer TEST_MOVE_OWNER_MISMATCH_USER_ID     = 0;                                              // TODO
+    private static final UUID    TEST_MOVE_OWNER_MISMATCH_TARGET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000"); // TODO
+    private static final UUID    TEST_MOVE_OWNER_MISMATCH_DEST_UUID   = UUID.fromString("00000000-0000-0000-0000-000000000000"); // TODO
     // ─────────────────────────────────────────────────────────────────────────
 
     // ── TODO: [createSubFolder - TEAM] 파라미터를 직접 채워 넣으세요 ────────────
@@ -225,6 +252,64 @@ class FolderServiceTest {
         }
 
         System.out.printf("%n전체 완료: %,d개%n", totalCreated);
+    }
+
+    @Test
+    @Commit
+    @DisplayName("[moveSubFolder] 서브폴더가 지정한 목적지 부모폴더 아래로 이동한다")
+    void moveSubFolder_moves_subfolder_to_destination() {
+
+        Folder destinationFolder = folderService.getSimpleFolder(TEST_MOVE_DEST_UUID);
+
+        SubFolderMoveRequest request = new SubFolderMoveRequest();
+        request.setTargetFolderUuid(TEST_MOVE_TARGET_UUID);
+        request.setDestinationFolderUuid(TEST_MOVE_DEST_UUID);
+
+        Folder result = folderService.moveSubFolder(TEST_MOVE_USER_ID, request);
+
+        assertNotNull(result,                                                   "이동된 폴더 객체가 반환되어야 합니다");
+        assertEquals(TEST_MOVE_TARGET_UUID, result.getUuid(),                   "반환된 폴더의 UUID 가 이동 대상 UUID 와 일치해야 합니다");
+        assertEquals(destinationFolder.getFolderId(), result.getParentFolderId(), "parentFolderId 가 목적지 폴더의 folderId 로 변경되어야 합니다");
+        assertEquals(destinationFolder.getFolderType(), result.getFolderType(), "이동 후 folderType 이 유지되어야 합니다");
+        assertEquals(destinationFolder.getOwnerId(), result.getOwnerId(),       "이동 후 ownerId 가 유지되어야 합니다");
+        assertTrue(result.getFolderIdPath().startsWith(destinationFolder.getFolderIdPath()),
+                "이동된 폴더의 idPath 가 목적지 폴더의 idPath 로 시작해야 합니다");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("[moveSubFolder] target 과 destination 의 FolderType 이 다르면 BAD_REQUEST 예외가 발생한다")
+    void moveSubFolder_throws_when_folder_type_mismatch() {
+
+        SubFolderMoveRequest request = new SubFolderMoveRequest();
+        request.setTargetFolderUuid(TEST_MOVE_TYPE_MISMATCH_TARGET_UUID);
+        request.setDestinationFolderUuid(TEST_MOVE_TYPE_MISMATCH_DEST_UUID);
+
+        GeneralCustomException ex = assertThrows(
+                GeneralCustomException.class,
+                () -> folderService.moveSubFolder(TEST_MOVE_TYPE_MISMATCH_USER_ID, request),
+                "FolderType 이 다를 때 GeneralCustomException 이 발생해야 합니다"
+        );
+
+        assertEquals("FOLDER TYPE MISMATCH", ex.getMessage());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("[moveSubFolder] target 과 destination 의 Owner 가 다르면 BAD_REQUEST 예외가 발생한다")
+    void moveSubFolder_throws_when_owner_mismatch() {
+
+        SubFolderMoveRequest request = new SubFolderMoveRequest();
+        request.setTargetFolderUuid(TEST_MOVE_OWNER_MISMATCH_TARGET_UUID);
+        request.setDestinationFolderUuid(TEST_MOVE_OWNER_MISMATCH_DEST_UUID);
+
+        GeneralCustomException ex = assertThrows(
+                GeneralCustomException.class,
+                () -> folderService.moveSubFolder(TEST_MOVE_OWNER_MISMATCH_USER_ID, request),
+                "Owner 가 다를 때 GeneralCustomException 이 발생해야 합니다"
+        );
+
+        assertEquals("FOLDER OWNER CAN NOT BE CHANGED", ex.getMessage());
     }
 
     private FolderCreateRequest buildPerfRequest(String name, UUID parentUuid) {

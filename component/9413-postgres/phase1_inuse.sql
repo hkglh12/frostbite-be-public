@@ -67,7 +67,7 @@ create table rel_user_team_tb(
 comment on table rel_user_team_tb is '사용자-팀 관계';
 comment on column rel_user_team_tb.rel_id is '사용자-팀 관계식별자';
 comment on column rel_user_team_tb.user_id is '사용자 식별자';
-comment on column rel_user_team_tb.create_user is '초대자';
+comment on column rel_user_team_tb.create_user_id is '초대자';
 comment on column rel_user_team_tb.team_id is '팀 식별자';
 comment on column rel_user_team_tb.join_time is '합류시각';
 comment on column rel_user_team_tb.role is '팀 내 역할';
@@ -110,7 +110,9 @@ create table folder_tb(
                           parent_folder_id bigint,
                           render_sequence int,
                           uuid varchar(50),
-                          status smallint
+                          status smallint,
+                          folder_id_path varchar,
+                          folder_name_path varchar
 
 );
 -- folder_type은 ENUM으로 1 -> private, 2-> team 으로 추후 구성

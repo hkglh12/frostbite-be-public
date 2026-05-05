@@ -55,8 +55,8 @@ public class Folder {
     /** 삭제여부 */
     private FolderStatus status;
 
-    private String folder_id_path;
-    private String folder_name_path;
+    private String folderIdPath;
+    private String folderNamePath;
 
     /** 특정 케이스에 대해 엔트리폴더 생성 */
     public static Folder createEntryFolder(String name, Integer ownerId,

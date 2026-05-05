@@ -51,6 +51,26 @@
                 )
     </insert>
 
+    <update id="updateSubFolderParent" parameterType="SubFolderMoveCommand">
+        UPDATE
+            folder_tb
+        SET
+            parent_folder_id = #{destinationFolderId},
+            modify_user_id = #{modifyUserId}
+        WHERE
+            folder_id = #{targetFolderId}
+    </update>
+
+    <update id="updateSubFolderPath" parameterType="MovedSubFolderPathCommand">
+        UPDATE
+            folder_tb
+        SET
+            folder_id_path = replace(folder_id_path, #{oldFolderIdPath}, #{newFolderIdPath}),
+            folder_name_path = replace(folder_name_path, #{oldFolderNamePath}, #{newFolderNamePath})
+        WHERE
+            folder_id_path like #{oldFolderIdPath} || '%'
+    </update>
+
     <select id ="selectPrivateEntryFolder" parameterType="PrivateEntryFolderCondition" resultType="Folder">
         SELECT
             folder_id, name, create_user_id, create_time, folder_type, owner_id, parent_folder_id, uuid, folder_name_path

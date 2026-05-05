@@ -14,6 +14,8 @@ public class CustomUserDetails implements UserDetails {
     private String email;
     private String password;
     private UUID uuid;
+    private Integer userId;
+
     private SimpleGrantedAuthority authority;
     private UserStatus status;
 
@@ -34,6 +36,7 @@ public class CustomUserDetails implements UserDetails {
 
     public UUID getUuid(){return uuid;}
 
+    public Integer getUserId(){return userId;}
     @Override
     public boolean isAccountNonExpired(){
         return status != UserStatus.EXPIRED;
@@ -49,15 +52,16 @@ public class CustomUserDetails implements UserDetails {
         return status == UserStatus.ACTIVE;
     }
 
-    private CustomUserDetails(String email, String password, SimpleGrantedAuthority authority, UUID uuid, UserStatus status){
+    private CustomUserDetails(String email, String password, SimpleGrantedAuthority authority, UUID uuid, Integer userId, UserStatus status){
         this.email = email;
         this.password = password;
         this.authority = authority;
         this.status = status;
         this.uuid = uuid;
+        this.userId = userId;
     }
     public static CustomUserDetails fromUser (User user){
         return new CustomUserDetails(user.getEmail(), user.getPassword(),
-                user.getAccountType().toSimpleGrantedAuthority(), user.getUuid(), user.getStatus());
+                user.getAccountType().toSimpleGrantedAuthority(), user.getUuid(), user.getUserId(), user.getStatus());
     }
 }
