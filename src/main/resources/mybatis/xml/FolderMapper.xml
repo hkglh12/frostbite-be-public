@@ -94,6 +94,28 @@
         AND
             status = #{status}
     </select>
+
+    <select id="selectSimpleFolderOffsetById" parameterType="SimpleFolderOffsetConditionById" resultType="SimpleFolderResponse">
+            SELECT folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
+                  parent.uuid, folder.status
+            FROM folder_tb folder
+            join folder_tb parent on folder.parent_folder_id = parent.folder_id
+            WHERE parent_folder_id = #{parentFolderId}
+            AND status = #{status}
+            ORDER BY render_sequence ASC NULLS LAST, folder_id ASC
+            OFFSET #{offset} LIMIT #{limit}
+    </select>
+    <select id="selectSimpleFolderKeybaseById" parameterType="SimpleFolderOffsetConditionById" resultType="SimpleFolderResponse">
+        WITH FOLDER_CRITERIA AS (
+            SELECT
+                folder_id,
+                -- wHERE절 NULL 비교를 피하기 위해,
+                COALESCE(render_sequence, 2147483647) AS render_sequence
+            FROM
+                folder_tb
+            WHERE uuid = #{lastFolderUuid}
+        )
+    </select>
     <select id ="selectTeamEntryFolder" parameterType="TeamEntryFolderCondition" resultType="Folder">
         SELECT
         folder_id, name, create_user_id, create_time, folder_type, owner_id, parent_folder_id, uuid, folder_name_path

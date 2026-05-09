@@ -3,13 +3,12 @@ package com.uruz.frostbite.service;
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.domain.User;
-import com.uruz.frostbite.dto.folder.FolderCreateRequest;
-import com.uruz.frostbite.dto.folder.MovedSubFolderPathCommand;
-import com.uruz.frostbite.dto.folder.SubFolderMoveRequest;
-import com.uruz.frostbite.dto.folder.TeamRootFolderCreateRequest;
+import com.uruz.frostbite.dto.folder.*;
 import com.uruz.frostbite.dto.folder.internal.PrivateEntryFolderCondition;
+import com.uruz.frostbite.dto.folder.internal.SimpleFolderOffsetConditionById;
 import com.uruz.frostbite.dto.folder.internal.SubFolderMoveCommand;
 import com.uruz.frostbite.dto.folder.internal.TeamEntryFolderCondition;
+import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.mapper.FolderMapper;
@@ -17,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -94,7 +94,28 @@ public class FolderService {
     // INPUT : 사용자PK
     // Process : 사용자 PK로부터 개인 Entry Folder조회 -> 해당 값으로 ROOT 폴더 조회
     // OUTPUT : List<Folder>
+    // 이거 안쓸거같다. ROOT List 는 TreeView에서만 사용할듯
+    @Deprecated
+    public List<Folder> getPrivateRootFoldersByOffsetBase(Integer userId, Integer offset, Integer limit){
+        PrivateEntryFolderCondition entryCondition = PrivateEntryFolderCondition.fromUserId(userId);
 
+        Folder privateEntryFolder = getPrivateEntryFolder(entryCondition);
+
+        SimpleFolderOffsetConditionById folderCondition = SimpleFolderOffsetConditionById.of(
+                FolderType.PRIVATE, userId, privateEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
+        );
+
+
+
+        List<FolderSimpleResponse> list = selectSimpleFolderOffsetById(folderCondition);
+
+
+        return null;
+    }
+
+    public List<FolderSimpleResponse> selectSimpleFolderOffsetById(SimpleFolderOffsetConditionById condition){
+        return folderMapper.selectSimpleFolderOffsetById(condition);
+    }
 
     /** Sub폴더 이동
      * 1. Sub폴더만 이동 가능
