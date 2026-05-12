@@ -1,19 +1,15 @@
 package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.Folder;
-import com.uruz.frostbite.dto.folder.FolderSimpleResponse;
+import com.uruz.frostbite.dto.folder.SimpleFolderResponse;
 import com.uruz.frostbite.dto.folder.MovedSubFolderPathCommand;
-import com.uruz.frostbite.dto.folder.internal.PrivateEntryFolderCondition;
-import com.uruz.frostbite.dto.folder.internal.SimpleFolderOffsetConditionById;
-import com.uruz.frostbite.dto.folder.internal.SubFolderMoveCommand;
-import com.uruz.frostbite.dto.folder.internal.TeamEntryFolderCondition;
+import com.uruz.frostbite.dto.folder.internal.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+import java.util.List;
 @Repository
 @Mapper
 public interface FolderMapper {
@@ -26,6 +22,15 @@ public interface FolderMapper {
     Optional<Folder> selectPrivateEntryFolder(PrivateEntryFolderCondition condition);
     Optional<Folder> selectTeamEntryFolder(TeamEntryFolderCondition condition);
 
+    List<SimpleFolderResponse> selectSimpleFolderOffsetById(SimpleFolderOffsetConditionByFolderId condition);
+    List<SimpleFolderResponse> selectSimpleFolderOffsetByUuid(SimpleFolderOffsetConditionByUuid condition);
+    int selectSimpleFolderTotalCountById(SimpleFolderOffsetConditionByFolderId condition);
+    int selectSimpleFolderTotalCountByUuid(SimpleFolderOffsetConditionByUuid condition);
+    List<SimpleFolderResponse> selectSimpleFolderKeyBaseById(SimpleFolderKeyBaseConditionByFolderId condition);
+    List<SimpleFolderResponse> selectSimpleFolderKeyBaseByUuid(SimpleFolderKeyBaseConditionByUuid condition);
+
+    boolean selectSimpleFolderKeyBaseHasNext(SimpleFolderKeyBaseConditionByFolderId condition);
+    boolean selectSimpleFolderKeyBaseHasNextByUuid(SimpleFolderKeyBaseConditionByUuid condition);
     //Folder selectFolderDetailByUuid(UUID folderUuid);
     Optional<Folder> selectFolderSimpleByUuid(UUID folderUuid);
 
@@ -33,8 +38,13 @@ public interface FolderMapper {
 
     int updateSubFolderPath(MovedSubFolderPathCommand pathCommand);
 
-    List<FolderSimpleResponse> selectSimpleFolderOffsetById(SimpleFolderOffsetConditionById condition);
+
+
+
+    /*
     Folder selectFolderDetailByFolderId(Long folderId);
 
     Folder selectFoldersByParentUuid(UUID folderUuid);
+
+     */
 }

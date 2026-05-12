@@ -2,12 +2,8 @@ package com.uruz.frostbite.service;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.Folder;
-import com.uruz.frostbite.domain.User;
 import com.uruz.frostbite.dto.folder.*;
-import com.uruz.frostbite.dto.folder.internal.PrivateEntryFolderCondition;
-import com.uruz.frostbite.dto.folder.internal.SimpleFolderOffsetConditionById;
-import com.uruz.frostbite.dto.folder.internal.SubFolderMoveCommand;
-import com.uruz.frostbite.dto.folder.internal.TeamEntryFolderCondition;
+import com.uruz.frostbite.dto.folder.internal.*;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
@@ -45,9 +41,9 @@ public class FolderService {
     }
 
     /** 사용자 UUID로 부터 개인 엔트리폴더 아래 루트폴더 생성 */
-    public Folder createPrivateRootFolder(UUID userUuid, String folderName){
+    public Folder createPrivateRootFolder(Integer userId, String folderName){
 
-        PrivateEntryFolderCondition condition = PrivateEntryFolderCondition.fromUserUuid(userUuid);
+        PrivateEntryFolderCondition condition = PrivateEntryFolderCondition.fromUserId(userId);
         // 사용자 UUID를 통한 개인 엔트리폴더 조회
         Folder privateEntryFolder = getPrivateEntryFolder(condition);
 
@@ -61,14 +57,13 @@ public class FolderService {
     }
 
     /** 팀 UUID로부터 팀 엔트리폴더 아래 루트폴더 생성*/
-    public Folder createTeamRootFolder(UUID userUuid, TeamRootFolderCreateRequest request){
+    public Folder createTeamRootFolder(Integer userId, TeamRootFolderCreateRequest request){
 
-        TeamEntryFolderCondition condition = TeamEntryFolderCondition.of(userUuid, request.getTeamUuid());
+        TeamEntryFolderCondition condition = TeamEntryFolderCondition.of(userId, request.getTeamUuid());
 
         Folder teamEntryFolder = getTeamEntryFolder(condition);
-        User user = userResolverService.getUser(userUuid);
         Folder newFolder = Folder.createTeamRootFolder(request.getName(), teamEntryFolder.getFolderId(),
-                teamEntryFolder.getOwnerId(), user.getUserId());
+                teamEntryFolder.getOwnerId(), userId);
 
         folderMapper.insertRootFolder(newFolder);
         return null;
@@ -90,31 +85,119 @@ public class FolderService {
         return newFolder;
     }
 
-    /** 사용자 ID를 통한 ROOT Folder 조회 */
-    // INPUT : 사용자PK
-    // Process : 사용자 PK로부터 개인 Entry Folder조회 -> 해당 값으로 ROOT 폴더 조회
-    // OUTPUT : List<Folder>
-    // 이거 안쓸거같다. ROOT List 는 TreeView에서만 사용할듯
-    @Deprecated
-    public List<Folder> getPrivateRootFoldersByOffsetBase(Integer userId, Integer offset, Integer limit){
+    /** offsetBase로 개인 RootFolder List 조회에 사용 */
+    public SimpleFolderListOffsetResponse getPrivateRootFoldersByOffsetBase(Integer userId, Integer offset, Integer limit){
         PrivateEntryFolderCondition entryCondition = PrivateEntryFolderCondition.fromUserId(userId);
 
         Folder privateEntryFolder = getPrivateEntryFolder(entryCondition);
 
-        SimpleFolderOffsetConditionById folderCondition = SimpleFolderOffsetConditionById.of(
-                FolderType.PRIVATE, userId, privateEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
+        SimpleFolderOffsetConditionByFolderId folderCondition = SimpleFolderOffsetConditionByFolderId.of(
+                userId, privateEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
         );
 
+        List<SimpleFolderResponse> list = selectSimpleFolderOffsetById(folderCondition);
+        int totalCount = folderMapper.selectSimpleFolderTotalCountById(folderCondition);
+        int currentMax = (offset+1) * limit + list.size();
+        SimpleFolderListOffsetResponse response = new SimpleFolderListOffsetResponse(list, totalCount, currentMax);
 
-
-        List<FolderSimpleResponse> list = selectSimpleFolderOffsetById(folderCondition);
-
-
-        return null;
+        return response;
     }
 
-    public List<FolderSimpleResponse> selectSimpleFolderOffsetById(SimpleFolderOffsetConditionById condition){
-        return folderMapper.selectSimpleFolderOffsetById(condition);
+
+    /** KEYSET Base로 개인 ROOT Folder List 조회*/
+    public SimpleFolderListKeysetResponse getPrivateRootFoldersByKeysetBase(Integer userId, UUID lastFolderUuid, Integer limit){
+        PrivateEntryFolderCondition entryCondition = PrivateEntryFolderCondition.fromUserId(userId);
+
+        Folder privateEntryFolder = getPrivateEntryFolder(entryCondition);
+
+        SimpleFolderKeyBaseConditionByFolderId folderCondition = SimpleFolderKeyBaseConditionByFolderId.of(
+                privateEntryFolder.getFolderId(), FolderStatus.ACTIVE, lastFolderUuid, limit);
+
+        List<SimpleFolderResponse> list = selectSimpleFolderKeyBaseById(folderCondition);
+        Boolean hasNext = folderMapper.selectSimpleFolderKeyBaseHasNext(folderCondition);
+        UUID newLastFolderUuid = list.get(list.size()-1).getUuid();
+        SimpleFolderListKeysetResponse response = new SimpleFolderListKeysetResponse(list, hasNext, newLastFolderUuid);
+        return response;
+    }
+
+    /** offsetBase로 팀 RootFolder List 조회에 사용*/
+    public SimpleFolderListOffsetResponse getTeamRootFoldersByOffsetBase(Integer userId, UUID teamUuid, Integer offset, Integer limit){
+        TeamEntryFolderCondition entryCondition = TeamEntryFolderCondition.of(userId, teamUuid);
+
+        Folder teamEntryFolder = getTeamEntryFolder(entryCondition);
+
+        SimpleFolderOffsetConditionByFolderId folderCondition = SimpleFolderOffsetConditionByFolderId.of(
+                teamEntryFolder.getOwnerId(), teamEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
+        );
+
+        List<SimpleFolderResponse> list = selectSimpleFolderOffsetById(folderCondition);
+        int totalCount = folderMapper.selectSimpleFolderTotalCountById(folderCondition);
+        int currentMax = (offset+1) * limit + list.size();
+        SimpleFolderListOffsetResponse response = new SimpleFolderListOffsetResponse(list, totalCount, currentMax);
+
+        return response;
+    }
+
+    /** KeyBase 팀 RootFolder List  조회에 사용*/
+
+    public SimpleFolderListKeysetResponse getTeamRootFoldersByKetsetBase(Integer userId, UUID teamUuid, UUID lastFolderUuid, Integer limit){
+        TeamEntryFolderCondition entryCondition =  TeamEntryFolderCondition.of(userId, teamUuid);
+
+        Folder teamEntryFolder = getTeamEntryFolder(entryCondition);
+
+        SimpleFolderKeyBaseConditionByFolderId folderCondition = SimpleFolderKeyBaseConditionByFolderId.of(
+                teamEntryFolder.getFolderId(), FolderStatus.ACTIVE, lastFolderUuid, limit
+        );
+
+        List<SimpleFolderResponse> list = selectSimpleFolderKeyBaseById(folderCondition);
+        Boolean hasNext = folderMapper.selectSimpleFolderKeyBaseHasNext(folderCondition);
+        UUID newLastFolderUuid = list.get(list.size()-1).getUuid();
+        SimpleFolderListKeysetResponse response = new SimpleFolderListKeysetResponse(list, hasNext, newLastFolderUuid);
+        return response;
+    }
+
+    /** 서브폴더 Keyset base 리스트 by uuid
+     * -> keysetBase는 좌측트리로만 출력하므로, Entries(folder+file) 일 필요 없다.
+     *
+     */
+
+    public SimpleFolderListKeysetResponse getSubFoldersByKeysetBaseByUuid(Integer userId, UUID parentFolderUuid, UUID lastFolderUuid, Integer limit){
+        SimpleFolderKeyBaseConditionByUuid folderCondition = SimpleFolderKeyBaseConditionByUuid.of(parentFolderUuid, FolderStatus.ACTIVE, lastFolderUuid, limit);
+
+        List<SimpleFolderResponse> list = selectSimpleFolderKeyBaseByUuid(folderCondition);
+        Boolean hasNext = folderMapper.selectSimpleFolderKeyBaseHasNextByUuid(folderCondition);
+        UUID newLastFolderUuid = list.get(list.size()-1).getUuid();
+
+        SimpleFolderListKeysetResponse response = new SimpleFolderListKeysetResponse(list, hasNext, newLastFolderUuid);
+        return response;
+    }
+
+    /** 사용자가 클릭한 폴더의 UUID를 기준으로 그 폴더의 내용물 (서브폴더와 파일)을 함께 조회한다 */
+    public SimpleFolderEntriesListOffsetResponse getSubFolderEntriesOffsetBaseByUuid(Integer userId, UUID parentFolderUuid, Integer offset, Integer limit){
+        SimpleFolderOffsetConditionByUuid folderCondition = SimpleFolderOffsetConditionByUuid.of(parentFolderUuid, FolderStatus.ACTIVE, offset, limit);
+
+        // 조회하려는 위치가 폴더 전체 개수보다 많은지 확인한다.
+        int currentStartCount = (offset+1) * limit;
+        int totalFolderCount = folderMapper.selectSimpleFolderTotalCountByUuid(folderCondition);
+
+        int currentFolderMax = 0;
+
+        List<SimpleFolderResponse> folders = null;
+        if(totalFolderCount >= currentStartCount){
+            folders = selectSimpleFolderOffsetByUuid(folderCondition);
+            currentFolderMax = (offset+1) * limit + folders.size();
+        } else {
+            currentFolderMax = totalFolderCount;
+            // 폴더 조회 후 파일
+        }
+
+        SimpleFolderEntriesListOffsetResponse response = new SimpleFolderEntriesListOffsetResponse();
+        response.setFolders(folders);
+        response.setFolderTotal(totalFolderCount);
+        response.setCurrentFolderMax(currentFolderMax);
+
+        return response;
+
     }
 
     /** Sub폴더 이동
@@ -167,6 +250,32 @@ public class FolderService {
         Folder movedFolder = getSimpleFolder(request.getTargetFolderUuid());
 
         return movedFolder;
+    }
+
+    /**
+     * Offset base로 폴더 조회 헬퍼메서드. -> 이 경우 메인 컨텐츠 뷰 offset base 조회에 사용. Entries 와 함께 사용해야 할듯
+     * ROOT List, Sub Folder 리스트 구분없이 사용 가능.
+     *
+     * */
+    public List<SimpleFolderResponse> selectSimpleFolderOffsetById(SimpleFolderOffsetConditionByFolderId condition){
+        return folderMapper.selectSimpleFolderOffsetById(condition);
+    }
+
+    public List<SimpleFolderResponse> selectSimpleFolderOffsetByUuid(SimpleFolderOffsetConditionByUuid condition){
+        return folderMapper.selectSimpleFolderOffsetByUuid(condition);
+    }
+
+    /**
+     * Keyset base로 폴더 조회 메서드 -> 이경우 좌측 트리 무한스크롤/더보기 에 사용
+     * ROOT List, Subfolder 리스트 구분 없이 사용 가능.
+     * */
+
+    public List<SimpleFolderResponse> selectSimpleFolderKeyBaseById(SimpleFolderKeyBaseConditionByFolderId condition){
+        return folderMapper.selectSimpleFolderKeyBaseById(condition);
+    }
+
+    public List<SimpleFolderResponse> selectSimpleFolderKeyBaseByUuid(SimpleFolderKeyBaseConditionByUuid condition){
+        return folderMapper.selectSimpleFolderKeyBaseByUuid(condition);
     }
 
     /** 폴더 UUID로 폴더 조회*/

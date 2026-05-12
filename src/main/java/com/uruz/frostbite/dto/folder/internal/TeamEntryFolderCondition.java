@@ -12,21 +12,21 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 public class TeamEntryFolderCondition {
-    private UUID userUuid;
+    private Integer userId;
     private UUID teamUuid;
     private FolderType folderType;
     private Long parentFolderId;
     private FolderStatus status;
 
-    private TeamEntryFolderCondition(UUID userUuid, UUID teamUuid, FolderType folderType){
-        this.userUuid = userUuid;
+    private TeamEntryFolderCondition(Integer userId, UUID teamUuid, FolderType folderType){
+        this.userId = userId;
         this.teamUuid = teamUuid;
         this.folderType = folderType;
         this.parentFolderId = null;
         this.status = FolderStatus.ACTIVE;
     }
-    public static TeamEntryFolderCondition of(UUID userUuid, UUID teamUuid){
+    public static TeamEntryFolderCondition of(Integer userId, UUID teamUuid){
 
-        return new TeamEntryFolderCondition(userUuid, teamUuid, FolderType.TEAM);
+        return new TeamEntryFolderCondition(userId, teamUuid, FolderType.TEAM);
     }
 }

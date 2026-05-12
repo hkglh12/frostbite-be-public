@@ -16,7 +16,7 @@ import java.util.UUID;
 @Schema(
         description = "폴더 간략정보"
 )
-public class FolderSimpleResponse {
+public class SimpleFolderResponse {
 
     @Schema(description = "식별자 UUID")
     private UUID uuid;
@@ -32,6 +32,5 @@ public class FolderSimpleResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     @Schema(description = "폴더상태")
     private FolderStatus status;
-
 }
 

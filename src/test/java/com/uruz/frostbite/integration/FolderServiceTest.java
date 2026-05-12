@@ -51,6 +51,7 @@ class FolderServiceTest {
 
     // ── TODO: [createPrivateRootFolder] 파라미터를 직접 채워 넣으세요 ─────────
     private static final UUID   TEST_USER_UUID  = UUID.fromString("cb548410-c81f-4c82-8ebb-299eaeff8362");
+    private static final Integer TEST_USER_ID = 7;
     private static final String TEST_FOLDER_NAME = "폴더 테스트";
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -114,7 +115,7 @@ class FolderServiceTest {
     @DisplayName("[createPrivateRootFolder] 개인 엔트리폴더 하위에 루트폴더가 생성된다")
     void createPrivateRootFolder_inserts_folder_under_private_entry() {
 
-        Folder result = folderService.createPrivateRootFolder(TEST_USER_UUID, TEST_FOLDER_NAME);
+        Folder result = folderService.createPrivateRootFolder(TEST_USER_ID, TEST_FOLDER_NAME);
 
         // NOTE: 현재 서비스 메서드가 null 을 리턴하는 WIP 상태이므로
         //       아래 단언은 리턴값 버그 수정 후 주석 해제하여 사용할 것.
@@ -138,7 +139,7 @@ class FolderServiceTest {
         request.setName(TEST_TEAM_FOLDER_NAME);
         request.setTeamUuid(TEST_TEAM_UUID);
 
-        Folder result = folderService.createTeamRootFolder(TEST_TEAM_USER_UUID, request);
+        Folder result = folderService.createTeamRootFolder(TEST_USER_ID, request);
 
         assertNotNull(result,                                  "생성된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_TEAM_FOLDER_NAME, result.getName(), "폴더명이 요청과 일치해야 합니다");
@@ -159,7 +160,7 @@ class FolderServiceTest {
         request.setParentFolderUuid(TEST_PRIVATE_SUB_PARENT_FOLDER_UUID);
         request.setFolderType(FolderType.PRIVATE);
 
-        Folder result = folderService.createFolder(TEST_PRIVATE_SUB_USER_UUID, request);
+        Folder result = folderService.createFolder(TEST_USER_ID, request);
 
 
         assertNotNull(result,                                          "생성된 폴더 객체가 반환되어야 합니다");
@@ -182,7 +183,7 @@ class FolderServiceTest {
         request.setParentFolderUuid(TEST_TEAM_SUB_PARENT_FOLDER_UUID);
         request.setFolderType(FolderType.TEAM);
 
-        Folder result = folderService.createFolder(TEST_TEAM_SUB_USER_UUID, request);
+        Folder result = folderService.createFolder(TEST_USER_ID, request);
 
         assertNotNull(result,                                        "생성된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_TEAM_SUB_FOLDER_NAME, result.getName(),   "폴더명이 요청과 일치해야 합니다");
@@ -221,7 +222,7 @@ class FolderServiceTest {
         // ── Depth 1: 지정 루트 폴더 하위에 10개 ──────────────────────────────
         for (int i = 1; i <= DEPTH_1_COUNT; i++) {
             Folder created = folderService.createFolder(
-                    TEST_PERF_USER_UUID, buildPerfRequest("d1-" + i, TEST_PERF_ROOT_UUID));
+                    TEST_USER_ID, buildPerfRequest("d1-" + i, TEST_PERF_ROOT_UUID));
             currentLevel.add(created.getUuid());
         }
         totalCreated += currentLevel.size();
@@ -239,7 +240,7 @@ class FolderServiceTest {
                 for (UUID parentUuid : batch) {
                     for (int c = 1; c <= CHILD_PER_NODE; c++) {
                         Folder created = folderService.createFolder(
-                                TEST_PERF_USER_UUID, buildPerfRequest("d" + depth + "-" + c, parentUuid));
+                                TEST_USER_ID, buildPerfRequest("d" + depth + "-" + c, parentUuid));
                         if (!isLastDepth) nextLevel.add(created.getUuid());
                         depthCreated++;
                     }
