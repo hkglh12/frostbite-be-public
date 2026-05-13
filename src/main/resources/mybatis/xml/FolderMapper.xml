@@ -7,14 +7,303 @@
 
     <!-- selectKey Before실행 -> POJO 값 바인드 -> 그 POJO로 <tag> 실행-->
     <!-- selectKey 사용시 useGeneratedKeys 불필요, 사용하려면 values에 PK가 안들어가고, useGeneratedKeys + KeyProperty -->
-    <insert id = "insertRootFolder" parameterType="Folder" keyProperty="folderId">
+    <insert id = "insertEntryFolder" parameterType="Folder" keyProperty="folderId">
+
+        <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
+            SELECT nextval('folder_tb_folder_id_seq')
+        </selectKey>
+        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user_id, create_time, modify_user_id, modify_time,
+                               parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
+            VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
+                #{parentFolderId}, #{renderSequence}, #{uuid}, #{status}, '/' || #{folderId} || '/', '/' || #{name} || '/'
+                    )
+    </insert>
+
+    <insert id="insertRootFolder" parameterType="Folder" keyProperty="folderId">
         /* folderMapper insertRootFolder */
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
-        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user, create_time, modify_user, modify_time,
-                               parent_id, render_sequence, uuid, status)
-            VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUser}, #{createTime}, #{modifyUser}, #{modifyTime},
-                #{parentId}, #{renderSequence}, #{uuid}, #{status})
+        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user_id, create_time, modify_user_id, modify_time,
+        parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
+        VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
+        #{parentFolderId}, #{renderSequence}, #{uuid}, #{status},
+                (select folder_id_path || #{folderId} || '/' from folder_tb where folder_id = #{parentFolderId}
+                ),(
+                    select folder_name_path || #{name} || '/' from folder_tb where folder_id = #{parentFolderId}
+                )
+        )
     </insert>
+
+    <insert id="insertSubFolder" parameterType="Folder" keyProperty="folderId">
+        /* folderMapper insertRootFolder */
+        <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
+            SELECT nextval('folder_tb_folder_id_seq')
+        </selectKey>
+        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user_id, create_time, modify_user_id, modify_time,
+        parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
+        VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
+        #{parentFolderId}, #{renderSequence}, #{uuid}, #{status},
+            (select folder_id_path || #{folderId} || '/' from folder_tb where folder_id = #{parentFolderId}
+            ),(
+            select folder_name_path || #{name} || '/' from folder_tb where folder_id = #{parentFolderId}
+            )
+                )
+    </insert>
+
+    <update id="updateSubFolderParent" parameterType="SubFolderMoveCommand">
+        UPDATE
+            folder_tb
+        SET
+            parent_folder_id = #{destinationFolderId},
+            modify_user_id = #{modifyUserId}
+        WHERE
+            folder_id = #{targetFolderId}
+    </update>
+
+    <update id="updateSubFolderPath" parameterType="MovedSubFolderPathCommand">
+        UPDATE
+            folder_tb
+        SET
+            folder_id_path = replace(folder_id_path, #{oldFolderIdPath}, #{newFolderIdPath}),
+            folder_name_path = replace(folder_name_path, #{oldFolderNamePath}, #{newFolderNamePath})
+        WHERE
+            folder_id_path like #{oldFolderIdPath} || '%'
+    </update>
+
+    <select id ="selectPrivateEntryFolder" parameterType="PrivateEntryFolderCondition" resultType="Folder">
+       /** selectPrivateEntryFolder*/
+        <!-- TODO : ENTRYFOLDER 전용이니까  parentUuid when choose는 지워도 될텐데-->
+        SELECT
+            folder_id, name, create_user_id, create_time, folder_type, owner_id, parent_folder_id, uuid, folder_name_path
+        FROM
+            folder_tb
+        WHERE
+            folder_type = #{folderType}
+        AND
+            owner_id = #{userId}
+        AND
+            <choose>
+            <when test="parentFolderId == null">
+                parent_folder_id is null
+            </when>
+            <otherwise>
+                parent_folder_id = #{parentFolderId}
+            </otherwise>
+            </choose>
+
+        AND
+            status = #{status}
+    </select>
+    <select id="selectSimpleFolderOffsetById" parameterType="SimpleFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
+            /** selectSimpleFolderOffsetById */
+            SELECT folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
+                  parent.uuid as parent_folder_uuid, folder.status
+            FROM folder_tb folder
+            LEFT JOIN folder_tb parent on folder.parent_folder_id = parent.folder_id
+            WHERE folder.parent_folder_id = #{parentFolderId}
+            AND folder.status = #{status}
+            ORDER BY folder.render_sequence ASC NULLS LAST, folder.folder_id ASC
+            OFFSET #{offset} LIMIT #{limit}
+    </select>
+    <select id="selectSimpleFolderOffsetByUuid" parameterType="SimpleFolderOffsetConditionByUuid" resultType="SimpleFolderResponse">
+        /** selectSimpleFolderOffsetByUuid */
+        SELECT folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
+               parent.uuid as parent_folder_uuid, folder.status
+        FROM folder_tb folder
+                 LEFT JOIN folder_tb parent on folder.parent_folder_id = parent.folder_id
+        WHERE folder.parent_folder_id = (select folder_id from folder_tb where uuid = #{parentFolderUuid})
+          AND folder.status = #{status}
+        ORDER BY folder.render_sequence ASC NULLS LAST, folder.folder_id ASC
+        OFFSET #{offset} LIMIT #{limit}
+    </select>
+    <select id="selectSimpleFolderTotalCountById" parameterType="SimpleFolderOffsetConditionByFolderId" resultType="integer">
+        SELECT count(folder_id)
+        FROM folder_tb folder
+        WHERE parent_folder_id = #{parentFolderId}
+          AND status = #{status}
+    </select>
+    <select id="selectSimpleFolderTotalCountByUuid" parameterType="SimpleFolderOffsetConditionByUuid" resultType="integer">
+        SELECT count(folder_id)
+        FROM folder_tb folder
+        WHERE parent_folder_id = (select folder_id from folder_tb where uuid = #{parentFolderUuid})
+          AND status = #{status}
+    </select>
+    <select id="selectSimpleFolderKeyBaseById" parameterType="SimpleFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
+            SELECT
+                folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
+                parent.uuid AS parent_folder_uuid, folder.status
+            FROM
+                folder_tb folder
+            LEFT JOIN
+                folder_tb parent
+            ON
+                folder.parent_folder_id = parent.folder_id
+            <if test="lastFolderUuid != null">
+                CROSS JOIN (
+                    SELECT
+                        folder_id, COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
+                    FROM
+                        folder_tb
+                    WHERE
+                        uuid = #{lastFolderUuid}
+                    ) criteria
+            </if>
+            <where>
+                folder.parent_folder_id = #{parentFolderId}
+                AND folder.status = #{status}
+                <if test="lastFolderUuid != null">
+                    AND (
+                        COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
+                        OR (
+                            COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
+                            AND folder.folder_id > criteria.folder_id
+                        )
+                    )
+                </if>
+            </where>
+            ORDER BY
+                COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
+            LIMIT #{limit}
+    </select>
+    <select id="selectSimpleFolderKeyBaseByUuid" parameterType="SimpleFolderKeyBaseConditionByUuid" resultType="SimpleFolderResponse">
+        SELECT
+        folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
+        parent.uuid AS parent_folder_uuid, folder.status
+        FROM
+        folder_tb folder
+        LEFT JOIN
+        folder_tb parent
+        ON
+        folder.parent_folder_id = parent.folder_id
+        <if test="lastFolderUuid != null">
+            CROSS JOIN (
+            SELECT
+            folder_id, COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
+            FROM
+            folder_tb
+            WHERE
+            uuid = #{lastFolderUuid}
+            ) criteria
+        </if>
+        <where>
+            parent.uuid = #{parentFolderUuid}
+            AND folder.status = #{status}
+            <if test="lastFolderUuid != null">
+                AND (
+                COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
+                OR (
+                COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
+                AND folder.folder_id > criteria.folder_id
+                )
+                )
+            </if>
+        </where>
+        ORDER BY
+        COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectSimpleFolderKeyBaseHasNext" resultType = "boolean" parameterType="SimpleFolderKeyBaseConditionByFolderId">
+        SELECT EXISTS (
+            SELECT 1
+            FROM folder_tb folder
+            <if test="lastFolderUuid != null">
+            CROSS JOIN (
+                SELECT
+                    folder_id,
+                    COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
+                FROM
+                    folder_tb
+                WHERE
+                    uuid = #{lastFolderUuid}
+            ) criteria
+            </if>
+            <where>
+            folder.parent_folder_id = #{parentFolderId}
+            AND folder.status = #{status}
+            <if test="lastFolderUuid != null">
+                AND (
+                COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
+                OR (
+                COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
+                AND folder.folder_id > criteria.folder_id
+                )
+            )
+            </if>
+        </where>
+        LIMIT 1
+        )
+    </select>
+    <select id="selectSimpleFolderKeyBaseHasNextByUuid" resultType = "boolean" parameterType="SimpleFolderKeyBaseConditionByFolderId">
+        SELECT EXISTS (
+        SELECT 1
+        FROM folder_tb folder
+        <if test="lastFolderUuid != null">
+            CROSS JOIN (
+            SELECT
+            folder_id,
+            COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
+            FROM
+            folder_tb
+            WHERE
+            uuid = #{lastFolderUuid}
+            ) criteria
+        </if>
+        <where>
+            folder.parent_folder_id = (select folder_id from folder_tb where uuid = #{parentFolderUuid})
+            AND folder.status = #{status}
+            <if test="lastFolderUuid != null">
+                AND (
+                COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
+                OR (
+                COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
+                AND folder.folder_id > criteria.folder_id
+                )
+                )
+            </if>
+        </where>
+        LIMIT 1
+        )
+    </select>
+
+    <select id ="selectTeamEntryFolder" parameterType="TeamEntryFolderCondition" resultType="Folder">
+        SELECT
+        folder_id, name, create_user_id, create_time, folder_type, owner_id, parent_folder_id, uuid, folder_name_path
+        FROM
+        folder_tb
+        WHERE
+        folder_type = #{folderType}
+        AND
+        owner_id = (SELECT team_id FROM team_tb
+        where uuid = #{teamUuid})
+        AND
+        <choose>
+            <when test="parentFolderId == null">
+                parent_folder_id is null
+            </when>
+            <otherwise>
+                parent_folder_id = #{parentFolderId}
+            </otherwise>
+        </choose>
+
+        AND
+        status = #{status}
+    </select>
+    <select id="selectSimpleFolderByFolderUuid" resultType="SimpleFolderResponse">
+        SELECT
+            folder_id, name, folder_type, owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+        FROM
+            folder_tb
+        WHERE
+            folder_id = #{folderId}
+    </select>
+    <select id="selectFolderByUuid" resultType="Folder">
+        SELECT
+            folder_id, name, folder_type, owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+        FROM
+            folder_tb
+        WHERE
+            uuid = #{folderUuid}
+    </select>
 </mapper>

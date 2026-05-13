@@ -113,6 +113,7 @@ public class SecurityConfiguration {
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",   // FE dev server
                 "http://localhost:5173",    // Vite dev server 등
+                "http://localhost:5174",    // Vite dev server 등
                 "http://localhost:9410"     // swagger-ui 사용 용 자기자신
 
         ));
