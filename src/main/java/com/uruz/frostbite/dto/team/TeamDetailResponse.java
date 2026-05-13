@@ -3,9 +3,8 @@ package com.uruz.frostbite.dto.team;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.uruz.frostbite.enums.team.TeamStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -15,6 +14,8 @@ import java.util.UUID;
 @Schema(
         description = "팀 상세정보"
 )
+@NoArgsConstructor
+@AllArgsConstructor
 public class TeamDetailResponse {
 
         @Schema(description = "팀 이름")

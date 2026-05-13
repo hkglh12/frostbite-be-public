@@ -56,13 +56,13 @@
 
     <select id="selectTeamsByUserId" resultType="TeamDetailResponse">
         SELECT team.name, team.create_time, team.uuid, team.status,
-               user.name as createUser
+               user_tb.name as createUser
         FROM team_tb team
-                 JOIN user_tb user
-        ON user.user_id = team.create_user_id
+                 JOIN user_tb user_tb
+        ON user_tb.user_id = team.create_user_id
         WHERE EXISTS(
             SELECT 1
-            FROM rel_user_role_tb relation
+            FROM rel_user_team_tb relation
             WHERE
                 relation.team_id = team.team_id
             AND
