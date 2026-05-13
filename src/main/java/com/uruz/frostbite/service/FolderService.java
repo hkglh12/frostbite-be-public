@@ -41,7 +41,7 @@ public class FolderService {
     }
 
     /** 사용자 UUID로 부터 개인 엔트리폴더 아래 루트폴더 생성 */
-    public Folder createPrivateRootFolder(Integer userId, String folderName){
+    public SimpleFolderResponse createPrivateRootFolder(Integer userId, String folderName){
 
         PrivateEntryFolderCondition condition = PrivateEntryFolderCondition.fromUserId(userId);
         // 사용자 UUID를 통한 개인 엔트리폴더 조회
@@ -52,12 +52,11 @@ public class FolderService {
         );
 
         folderMapper.insertRootFolder(newFolder);
-
-        return newFolder;
+        return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
     /** 팀 UUID로부터 팀 엔트리폴더 아래 루트폴더 생성*/
-    public Folder createTeamRootFolder(Integer userId, TeamRootFolderCreateRequest request){
+    public SimpleFolderResponse createTeamRootFolder(Integer userId, TeamRootFolderCreateRequest request){
 
         TeamEntryFolderCondition condition = TeamEntryFolderCondition.of(userId, request.getTeamUuid());
 
@@ -66,12 +65,12 @@ public class FolderService {
                 teamEntryFolder.getOwnerId(), userId);
 
         folderMapper.insertRootFolder(newFolder);
-        return null;
+        return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
     /** 부모 폴더 UUID로부터 서브폴더 생성 */
-    public Folder createFolder(Integer userId, FolderCreateRequest request) {
-        Folder parentFolder = getSimpleFolder(request.getParentFolderUuid());
+    public SimpleFolderResponse createFolder(Integer userId, FolderCreateRequest request) {
+        Folder parentFolder = selectFolderByUuid(request.getParentFolderUuid());
         // 폴더타입은 이미 Context 상 부모폴더에 있음.
         FolderType folderType = parentFolder.getFolderType();
         Folder newFolder = null;
@@ -82,7 +81,7 @@ public class FolderService {
         }
 
         folderMapper.insertSubFolder(newFolder);
-        return newFolder;
+        return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
     /** offsetBase로 개인 RootFolder List 조회에 사용 */
@@ -140,7 +139,7 @@ public class FolderService {
 
     /** KeyBase 팀 RootFolder List  조회에 사용*/
 
-    public SimpleFolderListKeysetResponse getTeamRootFoldersByKetsetBase(Integer userId, UUID teamUuid, UUID lastFolderUuid, Integer limit){
+    public SimpleFolderListKeysetResponse getTeamRootFoldersByKeysetBase(Integer userId, UUID teamUuid, UUID lastFolderUuid, Integer limit){
         TeamEntryFolderCondition entryCondition =  TeamEntryFolderCondition.of(userId, teamUuid);
 
         Folder teamEntryFolder = getTeamEntryFolder(entryCondition);
@@ -177,7 +176,7 @@ public class FolderService {
         SimpleFolderOffsetConditionByUuid folderCondition = SimpleFolderOffsetConditionByUuid.of(parentFolderUuid, FolderStatus.ACTIVE, offset, limit);
 
         // 조회하려는 위치가 폴더 전체 개수보다 많은지 확인한다.
-        int currentStartCount = (offset+1) * limit;
+        int currentStartCount = (offset) * limit;
         int totalFolderCount = folderMapper.selectSimpleFolderTotalCountByUuid(folderCondition);
 
         int currentFolderMax = 0;
@@ -185,7 +184,7 @@ public class FolderService {
         List<SimpleFolderResponse> folders = null;
         if(totalFolderCount >= currentStartCount){
             folders = selectSimpleFolderOffsetByUuid(folderCondition);
-            currentFolderMax = (offset+1) * limit + folders.size();
+            currentFolderMax = (offset) * limit + folders.size();
         } else {
             currentFolderMax = totalFolderCount;
             // 폴더 조회 후 파일
@@ -210,9 +209,9 @@ public class FolderService {
     // 이때, 굳이 EntryFolder 정보 찾아오고, 그 EntryFolder가 직접부모인지 검증할게 아니라, depth 정보 하나면
     // 0계층, 1계층에 대해서 동작을 막아버리면 되는 이점이 있음. 단, update시 @Transactional이 걸려야겠지
     @Transactional
-    public Folder moveSubFolder(Integer userId, SubFolderMoveRequest request){
-        Folder targetFolder = getSimpleFolder(request.getTargetFolderUuid());
-        Folder destinationFolder = getSimpleFolder(request.getDestinationFolderUuid());
+    public SimpleFolderResponse moveSubFolder(Integer userId, SubFolderMoveRequest request){
+        Folder targetFolder = selectFolderByUuid(request.getTargetFolderUuid());
+        Folder destinationFolder = selectFolderByUuid(request.getDestinationFolderUuid());
 
         // 폴더 종류 변경 불가
         if(targetFolder.getFolderType() != destinationFolder.getFolderType()){
@@ -247,9 +246,7 @@ public class FolderService {
 
         int pathAffectedRow = folderMapper.updateSubFolderPath(pathCommand);
 
-        Folder movedFolder = getSimpleFolder(request.getTargetFolderUuid());
-
-        return movedFolder;
+        return selectSimpleFolderByFolderUuid(request.getTargetFolderUuid());
     }
 
     /**
@@ -278,9 +275,21 @@ public class FolderService {
         return folderMapper.selectSimpleFolderKeyBaseByUuid(condition);
     }
 
+    public Folder selectFolderByUuid(UUID folderUuid){
+        return folderMapper.selectFolderByUuid(folderUuid).orElseThrow(
+                () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "FOLDER NOT FOUND")
+        );
+    }
+
     /** 폴더 UUID로 폴더 조회*/
-    public Folder getSimpleFolder(UUID folderUuid){
-        return folderMapper.selectFolderSimpleByUuid(folderUuid).orElseThrow(
+    public SimpleFolderResponse selectSimpleFolderByFolderUuid(UUID folderUuid){
+        return folderMapper.selectSimpleFolderByFolderUuid(folderUuid).orElseThrow(
+                () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "FOLDER NOT FOUND")
+        );
+    }
+
+    public SimpleFolderResponse selectSimpleFolderByFolderId(Long folderId){
+        return folderMapper.selectSimpleFolderByFolderId(folderId).orElseThrow(
                 () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "FOLDER NOT FOUND")
         );
     }

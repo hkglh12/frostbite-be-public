@@ -3,6 +3,8 @@ package com.uruz.frostbite.aop;
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.dto.wrapper.ApiErrorResponse;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
 
@@ -45,7 +48,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             Exception.class
     })
-    protected ResponseEntity<ApiErrorResponse> handleGeneral(Exception E){
+    protected ResponseEntity<ApiErrorResponse> handleGeneral(Exception E,
+                                                             HttpServletRequest request){
+        log.error(request.getRequestURL().toString());
+        E.printStackTrace();
         return ResponseEntity.internalServerError()
                 .body(new ApiErrorResponse(ApiErrorCode.UNRECOGNIZED, E.getMessage()));
     }

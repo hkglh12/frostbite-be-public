@@ -3,6 +3,126 @@ package com.uruz.frostbite.configuration;
 public class SwaggerExamples {
     private SwaggerExamples() {}
 
+    /** FOLDER CONTROLLER */
+
+    public static final String SIMPLE_FOLDER_RESPONSE_SUCCESS = """
+    {
+      "result": {
+        "uuid" : "0f7e2d62-2f45-4c47-9b3f-9e62fb041f31",
+        "name" : "프로젝트 폴더",
+        "folderType" : "PRIVATE",
+        "renderSequence" : 1,
+        "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+        "status" : "ACTIVE"
+      },
+      "message": "SUCCEED",
+      "code" : "SUCCEED",
+      "timestamp" : "2026-04-18 19:01:01"
+    }
+    """;
+
+    public static final String SIMPLE_FOLDER_LIST_OFFSET_RESPONSE_SUCCESS = """
+    {
+      "result": {
+        "folders" : [
+          {
+            "uuid" : "0f7e2d62-2f45-4c47-9b3f-9e62fb041f31",
+            "name" : "project-docs",
+            "folderType" : "PRIVATE",
+            "renderSequence" : 1,
+            "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+            "status" : "ACTIVE"
+          },
+          {
+            "uuid" : "2be0e687-2c5f-42d1-8fd7-5e6f3a84ecb2",
+            "name" : "meeting-notes",
+            "folderType" : "PRIVATE",
+            "renderSequence" : 2,
+            "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+            "status" : "ACTIVE"
+          }
+        ],
+        "total" : 2,
+        "currentMax" : 2
+      },
+      "message": "SUCCEED",
+      "code" : "SUCCEED",
+      "timestamp" : "2026-04-18 19:01:01"
+    }
+    """;
+
+    public static final String SIMPLE_FOLDER_LIST_KEYSET_RESPONSE_SUCCESS = """
+    {
+      "result": {
+        "folders" : [
+          {
+            "uuid" : "0f7e2d62-2f45-4c47-9b3f-9e62fb041f31",
+            "name" : "project-docs",
+            "folderType" : "PRIVATE",
+            "renderSequence" : 1,
+            "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+            "status" : "ACTIVE"
+          },
+          {
+            "uuid" : "2be0e687-2c5f-42d1-8fd7-5e6f3a84ecb2",
+            "name" : "meeting-notes",
+            "folderType" : "PRIVATE",
+            "renderSequence" : 2,
+            "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+            "status" : "ACTIVE"
+          }
+        ],
+        "hasNext" : true,
+        "lastFolderUuid" : "2be0e687-2c5f-42d1-8fd7-5e6f3a84ecb2"
+      },
+      "message": "SUCCEED",
+      "code" : "SUCCEED",
+      "timestamp" : "2026-04-18 19:01:01"
+    }
+    """;
+
+    public static final String SIMPLE_FOLDER_ENTRIES_LIST_OFFSET_RESPONSE_SUCCESS = """
+    {
+      "result": {
+        "folders" : [
+          {
+            "uuid" : "0f7e2d62-2f45-4c47-9b3f-9e62fb041f31",
+            "name" : "project-docs",
+            "folderType" : "PRIVATE",
+            "renderSequence" : 1,
+            "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+            "status" : "ACTIVE"
+          },
+          {
+            "uuid" : "2be0e687-2c5f-42d1-8fd7-5e6f3a84ecb2",
+            "name" : "meeting-notes",
+            "folderType" : "PRIVATE",
+            "renderSequence" : 2,
+            "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+            "status" : "ACTIVE"
+          }
+        ],
+        "files" : [],
+        "folderTotal" : 2,
+        "fileTotal" : 0,
+        "currentFolderMax" : 2,
+        "currentFileMax" : 0
+      },
+      "message": "SUCCEED",
+      "code" : "SUCCEED",
+      "timestamp" : "2026-04-18 19:01:01"
+    }
+    """;
+
+    public static final String FOLDER_TARGET_NOT_FOUND = """
+{
+  "message": "FOLDER NOT FOUND",
+  "code": "FOLDER NOT FOUND",
+  "codeMessage": "unabled to find request target",
+  "timestamp": "2026-05-01 19:01:01"
+}
+""";
+
     /** USERCONTROLLER */
 
     public static final String USER_JOIN_SUCCESS = """

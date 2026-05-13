@@ -31,8 +31,13 @@ public interface FolderMapper {
 
     boolean selectSimpleFolderKeyBaseHasNext(SimpleFolderKeyBaseConditionByFolderId condition);
     boolean selectSimpleFolderKeyBaseHasNextByUuid(SimpleFolderKeyBaseConditionByUuid condition);
+
+    Optional<SimpleFolderResponse> selectSimpleFolderByFolderId(Long folderId);
+    Optional<SimpleFolderResponse> selectSimpleFolderByFolderUuid(UUID folderUuid);
+
     //Folder selectFolderDetailByUuid(UUID folderUuid);
-    Optional<Folder> selectFolderSimpleByUuid(UUID folderUuid);
+    Optional<Folder> selectFolderByUuid(UUID folderUuid);
+
 
     int updateSubFolderParent(SubFolderMoveCommand command);
 

@@ -1,12 +1,11 @@
 package com.uruz.frostbite.dto.folder;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -32,5 +31,6 @@ public class SimpleFolderResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     @Schema(description = "폴더상태")
     private FolderStatus status;
+
 }
 

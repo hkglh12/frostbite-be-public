@@ -157,7 +157,7 @@ class FolderServiceTest {
 
         FolderCreateRequest request = new FolderCreateRequest();
         request.setName(TEST_PRIVATE_SUB_FOLDER_NAME);
-        request.setParentFolderUuid(TEST_PRIVATE_SUB_PARENT_FOLDER_UUID);
+        request.setParentFolderUuid(TEST_PRIVATE_SUB_PARENT_FOLDER_UUID);folder_acl_tb
         request.setFolderType(FolderType.PRIVATE);
 
         Folder result = folderService.createFolder(TEST_USER_ID, request);
@@ -260,7 +260,7 @@ class FolderServiceTest {
     @DisplayName("[moveSubFolder] 서브폴더가 지정한 목적지 부모폴더 아래로 이동한다")
     void moveSubFolder_moves_subfolder_to_destination() {
 
-        Folder destinationFolder = folderService.getSimpleFolder(TEST_MOVE_DEST_UUID);
+        Folder destinationFolder = folderService.selectSimpleFolderByFolderUuid(TEST_MOVE_DEST_UUID);
 
         SubFolderMoveRequest request = new SubFolderMoveRequest();
         request.setTargetFolderUuid(TEST_MOVE_TARGET_UUID);

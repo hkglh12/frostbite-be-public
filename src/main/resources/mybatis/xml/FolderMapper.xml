@@ -72,7 +72,8 @@
     </update>
 
     <select id ="selectPrivateEntryFolder" parameterType="PrivateEntryFolderCondition" resultType="Folder">
-       <!-- TODO : ENTRYFOLDER 전용이니까  parentUuid when choose는 지워도 될텐데-->
+       /** selectPrivateEntryFolder*/
+        <!-- TODO : ENTRYFOLDER 전용이니까  parentUuid when choose는 지워도 될텐데-->
         SELECT
             folder_id, name, create_user_id, create_time, folder_type, owner_id, parent_folder_id, uuid, folder_name_path
         FROM
@@ -80,8 +81,7 @@
         WHERE
             folder_type = #{folderType}
         AND
-            owner_id = (SELECT user_id FROM user_tb
-                                      where uuid = #{userUuid})
+            owner_id = #{userId}
         AND
             <choose>
             <when test="parentFolderId == null">
@@ -96,23 +96,25 @@
             status = #{status}
     </select>
     <select id="selectSimpleFolderOffsetById" parameterType="SimpleFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
+            /** selectSimpleFolderOffsetById */
             SELECT folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
                   parent.uuid as parent_folder_uuid, folder.status
             FROM folder_tb folder
             LEFT JOIN folder_tb parent on folder.parent_folder_id = parent.folder_id
-            WHERE parent_folder_id = #{parentFolderId}
-            AND status = #{status}
-            ORDER BY render_sequence ASC NULLS LAST, folder_id ASC
+            WHERE folder.parent_folder_id = #{parentFolderId}
+            AND folder.status = #{status}
+            ORDER BY folder.render_sequence ASC NULLS LAST, folder.folder_id ASC
             OFFSET #{offset} LIMIT #{limit}
     </select>
     <select id="selectSimpleFolderOffsetByUuid" parameterType="SimpleFolderOffsetConditionByUuid" resultType="SimpleFolderResponse">
+        /** selectSimpleFolderOffsetByUuid */
         SELECT folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
                parent.uuid as parent_folder_uuid, folder.status
         FROM folder_tb folder
                  LEFT JOIN folder_tb parent on folder.parent_folder_id = parent.folder_id
-        WHERE parent_folder_id = (select folder_id from folder_tb where uuid = #{parentFolderUuid})
-          AND status = #{status}
-        ORDER BY render_sequence ASC NULLS LAST, folder_id ASC
+        WHERE folder.parent_folder_id = (select folder_id from folder_tb where uuid = #{parentFolderUuid})
+          AND folder.status = #{status}
+        ORDER BY folder.render_sequence ASC NULLS LAST, folder.folder_id ASC
         OFFSET #{offset} LIMIT #{limit}
     </select>
     <select id="selectSimpleFolderTotalCountById" parameterType="SimpleFolderOffsetConditionByFolderId" resultType="integer">
@@ -288,7 +290,15 @@
         AND
         status = #{status}
     </select>
-    <select id="selectFolderSimpleByUuid" resultType="Folder">
+    <select id="selectSimpleFolderByFolderUuid" resultType="SimpleFolderResponse">
+        SELECT
+            folder_id, name, folder_type, owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+        FROM
+            folder_tb
+        WHERE
+            folder_id = #{folderId}
+    </select>
+    <select id="selectFolderByUuid" resultType="Folder">
         SELECT
             folder_id, name, folder_type, owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
