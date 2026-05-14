@@ -51,7 +51,16 @@
                 )
     </insert>
 
-    <update id="updateSubFolderParent" parameterType="SubFolderMoveCommand">
+    <update id="updateFolder" parameterType="FolderModifyCommand">
+        update
+            folder_tb
+        SEt
+            name = #{name}
+        WHERE
+            uuid = #{folderUuid}
+    </update>
+
+    <update id="updateFolderParent" parameterType="SubFolderMoveCommand">
         UPDATE
             folder_tb
         SET
@@ -306,4 +315,25 @@
         WHERE
             uuid = #{folderUuid}
     </select>
+    <select id="selectFolderDetails" resultType="FolderDetailsDraft">
+        SELECT
+            folder.uuid, folder.name, folder.folder_type,owner_id, folder.create_user_id,
+            folder.create_time, folder.modify_user_id, folder.modify_time, folder.render_sequence,
+            parent.uuid as parent_folder_uuid, folder.status
+        FROM
+            folder_tb folder
+        LEFT JOIN
+            folder_tb parent
+        on folder.parent_folder_id = parent.folder_id
+        WHERE
+            folder.uuid = #{folderUuid}
+    </select>
+    <update id="updateFolderStatusAsDelete">
+        UPDATE
+            folder_tb
+        SET
+            status = #{status}
+        WHERE
+            uuid = #{folderUuid}
+    </update>
 </mapper>

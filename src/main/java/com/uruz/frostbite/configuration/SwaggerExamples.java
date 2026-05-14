@@ -114,6 +114,68 @@ public class SwaggerExamples {
     }
     """;
 
+    public static final String FOLDER_DETAIL_RESPONSE_SUCCESS = """
+    {
+      "result": {
+        "uuid" : "0f7e2d62-2f45-4c47-9b3f-9e62fb041f31",
+        "name" : "project-docs",
+        "folderType" : "PRIVATE",
+        "ownerName" : "hong-gildong",
+        "createUserName" : "hong-gildong",
+        "createTime" : "2026-04-18",
+        "modifyUserName" : "hong-gildong",
+        "modifyTime" : "2026-04-18",
+        "renderSequence" : 1,
+        "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+        "status" : "ACTIVE"
+      },
+      "message": "SUCCEED",
+      "code" : "SUCCEED",
+      "timestamp" : "2026-04-18 19:01:01"
+    }
+    """;
+
+    public static final String FOLDER_MODIFY_RESPONSE_SUCCESS = """
+    {
+      "result": {
+        "uuid" : "0f7e2d62-2f45-4c47-9b3f-9e62fb041f31",
+        "name" : "renamed-project-docs",
+        "folderType" : "PRIVATE",
+        "renderSequence" : 1,
+        "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
+        "status" : "ACTIVE"
+      },
+      "message": "SUCCEED",
+      "code" : "SUCCEED",
+      "timestamp" : "2026-04-18 19:01:01"
+    }
+    """;
+
+    public static final String FOLDER_MOVE_RESPONSE_SUCCESS = """
+    {
+      "result": {
+        "uuid" : "0f7e2d62-2f45-4c47-9b3f-9e62fb041f31",
+        "name" : "project-docs",
+        "folderType" : "PRIVATE",
+        "renderSequence" : 3,
+        "parentFolderUuid" : "92df72b0-3458-4a2c-a62c-4dfcb5711429",
+        "status" : "ACTIVE"
+      },
+      "message": "SUCCEED",
+      "code" : "SUCCEED",
+      "timestamp" : "2026-04-18 19:01:01"
+    }
+    """;
+
+    public static final String FOLDER_REMOVE_RESPONSE_SUCCESS = """
+    {
+      "result": true,
+      "message": "SUCCEED",
+      "code" : "SUCCEED",
+      "timestamp" : "2026-04-18 19:01:01"
+    }
+    """;
+
     public static final String FOLDER_TARGET_NOT_FOUND = """
 {
   "message": "FOLDER NOT FOUND",

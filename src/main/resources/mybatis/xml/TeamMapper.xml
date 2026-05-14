@@ -33,6 +33,15 @@
         WHERE team.uuid = #{teamUuid}
     </select>
 
+    <select id="selectTeamByTeamId" resultType="Team">
+        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user, team.uuid,
+               team.status,
+        FROM team_tb team
+                 JOIN user_tb user
+        ON user.user_id = team.create_user_id
+        WHERE team.team_id = #{teamId}
+    </select>
+
     <update id="updateTeam" parameterType="TeamModifyCommand">
         UPDATE
             team_tb

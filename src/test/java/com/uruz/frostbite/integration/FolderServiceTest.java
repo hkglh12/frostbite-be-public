@@ -3,7 +3,7 @@ package com.uruz.frostbite.integration;
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.dto.folder.FolderCreateRequest;
-import com.uruz.frostbite.dto.folder.SubFolderMoveRequest;
+import com.uruz.frostbite.dto.folder.FolderMoveRequest;
 import com.uruz.frostbite.dto.folder.TeamRootFolderCreateRequest;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
@@ -262,11 +262,11 @@ class FolderServiceTest {
 
         Folder destinationFolder = folderService.selectSimpleFolderByFolderUuid(TEST_MOVE_DEST_UUID);
 
-        SubFolderMoveRequest request = new SubFolderMoveRequest();
+        FolderMoveRequest request = new FolderMoveRequest();
         request.setTargetFolderUuid(TEST_MOVE_TARGET_UUID);
         request.setDestinationFolderUuid(TEST_MOVE_DEST_UUID);
 
-        Folder result = folderService.moveSubFolder(TEST_MOVE_USER_ID, request);
+        Folder result = folderService.moveFolder(TEST_MOVE_USER_ID, request);
 
         assertNotNull(result,                                                   "이동된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_MOVE_TARGET_UUID, result.getUuid(),                   "반환된 폴더의 UUID 가 이동 대상 UUID 와 일치해야 합니다");
@@ -282,13 +282,13 @@ class FolderServiceTest {
     @DisplayName("[moveSubFolder] target 과 destination 의 FolderType 이 다르면 BAD_REQUEST 예외가 발생한다")
     void moveSubFolder_throws_when_folder_type_mismatch() {
 
-        SubFolderMoveRequest request = new SubFolderMoveRequest();
+        FolderMoveRequest request = new FolderMoveRequest();
         request.setTargetFolderUuid(TEST_MOVE_TYPE_MISMATCH_TARGET_UUID);
         request.setDestinationFolderUuid(TEST_MOVE_TYPE_MISMATCH_DEST_UUID);
 
         GeneralCustomException ex = assertThrows(
                 GeneralCustomException.class,
-                () -> folderService.moveSubFolder(TEST_MOVE_TYPE_MISMATCH_USER_ID, request),
+                () -> folderService.moveFolder(TEST_MOVE_TYPE_MISMATCH_USER_ID, request),
                 "FolderType 이 다를 때 GeneralCustomException 이 발생해야 합니다"
         );
 
@@ -300,13 +300,13 @@ class FolderServiceTest {
     @DisplayName("[moveSubFolder] target 과 destination 의 Owner 가 다르면 BAD_REQUEST 예외가 발생한다")
     void moveSubFolder_throws_when_owner_mismatch() {
 
-        SubFolderMoveRequest request = new SubFolderMoveRequest();
+        FolderMoveRequest request = new FolderMoveRequest();
         request.setTargetFolderUuid(TEST_MOVE_OWNER_MISMATCH_TARGET_UUID);
         request.setDestinationFolderUuid(TEST_MOVE_OWNER_MISMATCH_DEST_UUID);
 
         GeneralCustomException ex = assertThrows(
                 GeneralCustomException.class,
-                () -> folderService.moveSubFolder(TEST_MOVE_OWNER_MISMATCH_USER_ID, request),
+                () -> folderService.moveFolder(TEST_MOVE_OWNER_MISMATCH_USER_ID, request),
                 "Owner 가 다를 때 GeneralCustomException 이 발생해야 합니다"
         );
 
