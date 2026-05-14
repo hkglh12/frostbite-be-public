@@ -36,13 +36,13 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "정상 폴더 생성 완료",
+                    description = "폴더 생성 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "정상 응답",
-                                    summary = "폴더 축약 정보",
+                                    name = "성공 응답",
+                                    summary = "폴더 요약 정보",
                                     value = SwaggerExamples.SIMPLE_FOLDER_RESPONSE_SUCCESS
                             )
                     )
@@ -54,8 +54,8 @@ public class FolderController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "실패응답",
-                                    summary = "최종 결과 폴더 조회 실패",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -77,13 +77,13 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "정상 폴더 생성 완료",
+                    description = "폴더 생성 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "정상 응답",
-                                    summary = "폴더 축약 정보",
+                                    name = "성공 응답",
+                                    summary = "폴더 요약 정보",
                                     value = SwaggerExamples.SIMPLE_FOLDER_RESPONSE_SUCCESS
                             )
                     )
@@ -95,8 +95,8 @@ public class FolderController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "실패응답",
-                                    summary = "최종 결과 폴더 조회 실패",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -124,26 +124,26 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "?뺤긽 ?대뜑 ?앹꽦 ?꾨즺",
+                    description = "폴더 생성 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "?뺤긽 ?묐떟",
-                                    summary = "?대뜑 異뺤빟 ?뺣낫",
+                                    name = "성공 응답",
+                                    summary = "폴더 요약 정보",
                                     value = SwaggerExamples.SIMPLE_FOLDER_RESPONSE_SUCCESS
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "?ㅽ뙣",
+                    description = "실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "?ㅽ뙣?묐떟",
-                                    summary = "理쒖쥌 寃곌낵 ?대뜑 議고쉶 ?ㅽ뙣",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -171,26 +171,26 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "?뺤긽 ?대뜑 由ъ뒪??議고쉶 ?꾨즺",
+                    description = "폴더 목록 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "?뺤긽 ?묐떟",
-                                    summary = "?대뜑 offset 由ъ뒪??",
+                                    name = "성공 응답",
+                                    summary = "폴더 offset 목록",
                                     value = SwaggerExamples.SIMPLE_FOLDER_LIST_OFFSET_RESPONSE_SUCCESS
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "?ㅽ뙣",
+                    description = "실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "?ㅽ뙣?묐떟",
-                                    summary = "理쒖쥌 寃곌낵 ?대뜑 議고쉶 ?ㅽ뙣",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -212,26 +212,26 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "?뺤긽 ?대뜑 由ъ뒪??議고쉶 ?꾨즺",
+                    description = "폴더 목록 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "?뺤긽 ?묐떟",
-                                    summary = "?대뜑 keyset 由ъ뒪??",
+                                    name = "성공 응답",
+                                    summary = "폴더 keyset 목록",
                                     value = SwaggerExamples.SIMPLE_FOLDER_LIST_KEYSET_RESPONSE_SUCCESS
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "?ㅽ뙣",
+                    description = "실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "?ㅽ뙣?묐떟",
-                                    summary = "理쒖쥌 寃곌낵 ?대뜑 議고쉶 ?ㅽ뙣",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -255,26 +255,26 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "?뺤긽 ?대뜑 由ъ뒪??議고쉶 ?꾨즺",
+                    description = "폴더 목록 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "?뺤긽 ?묐떟",
-                                    summary = "?대뜑 offset 由ъ뒪??",
+                                    name = "성공 응답",
+                                    summary = "폴더 offset 목록",
                                     value = SwaggerExamples.SIMPLE_FOLDER_LIST_OFFSET_RESPONSE_SUCCESS
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "?ㅽ뙣",
+                    description = "실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "?ㅽ뙣?묐떟",
-                                    summary = "理쒖쥌 寃곌낵 ?대뜑 議고쉶 ?ㅽ뙣",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -297,26 +297,26 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "?뺤긽 ?대뜑 由ъ뒪??議고쉶 ?꾨즺",
+                    description = "폴더 목록 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "?뺤긽 ?묐떟",
-                                    summary = "?대뜑 keyset 由ъ뒪??",
+                                    name = "성공 응답",
+                                    summary = "폴더 keyset 목록",
                                     value = SwaggerExamples.SIMPLE_FOLDER_LIST_KEYSET_RESPONSE_SUCCESS
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "?ㅽ뙣",
+                    description = "실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "?ㅽ뙣?묐떟",
-                                    summary = "理쒖쥌 寃곌낵 ?대뜑 議고쉶 ?ㅽ뙣",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -337,26 +337,26 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "?뺤긽 ?대뜑 由ъ뒪??議고쉶 ?꾨즺",
+                    description = "폴더 목록 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "?뺤긽 ?묐떟",
-                                    summary = "?대뜑 keyset 由ъ뒪??",
+                                    name = "성공 응답",
+                                    summary = "폴더 keyset 목록",
                                     value = SwaggerExamples.SIMPLE_FOLDER_LIST_KEYSET_RESPONSE_SUCCESS
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "?ㅽ뙣",
+                    description = "실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "?ㅽ뙣?묐떟",
-                                    summary = "理쒖쥌 寃곌낵 ?대뜑 議고쉶 ?ㅽ뙣",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -380,26 +380,26 @@ public class FolderController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "?뺤긽 ?대뜑 ?뚯씪 由ъ뒪??議고쉶 ?꾨즺",
+                    description = "폴더 및 파일 목록 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiSucceedResponse.class),
                             examples = @ExampleObject(
-                                    name = "?뺤긽 ?묐떟",
-                                    summary = "?대뜑 ?뚯씪 offset 由ъ뒪??",
+                                    name = "성공 응답",
+                                    summary = "폴더 및 파일 offset 목록",
                                     value = SwaggerExamples.SIMPLE_FOLDER_ENTRIES_LIST_OFFSET_RESPONSE_SUCCESS
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "?ㅽ뙣",
+                    description = "실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
                             examples = @ExampleObject(
-                                    name = "?ㅽ뙣?묐떟",
-                                    summary = "理쒖쥌 寃곌낵 ?대뜑 議고쉶 ?ㅽ뙣",
+                                    name = "실패 응답",
+                                    summary = "폴더 조회 실패",
                                     value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
                             )
                     )
@@ -418,25 +418,164 @@ public class FolderController {
         return ResponseEntity.ok(new ApiSucceedResponse<>(entries));
     }
 
-    @GetMapping("/detail")
-    /** 사용자가 클릭한 폴더의 UUID의 상세내역을 조회한다.*/
-    public ResponseEntity<?> getSubFolderDetail(){
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "폴더 상세 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiSucceedResponse.class),
+                            examples = @ExampleObject(
+                                    name = "성공 응답",
+                                    summary = "폴더 상세 정보",
+                                    value = SwaggerExamples.FOLDER_DETAIL_RESPONSE_SUCCESS
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "폴더 조회 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "실패 응답",
+                                    summary = "폴더를 찾을 수 없음",
+                                    value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
+                            )
+                    )
 
-        return null;
+            )
+    })
+    @GetMapping("/{folderUuid}/detail")
+    /** 사용자가 클릭한 폴더의 UUID의 상세내역을 조회한다.*/
+    public ResponseEntity<?> getSubFolderDetail(
+            @AuthenticationPrincipal(expression = "userId") Integer userId,
+            @PathVariable(name = "folderUuid") UUID folderUuid
+    ){
+        FolderDetailsResponse folder = folderService.getFolderDetails(userId, folderUuid);
+        return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
     }
 
     /** 지정한 폴더를 수정한다 */
-    @PutMapping
-    public ResponseEntity<?> updateFolder(){
-        return null;
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "폴더 수정 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiSucceedResponse.class),
+                            examples = @ExampleObject(
+                                    name = "성공 응답",
+                                    summary = "폴더 수정 결과",
+                                    value = SwaggerExamples.FOLDER_MODIFY_RESPONSE_SUCCESS
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "폴더 수정 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "실패 응답",
+                                    summary = "폴더를 찾을 수 없음",
+                                    value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
+                            )
+                    )
+
+            )
+    })
+    @PutMapping("/{folderUuid}")
+    public ResponseEntity<?> updateFolder(
+            @AuthenticationPrincipal(expression = "userId") Integer userId,
+            @PathVariable(name = "folderUuid") UUID folderUuid,
+            @RequestBody @Validated FolderModifyRequest request
+    ){
+        SimpleFolderResponse folder = folderService.modifyFolder(userId, folderUuid, request);
+        return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
     }
 
+    /** 지정한 폴더 이동 (부모 폴더 변경) */
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "폴더 이동 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiSucceedResponse.class),
+                            examples = @ExampleObject(
+                                    name = "성공 응답",
+                                    summary = "폴더 이동 결과",
+                                    value = SwaggerExamples.FOLDER_MOVE_RESPONSE_SUCCESS
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "폴더 이동 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "실패 응답",
+                                    summary = "폴더를 찾을 수 없음",
+                                    value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
+                            )
+                    )
+
+            )
+    })
+    @PutMapping("/{folderUuid}/location")
+    public ResponseEntity<?> moveFolder(
+        @AuthenticationPrincipal(expression = "userId") Integer userId,
+        @PathVariable(name="folderUuid") UUID folderUuid,
+        @RequestBody @Validated FolderMoveRequest folderMoveRequest
+    ) {
+
+        SimpleFolderResponse folder = folderService.moveFolder(userId, folderUuid, folderMoveRequest);
+        return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
+    }
 
     /** 지정한 폴더를 softDelete한다 */
-    public ResponseEntity<?> removeFolder(){
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "폴더 삭제 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiSucceedResponse.class),
+                            examples = @ExampleObject(
+                                    name = "성공 응답",
+                                    summary = "폴더 삭제 결과",
+                                    value = SwaggerExamples.FOLDER_REMOVE_RESPONSE_SUCCESS
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "폴더 삭제 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "실패 응답",
+                                    summary = "폴더를 찾을 수 없음",
+                                    value = SwaggerExamples.FOLDER_TARGET_NOT_FOUND
+                            )
+                    )
 
-        return null;
+            )
+    })
+    @DeleteMapping("/{folderUuid}")
+    public ResponseEntity<?> removeFolder(
+            @AuthenticationPrincipal(expression = "userId") Integer userId,
+            @PathVariable(name="folderUuid") UUID folderUuid
+    ){
+
+        boolean result = folderService.softDeleteFolder(userId, folderUuid);
+        return ResponseEntity.ok(new ApiSucceedResponse<>(result));
     }
-
 
 }

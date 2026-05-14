@@ -28,8 +28,10 @@ public interface TeamMapper {
     public void updateTeamStatus(TeamStatusChangeCommand command);
     /** 팀 엔티티 조회*/
     public Optional<Team> selectTeam(UUID teamUuid);
+    public Optional<Team> selectTeamByTeamId(Integer teamId);
 
     public List<TeamDetailResponse> selectTeamsByUserId(Integer userId);
+
 
     /** 팀 권한 생성*/
     public int insertUserTeamRelation(RelUserTeam relation);

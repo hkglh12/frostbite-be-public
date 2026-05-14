@@ -1,12 +1,11 @@
 package com.uruz.frostbite.dto.folder;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.uruz.frostbite.dto.folder.internal.FolderDetailsDraft;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -17,6 +16,7 @@ import java.util.UUID;
 @Schema(
         description = "폴더 상세정보"
 )
+@AllArgsConstructor
 public class FolderDetailsResponse {
 
     @Schema(description = "식별자 UUID")
@@ -46,4 +46,10 @@ public class FolderDetailsResponse {
     @Schema(description = "폴더상태")
     private FolderStatus status;
 
+
+    public static FolderDetailsResponse from(FolderDetailsDraft draft, String ownerName, String createUserName, String modifyUserName){
+        return new FolderDetailsResponse(draft.getUuid(), draft.getName(), draft.getFolderType(),
+                ownerName, createUserName, draft.getCreateTime(), modifyUserName, draft.getModifyTime(),
+                draft.getRenderSequence(), draft.getParentFolderUuid(), draft.getStatus());
+    }
 }

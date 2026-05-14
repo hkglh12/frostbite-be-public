@@ -2,6 +2,8 @@ package com.uruz.frostbite.service;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.Folder;
+import com.uruz.frostbite.domain.Team;
+import com.uruz.frostbite.domain.User;
 import com.uruz.frostbite.dto.folder.*;
 import com.uruz.frostbite.dto.folder.internal.*;
 import com.uruz.frostbite.enums.FolderStatus;
@@ -21,11 +23,14 @@ public class FolderService {
     private final FolderMapper folderMapper;
 
     private final UserResolverService userResolverService;
+    private final TeamResolverService teamResolverService;
 
     @Autowired
-    public FolderService(FolderMapper folderMapper, UserResolverService userResolverService){
+    public FolderService(FolderMapper folderMapper, UserResolverService userResolverService,
+                         TeamResolverService teamResolverService){
         this.folderMapper = folderMapper;
         this.userResolverService = userResolverService;
+        this.teamResolverService = teamResolverService;
     }
 
     /** 최초 사용자 가입 시 개인폴더 할당 */
@@ -199,6 +204,45 @@ public class FolderService {
 
     }
 
+    /** 폴더 상세 조회 */
+    public FolderDetailsResponse getFolderDetails(Integer userId, UUID folderUuid){
+        FolderDetailsDraft draft = folderMapper.selectFolderDetails(folderUuid).orElseThrow(
+                () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "Target folder not found")
+        );
+        User createUser = userResolverService.getUserByUserId(draft.getCreateUserId());
+        User modifyUser = userResolverService.getUserByUserId(draft.getModifyUserId());
+
+        String ownerName = null;
+        if(draft.getFolderType().equals(FolderType.PRIVATE)){
+            User ownerUser = userResolverService.getUserByUserId(draft.getOwnerId());
+            ownerName = ownerUser.getName();
+        } else {
+            Team team = teamResolverService.getTeambyTeamId(draft.getOwnerId());
+            ownerName = team.getName();
+        }
+
+        return FolderDetailsResponse.from(draft, ownerName, createUser.getName(), modifyUser.getName());
+    }
+
+    @Transactional
+    /** 폴더 메타정보 수정 */
+    public SimpleFolderResponse modifyFolder(Integer userId, UUID targetFolderUuid, FolderModifyRequest request){
+        FolderModifyCommand command = FolderModifyCommand.builder()
+                .folderUuid(targetFolderUuid)
+                .name(request.getName())
+                .build();
+        int affectedRow = folderMapper.updateFolder(command);
+
+        if(affectedRow == 0){
+            throw new GeneralCustomException(ApiErrorCode.NOT_FOUND, "Target folder not found");
+        } else if(affectedRow > 1){
+            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "More than one folder affected");
+        }
+
+        SimpleFolderResponse resultFolder = selectSimpleFolderByFolderUuid(targetFolderUuid);
+
+        return resultFolder;
+    }
     /** Sub폴더 이동
      * 1. Sub폴더만 이동 가능
      * 2. FolderType 변경 불가
@@ -209,8 +253,8 @@ public class FolderService {
     // 이때, 굳이 EntryFolder 정보 찾아오고, 그 EntryFolder가 직접부모인지 검증할게 아니라, depth 정보 하나면
     // 0계층, 1계층에 대해서 동작을 막아버리면 되는 이점이 있음. 단, update시 @Transactional이 걸려야겠지
     @Transactional
-    public SimpleFolderResponse moveSubFolder(Integer userId, SubFolderMoveRequest request){
-        Folder targetFolder = selectFolderByUuid(request.getTargetFolderUuid());
+    public SimpleFolderResponse moveFolder(Integer userId, UUID targetFolderUuid, FolderMoveRequest request){
+        Folder targetFolder = selectFolderByUuid(targetFolderUuid);
         Folder destinationFolder = selectFolderByUuid(request.getDestinationFolderUuid());
 
         // 폴더 종류 변경 불가
@@ -227,7 +271,7 @@ public class FolderService {
 
         SubFolderMoveCommand command = SubFolderMoveCommand.of(targetFolder.getFolderId(), destinationFolder.getFolderId(), userId);
 
-        int affectedRow = folderMapper.updateSubFolderParent(command);
+        int affectedRow = folderMapper.updateFolderParent(command);
 
         if(affectedRow < 0) {
             throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "FOLDER MOVE FAILED");
@@ -246,7 +290,20 @@ public class FolderService {
 
         int pathAffectedRow = folderMapper.updateSubFolderPath(pathCommand);
 
-        return selectSimpleFolderByFolderUuid(request.getTargetFolderUuid());
+        return selectSimpleFolderByFolderUuid(targetFolderUuid);
+    }
+
+    @Transactional
+    public boolean softDeleteFolder(Integer userId, UUID folderUuid){
+        int affectedRows = folderMapper.updateFolderStatusAsDelete(folderUuid, FolderStatus.DELETED);
+
+        if(affectedRows == 0){
+            throw new GeneralCustomException(ApiErrorCode.NOT_FOUND, "Target folder not found");
+        } else if (affectedRows > 1){
+            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "More than one row affected");
+        } else {
+            return true;
+        }
     }
 
     /**

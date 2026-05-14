@@ -21,4 +21,8 @@ public class UserResolverService {
         return userMapper.selectUserByUuid(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
     }
 
+    public User getUserByUserId(Integer userId) {
+        return userMapper.selectUserByUserId(userId).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
+    }
+
 }

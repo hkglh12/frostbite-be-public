@@ -1,4 +1,4 @@
-package com.uruz.frostbite.dto.folder;
+package com.uruz.frostbite.dto.folder.internal;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

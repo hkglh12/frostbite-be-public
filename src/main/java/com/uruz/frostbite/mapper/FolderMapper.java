@@ -2,9 +2,11 @@ package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.dto.folder.SimpleFolderResponse;
-import com.uruz.frostbite.dto.folder.MovedSubFolderPathCommand;
+import com.uruz.frostbite.dto.folder.internal.MovedSubFolderPathCommand;
 import com.uruz.frostbite.dto.folder.internal.*;
+import com.uruz.frostbite.enums.FolderStatus;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -34,16 +36,17 @@ public interface FolderMapper {
 
     Optional<SimpleFolderResponse> selectSimpleFolderByFolderId(Long folderId);
     Optional<SimpleFolderResponse> selectSimpleFolderByFolderUuid(UUID folderUuid);
-
+    Optional<FolderDetailsDraft> selectFolderDetails(UUID folderUuid);
     //Folder selectFolderDetailByUuid(UUID folderUuid);
     Optional<Folder> selectFolderByUuid(UUID folderUuid);
 
+    int updateFolder(FolderModifyCommand command);
 
-    int updateSubFolderParent(SubFolderMoveCommand command);
+    int updateFolderParent(SubFolderMoveCommand command);
 
     int updateSubFolderPath(MovedSubFolderPathCommand pathCommand);
 
-
+    int updateFolderStatusAsDelete(@Param("folderUuid") UUID folderUuid, @Param("status")FolderStatus status);
 
 
     /*
