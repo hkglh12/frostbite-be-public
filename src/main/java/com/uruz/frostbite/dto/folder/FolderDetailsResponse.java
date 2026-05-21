@@ -27,7 +27,7 @@ public class FolderDetailsResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private FolderType folderType;
     @Schema(description = "소유자명[folderType->TEAM : 팀명 || PRIVATE : 소유자명")
-    private String ownerName;
+    private String resourceScopeName;
     @Schema(description = "생성자이름")
     private String createUserName;
     @Schema(description = "폴더 생성시각")
@@ -47,9 +47,9 @@ public class FolderDetailsResponse {
     private FolderStatus status;
 
 
-    public static FolderDetailsResponse from(FolderDetailsDraft draft, String ownerName, String createUserName, String modifyUserName){
+    public static FolderDetailsResponse from(FolderDetailsDraft draft, String resourceScopeName, String createUserName, String modifyUserName){
         return new FolderDetailsResponse(draft.getUuid(), draft.getName(), draft.getFolderType(),
-                ownerName, createUserName, draft.getCreateTime(), modifyUserName, draft.getModifyTime(),
+                resourceScopeName, createUserName, draft.getCreateTime(), modifyUserName, draft.getModifyTime(),
                 draft.getRenderSequence(), draft.getParentFolderUuid(), draft.getStatus());
     }
 }

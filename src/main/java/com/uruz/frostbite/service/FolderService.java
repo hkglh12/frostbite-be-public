@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -67,7 +68,7 @@ public class FolderService {
 
         Folder teamEntryFolder = getTeamEntryFolder(condition);
         Folder newFolder = Folder.createTeamRootFolder(request.getName(), teamEntryFolder.getFolderId(),
-                teamEntryFolder.getOwnerId(), userId);
+                teamEntryFolder.getResourceScopeId(), userId);
 
         folderMapper.insertRootFolder(newFolder);
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
@@ -80,9 +81,9 @@ public class FolderService {
         FolderType folderType = parentFolder.getFolderType();
         Folder newFolder = null;
         if(folderType.equals(FolderType.PRIVATE)){
-            newFolder = Folder.createPrivateSubFolder(request.getName(), parentFolder.getFolderId(),userId);
+            newFolder = Folder.createPrivateSubFolder(request.getName(), parentFolder.getFolderId(), userId);
         } else {
-            newFolder = Folder.createTeamSubFolder(request.getName(), parentFolder.getFolderId(), parentFolder.getOwnerId(),userId);
+            newFolder = Folder.createTeamSubFolder(request.getName(), parentFolder.getFolderId(), parentFolder.getResourceScopeId(),userId);
         }
 
         folderMapper.insertSubFolder(newFolder);
@@ -131,7 +132,7 @@ public class FolderService {
         Folder teamEntryFolder = getTeamEntryFolder(entryCondition);
 
         SimpleFolderOffsetConditionByFolderId folderCondition = SimpleFolderOffsetConditionByFolderId.of(
-                teamEntryFolder.getOwnerId(), teamEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
+                teamEntryFolder.getResourceScopeId(), teamEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
         );
 
         List<SimpleFolderResponse> list = selectSimpleFolderOffsetById(folderCondition);
@@ -169,9 +170,12 @@ public class FolderService {
         SimpleFolderKeyBaseConditionByUuid folderCondition = SimpleFolderKeyBaseConditionByUuid.of(parentFolderUuid, FolderStatus.ACTIVE, lastFolderUuid, limit);
 
         List<SimpleFolderResponse> list = selectSimpleFolderKeyBaseByUuid(folderCondition);
-        Boolean hasNext = folderMapper.selectSimpleFolderKeyBaseHasNextByUuid(folderCondition);
-        UUID newLastFolderUuid = list.get(list.size()-1).getUuid();
-
+        Boolean hasNext = false;
+        UUID newLastFolderUuid = null;
+        if(list.size() > 0) {
+            hasNext = list.size() > 0 ? folderMapper.selectSimpleFolderKeyBaseHasNextByUuid(folderCondition) : false;
+            newLastFolderUuid = list.get(list.size() - 1).getUuid();
+        }
         SimpleFolderListKeysetResponse response = new SimpleFolderListKeysetResponse(list, hasNext, newLastFolderUuid);
         return response;
     }
@@ -209,19 +213,20 @@ public class FolderService {
         FolderDetailsDraft draft = folderMapper.selectFolderDetails(folderUuid).orElseThrow(
                 () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "Target folder not found")
         );
-        User createUser = userResolverService.getUserByUserId(draft.getCreateUserId());
-        User modifyUser = userResolverService.getUserByUserId(draft.getModifyUserId());
+        User createUser = userResolverService.getUserByUserId(draft.getCreateUserId()).orElseThrow(() -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "TARGET USER NOT FOUND"));
+        // 일단은, 신규생성하고 아무것도 안건드렸으면 수정자 없음
+        Optional<User> modifyUser = userResolverService.getUserByUserId(draft.getModifyUserId());
 
-        String ownerName = null;
+        String resourcScopeName = null;
         if(draft.getFolderType().equals(FolderType.PRIVATE)){
-            User ownerUser = userResolverService.getUserByUserId(draft.getOwnerId());
-            ownerName = ownerUser.getName();
+            User ownerUser = userResolverService.getUserByUserId(draft.getResourceScopeId()).orElse(null);
+            resourcScopeName = ownerUser.getName();
         } else {
-            Team team = teamResolverService.getTeambyTeamId(draft.getOwnerId());
-            ownerName = team.getName();
+            Team team = teamResolverService.getTeambyTeamId(draft.getResourceScopeId());
+            resourcScopeName = team.getName();
         }
 
-        return FolderDetailsResponse.from(draft, ownerName, createUser.getName(), modifyUser.getName());
+        return FolderDetailsResponse.from(draft, resourcScopeName, createUser.getName(), modifyUser.map(User::getName).orElse(null));
     }
 
     @Transactional
@@ -265,7 +270,7 @@ public class FolderService {
         // Owner 변경불가
         // Team FolderType + Owner 변경 = 폴더 타 팀으로 인계
         // Private FolderType + Owner 변경 = 타 유저에게 폴더 소유권 이전
-        if(targetFolder.getOwnerId() != destinationFolder.getOwnerId()){
+        if(targetFolder.getResourceScopeId() != destinationFolder.getResourceScopeId()){
             throw new GeneralCustomException(ApiErrorCode.BAD_REQUEST, "FOLDER OWNER CAN NOT BE CHANGED");
         }
 

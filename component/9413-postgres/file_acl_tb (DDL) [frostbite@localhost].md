@@ -54,7 +54,7 @@ class node8 {
 class node0 {
    varchar(512) name  /* 폴더명 */
    varchar(256) owner_type  /* 종속종류 */
-   integer owner_id  /* 피종속 자원 식별자 */
+   integer resource_scope_id  /* 피종속 자원 식별자 */
    integer create_user  /* 폴더 생성자 */
    timestamp create_time  /* 생성시각 */
    integer modify_user

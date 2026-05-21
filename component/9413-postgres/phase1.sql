@@ -108,7 +108,9 @@ create table folder_tb(
                           modify_time timestamp,
                          -- 폴더의 소유형태를 결정한다. private = 개인폴더 -> team = 팀폴더
                           folder_type int,  -- private || team
-                          owner_id int, -- ownertype이 team이면 tema_id가, private 일경우 user_id로
+                          resource_scope_id int, -- ownertype이 team이면 tema_id가, private 일경우 user_id로
+                          resource_owner_id int,
+                          access_policy int,
                           parent_id bigint,
                           render_sequence int,
                           uuid varchar(50),
@@ -124,7 +126,7 @@ alter table folder_tb add constraint folder_tb_folder_parent_fk foreign key (par
 comment on table folder_tb is '폴더';
 comment on column folder_tb.folder_id is '폴더 식별자';
 comment on column folder_tb.name is '폴더명';
-comment on column folder_tb.owner_id is '피종속 자원 식별자';
+comment on column folder_tb.resource_scope_id is '피종속 자원 식별자';
 comment on column folder_tb.create_user is '폴더 생성자';
 comment on column folder_tb.create_time is '생성시각';
 comment on column folder_tb.folder_type is '폴더종류';
@@ -253,7 +255,6 @@ create table folder_acl_tb(
                               subject_type smallint, -- 대상 종류 (팀 || 사용자)
                               subject_id int, -- 대상의 PK
                               permission_bit_mask smallint,-- - READ, CREATE(==update 포함), DELETE, SAHRE 등등 가능한 기능과 권한에 대해 서술, ENUM으로 관리
-                              is_shared smallint,
                               create_time timestamp,
                               create_user int, -- 이 권한을 생성한 사람
                               status smallint

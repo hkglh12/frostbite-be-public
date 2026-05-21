@@ -15,6 +15,8 @@ import java.util.UUID;
 @Schema(
         description = "폴더 간략정보"
 )
+@NoArgsConstructor
+@AllArgsConstructor
 public class SimpleFolderResponse {
 
     @Schema(description = "식별자 UUID")

@@ -26,7 +26,7 @@ public class TeamResolverService {
     private final TeamResolverService self;
 
     @Autowired
-    public TeamResolverService(TeamMapper teamMapper, UserService userService, @Lazy TeamResolverService self){
+    public TeamResolverService(TeamMapper teamMapper, @Lazy TeamResolverService self){
         this.teamMapper = teamMapper;
         this.self = self;
     }

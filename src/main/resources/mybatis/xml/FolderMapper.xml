@@ -12,9 +12,9 @@
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
-        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user_id, create_time, modify_user_id, modify_time,
+        INSERT INTO FOLDER_TB (folder_id, name, folder_type, resource_scope_id, resource_owner_id, access_policy, create_user_id, create_time, modify_user_id, modify_time,
                                parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
-            VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
+            VALUES (#{folderId}, #{name}, #{folderType}, #{resourceScopeId}, #{resourceOwnerId}, #{accessPolicy}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
                 #{parentFolderId}, #{renderSequence}, #{uuid}, #{status}, '/' || #{folderId} || '/', '/' || #{name} || '/'
                     )
     </insert>
@@ -24,9 +24,9 @@
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
-        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user_id, create_time, modify_user_id, modify_time,
+        INSERT INTO FOLDER_TB (folder_id, name, folder_type, resource_scope_id, resource_owner_id, access_policy, create_user_id, create_time, modify_user_id, modify_time,
         parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
-        VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
+        VALUES (#{folderId}, #{name}, #{folderType}, #{resourceScopeId},#{resourceOwnerId}, #{accessPolicy},  #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
         #{parentFolderId}, #{renderSequence}, #{uuid}, #{status},
                 (select folder_id_path || #{folderId} || '/' from folder_tb where folder_id = #{parentFolderId}
                 ),(
@@ -40,9 +40,9 @@
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
-        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user_id, create_time, modify_user_id, modify_time,
+        INSERT INTO FOLDER_TB (folder_id, name, folder_type, resource_scope_id,resource_owner_id, access_policy, create_user_id, create_time, modify_user_id, modify_time,
         parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
-        VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
+        VALUES (#{folderId}, #{name}, #{folderType}, #{resourceScopeId},#{resourceOwnerId}, #{accessPolicy}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
         #{parentFolderId}, #{renderSequence}, #{uuid}, #{status},
             (select folder_id_path || #{folderId} || '/' from folder_tb where folder_id = #{parentFolderId}
             ),(
@@ -84,13 +84,13 @@
        /** selectPrivateEntryFolder*/
         <!-- TODO : ENTRYFOLDER 전용이니까  parentUuid when choose는 지워도 될텐데-->
         SELECT
-            folder_id, name, create_user_id, create_time, folder_type, owner_id, parent_folder_id, uuid, folder_name_path
+            folder_id, name, create_user_id, create_time, folder_type, resource_scope_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
         FROM
             folder_tb
         WHERE
             folder_type = #{folderType}
         AND
-            owner_id = #{userId}
+            resource_scope_id = #{userId}
         AND
             <choose>
             <when test="parentFolderId == null">
@@ -278,13 +278,13 @@
 
     <select id ="selectTeamEntryFolder" parameterType="TeamEntryFolderCondition" resultType="Folder">
         SELECT
-        folder_id, name, create_user_id, create_time, folder_type, owner_id, parent_folder_id, uuid, folder_name_path
+        folder_id, name, create_user_id, create_time, folder_type, resource_scope_id, parent_folder_id, uuid, folder_name_path
         FROM
         folder_tb
         WHERE
         folder_type = #{folderType}
         AND
-        owner_id = (SELECT team_id FROM team_tb
+        resource_scope_id = (SELECT team_id FROM team_tb
         where uuid = #{teamUuid})
         AND
         <choose>
@@ -299,25 +299,34 @@
         AND
         status = #{status}
     </select>
-    <select id="selectSimpleFolderByFolderUuid" resultType="SimpleFolderResponse">
+    <select id="selectSimpleFolderByFolderId" resultType="SimpleFolderResponse">
         SELECT
-            folder_id, name, folder_type, owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, name, folder_type, resource_scope_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE
             folder_id = #{folderId}
     </select>
+    <select id="selectSimpleFolderByFolderUuid" resultType="SimpleFolderResponse">
+        SELECT
+            folder_id, name, folder_type, resource_scope_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+        FROM
+            folder_tb
+        WHERE
+            uuid = #{folderUuid}
+    </select>
     <select id="selectFolderByUuid" resultType="Folder">
         SELECT
-            folder_id, name, folder_type, owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, name, folder_type, resource_scope_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE
             uuid = #{folderUuid}
     </select>
     <select id="selectFolderDetails" resultType="FolderDetailsDraft">
+        /** selectFolderDetails */
         SELECT
-            folder.uuid, folder.name, folder.folder_type,owner_id, folder.create_user_id,
+            folder.uuid, folder.name, folder.folder_type, folder.resource_scope_id, folder.resource_owner_id, folder.access_policy, folder.create_user_id,
             folder.create_time, folder.modify_user_id, folder.modify_time, folder.render_sequence,
             parent.uuid as parent_folder_uuid, folder.status
         FROM

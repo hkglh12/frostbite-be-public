@@ -31,9 +31,6 @@ public class FolderAcl {
     /** 제약 권한 (READ, CREATE, DELETE, SHARE 등 ENUM) */
     private PermissionBitMask permissionBitMask;
 
-    /** 공유로 생성된 제약 여부 */
-    private boolean isShared;
-
     /** 접근제어 생성시각 */
     private LocalDateTime createTime;
 

@@ -106,7 +106,9 @@ create table folder_tb(
                           modify_time timestamp,
     -- 폴더의 소유형태를 결정한다. private = 개인폴더 -> team = 팀폴더
                           folder_type int,  -- private || team
-                          owner_id int, -- ownertype이 team이면 tema_id가, private 일경우 user_id로
+                          resource_scope_id int, -- ownertype이 team이면 tema_id가, private 일경우 user_id로
+                          resource_owner_id int,
+                          access_policy int,
                           parent_folder_id bigint,
                           render_sequence int,
                           uuid varchar(50),
@@ -124,7 +126,7 @@ create table folder_tb(
 comment on table folder_tb is '폴더';
 comment on column folder_tb.folder_id is '폴더 식별자';
 comment on column folder_tb.name is '폴더명';
-comment on column folder_tb.owner_id is '피종속 자원 식별자';
+comment on column folder_tb.resource_scope_id is '피종속 자원 식별자';
 comment on column folder_tb.create_user_id is '폴더 생성자';
 comment on column folder_tb.create_time is '생성시각';
 comment on column folder_tb.modify_user_id is '폴더 생성자';

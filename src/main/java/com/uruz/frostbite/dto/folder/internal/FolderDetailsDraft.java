@@ -1,12 +1,11 @@
 package com.uruz.frostbite.dto.folder.internal;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.uruz.frostbite.enums.AccessPolicy;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -17,6 +16,8 @@ import java.util.UUID;
 @Schema(
         description = "폴더 상세정보"
 )
+@NoArgsConstructor
+@AllArgsConstructor
 public class FolderDetailsDraft {
 
     @Schema(description = "식별자 UUID")
@@ -27,7 +28,11 @@ public class FolderDetailsDraft {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private FolderType folderType;
     @Schema(description = "소유자명[folderType->TEAM : 팀명 || PRIVATE : 소유자명")
-    private Integer ownerId;
+    private Integer resourceScopeId;
+    @Schema(description = "소유자명[folderType->TEAM : 팀명 || PRIVATE : 소유자명")
+    private Integer resourceOwnerId;
+    @Schema(description = "소유자명[folderType->TEAM : 팀명 || PRIVATE : 소유자명")
+    private AccessPolicy accessPolicy;
     @Schema(description = "생성자PK")
     private Integer createUserId;
     @Schema(description = "폴더 생성시각")

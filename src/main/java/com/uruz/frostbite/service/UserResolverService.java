@@ -6,6 +6,7 @@ import com.uruz.frostbite.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.uruz.frostbite.enums.common.ApiErrorCode.NOT_FOUND;
@@ -21,8 +22,10 @@ public class UserResolverService {
         return userMapper.selectUserByUuid(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
     }
 
-    public User getUserByUserId(Integer userId) {
-        return userMapper.selectUserByUserId(userId).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
+
+    public Optional<User> getUserByUserId(Integer userId) {
+        return userMapper.selectUserByUserId(userId);
     }
+
 
 }
