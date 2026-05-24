@@ -1,22 +1,13 @@
-package com.uruz.frostbite.service;
+package com.uruz.frostbite.service.resolver;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
-import com.uruz.frostbite.domain.RelUserTeam;
 import com.uruz.frostbite.domain.Team;
-import com.uruz.frostbite.domain.User;
-import com.uruz.frostbite.dto.team.*;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
-import com.uruz.frostbite.enums.common.GeneralRelationStatus;
-import com.uruz.frostbite.enums.team.TeamRole;
-import com.uruz.frostbite.enums.team.TeamStatus;
 import com.uruz.frostbite.mapper.TeamMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service

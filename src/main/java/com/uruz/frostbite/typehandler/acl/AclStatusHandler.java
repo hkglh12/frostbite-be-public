@@ -1,4 +1,4 @@
-package com.uruz.frostbite.typehandler;
+package com.uruz.frostbite.typehandler.acl;
 
 import com.uruz.frostbite.enums.AclStatus;
 import com.uruz.frostbite.enums.AclSubjectType;

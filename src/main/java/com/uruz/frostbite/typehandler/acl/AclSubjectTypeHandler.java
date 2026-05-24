@@ -1,4 +1,4 @@
-package com.uruz.frostbite.typehandler;
+package com.uruz.frostbite.typehandler.acl;
 
 import com.uruz.frostbite.enums.AclSubjectType;
 import org.apache.ibatis.type.BaseTypeHandler;

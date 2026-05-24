@@ -1,4 +1,4 @@
-package com.uruz.frostbite.typehandler;
+package com.uruz.frostbite.typehandler.team;
 
 import com.uruz.frostbite.enums.AccessPolicy;
 import com.uruz.frostbite.enums.AclEffectType;

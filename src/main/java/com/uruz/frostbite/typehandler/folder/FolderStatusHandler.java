@@ -1,4 +1,4 @@
-package com.uruz.frostbite.typehandler;
+package com.uruz.frostbite.typehandler.folder;
 
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;

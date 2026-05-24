@@ -1,4 +1,4 @@
-package com.uruz.frostbite.service;
+package com.uruz.frostbite.service.resolver;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.User;
