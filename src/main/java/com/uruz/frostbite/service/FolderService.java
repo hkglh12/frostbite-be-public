@@ -40,7 +40,7 @@ public class FolderService {
         // 따라서 별도 메서드로 처리
 
         // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
-        Folder initialPrivateRootFolder = Folder.createEntryFolder(initialFolderName, userId, FolderType.PRIVATE);
+        Folder initialPrivateRootFolder = Folder.createPrivateEntryFolder(initialFolderName, userId);
         folderMapper.insertEntryFolder(initialPrivateRootFolder);
         // TODO : 폴더 생성 후 ACL 제어 추가 필요
 
@@ -68,7 +68,7 @@ public class FolderService {
 
         Folder teamEntryFolder = getTeamEntryFolder(condition);
         Folder newFolder = Folder.createTeamRootFolder(request.getName(), teamEntryFolder.getFolderId(),
-                teamEntryFolder.getResourceScopeId(), userId);
+                teamEntryFolder.getResourceScopeTeamId(), userId);
 
         folderMapper.insertRootFolder(newFolder);
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
@@ -83,7 +83,7 @@ public class FolderService {
         if(folderType.equals(FolderType.PRIVATE)){
             newFolder = Folder.createPrivateSubFolder(request.getName(), parentFolder.getFolderId(), userId);
         } else {
-            newFolder = Folder.createTeamSubFolder(request.getName(), parentFolder.getFolderId(), parentFolder.getResourceScopeId(),userId);
+            newFolder = Folder.createTeamSubFolder(request.getName(), parentFolder.getFolderId(), parentFolder.getResourceScopeTeamId(),userId);
         }
 
         folderMapper.insertSubFolder(newFolder);
@@ -96,7 +96,7 @@ public class FolderService {
 
         Folder privateEntryFolder = getPrivateEntryFolder(entryCondition);
 
-        SimpleFolderOffsetConditionByFolderId folderCondition = SimpleFolderOffsetConditionByFolderId.of(
+        SimplePrivateFolderOffsetConditionByFolderId folderCondition = SimplePrivateFolderOffsetConditionByFolderId.of(
                 userId, privateEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
         );
 
@@ -131,8 +131,8 @@ public class FolderService {
 
         Folder teamEntryFolder = getTeamEntryFolder(entryCondition);
 
-        SimpleFolderOffsetConditionByFolderId folderCondition = SimpleFolderOffsetConditionByFolderId.of(
-                teamEntryFolder.getResourceScopeId(), teamEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
+        SimplePrivateFolderOffsetConditionByFolderId folderCondition = SimplePrivateFolderOffsetConditionByFolderId.of(
+                teamEntryFolder.getResourceScopeTeamId(), teamEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
         );
 
         List<SimpleFolderResponse> list = selectSimpleFolderOffsetById(folderCondition);
@@ -219,10 +219,10 @@ public class FolderService {
 
         String resourcScopeName = null;
         if(draft.getFolderType().equals(FolderType.PRIVATE)){
-            User ownerUser = userResolverService.getUserByUserId(draft.getResourceScopeId()).orElse(null);
+            User ownerUser = userResolverService.getUserByUserId(draft.getResourceScopeUserId()).orElse(null);
             resourcScopeName = ownerUser.getName();
         } else {
-            Team team = teamResolverService.getTeambyTeamId(draft.getResourceScopeId());
+            Team team = teamResolverService.getTeambyTeamId(draft.getResourceScopeTeamId());
             resourcScopeName = team.getName();
         }
 
@@ -270,7 +270,7 @@ public class FolderService {
         // Owner 변경불가
         // Team FolderType + Owner 변경 = 폴더 타 팀으로 인계
         // Private FolderType + Owner 변경 = 타 유저에게 폴더 소유권 이전
-        if(targetFolder.getResourceScopeId() != destinationFolder.getResourceScopeId()){
+        if(targetFolder.getFolderType() != destinationFolder.getFolderType()){
             throw new GeneralCustomException(ApiErrorCode.BAD_REQUEST, "FOLDER OWNER CAN NOT BE CHANGED");
         }
 
@@ -316,7 +316,7 @@ public class FolderService {
      * ROOT List, Sub Folder 리스트 구분없이 사용 가능.
      *
      * */
-    public List<SimpleFolderResponse> selectSimpleFolderOffsetById(SimpleFolderOffsetConditionByFolderId condition){
+    public List<SimpleFolderResponse> selectSimpleFolderOffsetById(SimplePrivateFolderOffsetConditionByFolderId condition){
         return folderMapper.selectSimpleFolderOffsetById(condition);
     }
 

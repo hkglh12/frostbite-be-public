@@ -98,61 +98,70 @@ comment on column rel_user_role_tb.role_id is '역할 식별자';
 
  */
 
--- 폴더의 삭제는 "수정"으로 처리할 예정
-create table folder_tb(
-                          folder_id bigserial primary key,
-                          name varchar(512),
-                          create_user int,
-                          create_time timestamp,
-                          modify_user int,
-                          modify_time timestamp,
-                         -- 폴더의 소유형태를 결정한다. private = 개인폴더 -> team = 팀폴더
-                          folder_type int,  -- private || team
-                          resource_scope_id int, -- ownertype이 team이면 tema_id가, private 일경우 user_id로
-                          resource_owner_id int,
-                          access_policy int,
-                          parent_id bigint,
-                          render_sequence int,
-                          uuid varchar(50),
-                          status smallint
+create table folder_tb
+(
+    uuid                   varchar(50),
+    folder_id              bigserial
+        primary key,
+    name                   varchar(512),
+    folder_type            integer,
+    parent_folder_id       bigint,
+    resource_scope_team_id integer,
+    resource_scope_user_id integer,
+    resource_owner_id      integer,
+    access_policy           integer,
+    folder_id_path         varchar,
+    folder_name_path       varchar,
+    render_sequence        integer,
+    status                 smallint,
+    create_user_id         integer,
+    create_time            timestamp,
+    modify_user_id         integer,
+    modify_time            timestamp,
+    delete_user_id         integer,
+    delete_time            timestamp
 
 );
--- folder_type은 ENUM으로 1 -> private, 2-> team 으로 추후 구성
--- 팀은 그 자체로 폴더가됨 -> 1depth 폴더는 사실상 해당 팀폴다 아래의 2depth가 됨
-alter table folder_tb add constraint folder_tb_create_user_fk foreign key (create_user) references user_tb(user_id);
-alter table folder_tb add constraint folder_tb_modify_user_fk foreign key (modify_user) references user_tb(user_id);
-alter table folder_tb add constraint folder_tb_folder_parent_fk foreign key (parent_id) references folder_tb(folder_id);
 
 comment on table folder_tb is '폴더';
+comment on column folder_tb.uuid is 'uuid';
 comment on column folder_tb.folder_id is '폴더 식별자';
 comment on column folder_tb.name is '폴더명';
-comment on column folder_tb.resource_scope_id is '피종속 자원 식별자';
-comment on column folder_tb.create_user is '폴더 생성자';
-comment on column folder_tb.create_time is '생성시각';
-comment on column folder_tb.folder_type is '폴더종류';
-comment on column folder_tb.parent_id is '부모 폴더 식별자';
+comment on column folder_tb.folder_type is '폴더 종류(PRIVATE||TEAM)';
+comment on column folder_tb.parent_folder_id is '부모 폴더 식별자';
+comment on column folder_tb.resource_scope_team_id is '소유 팀 식별자';
+comment on column folder_tb.resource_scope_user_id is '소유 사용자식별자';
+comment on column folder_tb.resource_owner_id is '폴더 실제 관리 사용자 (UserPK)';
+comment on column folder_tb.access_policy is '폴더접근정책(USER||TEAM)';
+comment on column folder_tb.folder_id_path is ' 폴더 식별자 경로 ';
+comment on column folder_tb.folder_name_path is '폴더 이름 경로';
 comment on column folder_tb.render_sequence is '출력순서';
-comment on column folder_tb.uuid is 'uuid';
 comment on column folder_tb.status is '폴더상태';
+comment on column folder_tb.create_user_id is '폴더 생성자 PK';
+comment on column folder_tb.create_time is '생성시각';
+comment on column folder_tb.modify_user_id is '폴더 수정자 PK';
+comment on column folder_tb.modify_time is '수정시각';
+comment on column folder_tb.delete_user_id is '삭제자 PK';
+comment on column folder_tb.delete_time is '삭제시각';
 
-create table folder_tb_ver(
-                              folder_ver_id bigserial primary key,
-                              folder_id int,
-                              name varchar(512),
-                              modify_user int,
-                              modify_time timestamp
-);
+alter table folder_tb add constraint folder_tb_parent_fk foreign key (parent_folder_id) references folder_tb(folder_id);
+alter table folder_tb add constraint folder_tb_scope_team_fk foreign key (resource_scope_team_id) references team_tb(team_id);
+alter table folder_tb add constraint folder_tb_scope_user_fk foreign key (resource_scope_user_id) references user_tb(user_id);
+alter table folder_tb add constraint folder_tb_c_user_fk foreign key (create_user_id) references user_tb(user_id);
+alter table folder_tb add constraint folder_tb_m_user_fk foreign key (modify_user_id) references user_tb(user_id);
+alter table folder_tb add constraint folder_tb_d_user_fk foreign key (delete_user_id) references user_tb(user_id);
 
-alter table folder_tb_ver add constraint folder_tb_ver_modify_user_fk foreign key (modify_user) references user_tb(user_id);
-alter table folder_tb_ver add constraint folder_tb_ver_folder_fk foreign key (folder_id) references folder_tb(folder_id);
+ALTER TABLE folder_tb
+    ADD CONSTRAINT chk_folder_resource_scope
+        CHECK (
+            (folder_type = 1 AND resource_scope_user_id IS NOT NULL AND resource_scope_team_id IS NULL)
+                OR (folder_type = 2 AND resource_scope_user_id IS NULL AND resource_scope_team_id IS NOT NULL)
+            );
 
--- 폴더명 말고는 바꾸는걸 허용하지 않을예정임
-comment on table folder_tb_ver is '폴더 변경이력';
-comment on column folder_tb_ver.folder_ver_id is '폴더 버전 식별자';
-comment on column folder_tb_ver.folder_id is '폴더 식별자';
-comment on column folder_tb_ver.name is '폴더명';
-comment on column folder_tb_ver.modify_user is '수정자';
-comment on column folder_tb_ver.modify_time is '수정시각';
+ALTER TABLE folder_tb
+    ALTER COLUMN folder_type SET NOT NULL;
+ALTER TABLE folder_tb
+    ALTER COLUMN access_policy SET NOT NULL;
 
 -- 파일의 삭제는 "수정"으로 처리할 예정
 create table file_tb(
@@ -189,29 +198,6 @@ comment on column file_tb.is_delete is '삭제여부';
 alter table file_tb add constraint file_tb_folder_fk  foreign key (folder_id) references folder_tb(folder_id);
 alter table file_tb add constraint file_tb_create_user_fk foreign key (create_user) references user_tb(user_id);
 alter table file_tb add constraint file_tb_modify_user_fk foreign key (modify_user) references user_tb(user_id);
-
--- 사실 한개 폴더 내 동일한 파일명일 때 버전관리가 가능할것임. "폴더 단위로 이동이 발생"은 관리하지 않을예정
--- 단, 파일명이 변경된다면 -> 그건 버전관리로 관리되어야 함
-create table file_tb_ver(
-                            file_ver_id bigserial primary key ,
-                            file_id bigint,
-                            file_name varchar(1024),
-                            file_size bigint,
-                            operation_description varchar(256),
-                            mount_point varchar(512),
-                            file_path varchar(1024),
-                            modify_user int,
-                            modify_time timestamp
-);
-alter table file_tb_ver add constraint file_tb_ver_modify_user_fk foreign key (modify_user) references user_tb(user_id);
-alter table file_tb_ver add constraint file_tb_ver_file_fk foreign key (file_id) references file_tb(file_id);
-
-comment on table file_tb_ver is '파일 변경이력';
-comment on column file_tb_ver.file_ver_id is '파일 변경이력 식별자';
-comment on column file_tb_ver.file_name is '파일명';
-comment on column file_tb_ver.file_size is '파일크기';
-comment on column file_tb_ver.modify_user is '수정자';
-comment on column file_tb_ver.modify_time is '수정시각';
 
 -- file_stauts와 file_tb는 1:1 추가작업에 대한 이야기임 (검색엔진 동기화여부, 업로드완료여부 등등)
 create table file_status_tb(

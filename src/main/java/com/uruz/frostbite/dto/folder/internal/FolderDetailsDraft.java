@@ -24,15 +24,29 @@ public class FolderDetailsDraft {
     private UUID uuid;
     @Schema(description = "폴더 이름")
     private String name;
-    @Schema(description = "폴더 구분[TEAM || PRIVATE]")
+    @Schema(description = "폴더 구분")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private FolderType folderType;
-    @Schema(description = "소유자명[folderType->TEAM : 팀명 || PRIVATE : 소유자명")
-    private Integer resourceScopeId;
-    @Schema(description = "소유자명[folderType->TEAM : 팀명 || PRIVATE : 소유자명")
+    @Schema(description = "부모폴더UUID")
+    private UUID parentFolderUuid;
+    @Schema(description = "소유자 식별자")
+    private Integer resourceScopeTeamId;
+    private Integer resourceScopeUserId;
+    @Schema(description = "실 관리 사용자 식별자")
     private Integer resourceOwnerId;
-    @Schema(description = "소유자명[folderType->TEAM : 팀명 || PRIVATE : 소유자명")
+    @Schema(description = "접근정책")
     private AccessPolicy accessPolicy;
+
+    private String folderIdPath;
+    private String folderNamePath;
+
+    @Schema(description = "랜더순서")
+    private Integer renderSequence;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    @Schema(description = "폴더상태")
+    private FolderStatus status;
+
     @Schema(description = "생성자PK")
     private Integer createUserId;
     @Schema(description = "폴더 생성시각")
@@ -43,12 +57,12 @@ public class FolderDetailsDraft {
     @Schema(description = "폴더 수정시각")
     @JsonFormat(pattern = "yyyy-MM-dd", shape=JsonFormat.Shape.STRING)
     private LocalDateTime modifyTime;
-    @Schema(description = "랜더순서")
-    private Integer renderSequence;
-    @Schema(description = "부모폴더UUID")
-    private UUID parentFolderUuid;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    @Schema(description = "폴더상태")
-    private FolderStatus status;
+    @Schema(description = "삭제자PK")
+    private Integer deleteUserId;
+    @Schema(description = "폴더 삭제시각")
+    @JsonFormat(pattern = "yyyy-MM-dd", shape=JsonFormat.Shape.STRING)
+    private LocalDateTime deleteTime;
+
+
 
 }

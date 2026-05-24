@@ -7,50 +7,61 @@
 
     <!-- selectKey Before실행 -> POJO 값 바인드 -> 그 POJO로 <tag> 실행-->
     <!-- selectKey 사용시 useGeneratedKeys 불필요, 사용하려면 values에 PK가 안들어가고, useGeneratedKeys + KeyProperty -->
-    <insert id = "insertEntryFolder" parameterType="Folder" keyProperty="folderId">
-
+    <insert id="insertEntryFolder" parameterType="Folder" keyProperty="folderId">
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
-        INSERT INTO FOLDER_TB (folder_id, name, folder_type, resource_scope_id, resource_owner_id, access_policy, create_user_id, create_time, modify_user_id, modify_time,
-                               parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
-            VALUES (#{folderId}, #{name}, #{folderType}, #{resourceScopeId}, #{resourceOwnerId}, #{accessPolicy}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
-                #{parentFolderId}, #{renderSequence}, #{uuid}, #{status}, '/' || #{folderId} || '/', '/' || #{name} || '/'
-                    )
-    </insert>
 
-    <insert id="insertRootFolder" parameterType="Folder" keyProperty="folderId">
-        /* folderMapper insertRootFolder */
-        <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
-            SELECT nextval('folder_tb_folder_id_seq')
-        </selectKey>
-        INSERT INTO FOLDER_TB (folder_id, name, folder_type, resource_scope_id, resource_owner_id, access_policy, create_user_id, create_time, modify_user_id, modify_time,
-        parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
-        VALUES (#{folderId}, #{name}, #{folderType}, #{resourceScopeId},#{resourceOwnerId}, #{accessPolicy},  #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
-        #{parentFolderId}, #{renderSequence}, #{uuid}, #{status},
-                (select folder_id_path || #{folderId} || '/' from folder_tb where folder_id = #{parentFolderId}
-                ),(
-                    select folder_name_path || #{name} || '/' from folder_tb where folder_id = #{parentFolderId}
-                )
+        INSERT INTO FOLDER_TB (
+        uuid, folder_id, name, folder_type, parent_folder_id, resource_scope_team_id, resource_scope_user_id,
+        resource_owner_id, access_policy, folder_id_path, folder_name_path, render_sequence, status,
+        create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
+        )
+        VALUES (
+        #{uuid}, #{folderId}, #{name}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
+        #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy}, '/' || #{folderId} || '/',
+        '/' || #{name} || '/', #{renderSequence}, #{status}, #{createUserId}, #{createTime},
+        #{modifyUserId}, #{modifyTime}, #{deleteUserId}, #{deleteTime}
         )
     </insert>
-
-    <insert id="insertSubFolder" parameterType="Folder" keyProperty="folderId">
-        /* folderMapper insertRootFolder */
+    <insert id="insertRootFolder" parameterType="Folder" keyProperty="folderId">
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
-        INSERT INTO FOLDER_TB (folder_id, name, folder_type, resource_scope_id,resource_owner_id, access_policy, create_user_id, create_time, modify_user_id, modify_time,
-        parent_folder_id, render_sequence, uuid, status, folder_id_path, folder_name_path)
-        VALUES (#{folderId}, #{name}, #{folderType}, #{resourceScopeId},#{resourceOwnerId}, #{accessPolicy}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
-        #{parentFolderId}, #{renderSequence}, #{uuid}, #{status},
-            (select folder_id_path || #{folderId} || '/' from folder_tb where folder_id = #{parentFolderId}
-            ),(
-            select folder_name_path || #{name} || '/' from folder_tb where folder_id = #{parentFolderId}
-            )
-                )
-    </insert>
 
+        INSERT INTO FOLDER_TB (
+        uuid, folder_id, name, folder_type, parent_folder_id, resource_scope_team_id, resource_scope_user_id,
+        resource_owner_id, access_policy, folder_id_path, folder_name_path, render_sequence, status,
+        create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
+        )
+        VALUES (
+        #{uuid}, #{folderId}, #{name}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
+        #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy},
+        (SELECT folder_id_path || #{folderId} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
+        (SELECT folder_name_path || #{name} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
+        #{renderSequence}, #{status}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
+        #{deleteUserId}, #{deleteTime}
+        )
+    </insert>
+    <insert id="insertSubFolder" parameterType="Folder" keyProperty="folderId">
+        <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
+            SELECT nextval('folder_tb_folder_id_seq')
+        </selectKey>
+
+        INSERT INTO FOLDER_TB (
+        uuid, folder_id, name, folder_type, parent_folder_id, resource_scope_team_id, resource_scope_user_id,
+        resource_owner_id, access_policy, folder_id_path, folder_name_path, render_sequence, status,
+        create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
+        )
+        VALUES (
+        #{uuid}, #{folderId}, #{name}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
+        #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy},
+        (SELECT folder_id_path || #{folderId} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
+        (SELECT folder_name_path || #{name} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
+        #{renderSequence}, #{status}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
+        #{deleteUserId}, #{deleteTime}
+        )
+    </insert>
     <update id="updateFolder" parameterType="FolderModifyCommand">
         update
             folder_tb
@@ -84,13 +95,13 @@
        /** selectPrivateEntryFolder*/
         <!-- TODO : ENTRYFOLDER 전용이니까  parentUuid when choose는 지워도 될텐데-->
         SELECT
-            folder_id, name, create_user_id, create_time, folder_type, resource_scope_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
+            folder_id, name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
         FROM
             folder_tb
         WHERE
             folder_type = #{folderType}
         AND
-            resource_scope_id = #{userId}
+        resource_scope_user_id = #{userId}
         AND
             <choose>
             <when test="parentFolderId == null">
@@ -278,13 +289,13 @@
 
     <select id ="selectTeamEntryFolder" parameterType="TeamEntryFolderCondition" resultType="Folder">
         SELECT
-        folder_id, name, create_user_id, create_time, folder_type, resource_scope_id, parent_folder_id, uuid, folder_name_path
+        folder_id, name, create_user_id, create_time, folder_type, resource_scope_team_id, parent_folder_id, uuid, folder_name_path
         FROM
         folder_tb
         WHERE
         folder_type = #{folderType}
         AND
-        resource_scope_id = (SELECT team_id FROM team_tb
+        resource_scope_team_id = (SELECT team_id FROM team_tb
         where uuid = #{teamUuid})
         AND
         <choose>
@@ -301,7 +312,7 @@
     </select>
     <select id="selectSimpleFolderByFolderId" resultType="SimpleFolderResponse">
         SELECT
-            folder_id, name, folder_type, resource_scope_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE
@@ -309,7 +320,7 @@
     </select>
     <select id="selectSimpleFolderByFolderUuid" resultType="SimpleFolderResponse">
         SELECT
-            folder_id, name, folder_type, resource_scope_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id,, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE
@@ -317,7 +328,7 @@
     </select>
     <select id="selectFolderByUuid" resultType="Folder">
         SELECT
-            folder_id, name, folder_type, resource_scope_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE
@@ -326,7 +337,7 @@
     <select id="selectFolderDetails" resultType="FolderDetailsDraft">
         /** selectFolderDetails */
         SELECT
-            folder.uuid, folder.name, folder.folder_type, folder.resource_scope_id, folder.resource_owner_id, folder.access_policy, folder.create_user_id,
+            folder.uuid, folder.name, folder.folder_type, folder.resource_scope_team_id, folder.resource_scope_user_id, folder.resource_owner_id, folder.access_policy, folder.create_user_id,
             folder.create_time, folder.modify_user_id, folder.modify_time, folder.render_sequence,
             parent.uuid as parent_folder_uuid, folder.status
         FROM

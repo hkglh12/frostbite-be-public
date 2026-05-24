@@ -24,9 +24,9 @@ public interface FolderMapper {
     Optional<Folder> selectPrivateEntryFolder(PrivateEntryFolderCondition condition);
     Optional<Folder> selectTeamEntryFolder(TeamEntryFolderCondition condition);
 
-    List<SimpleFolderResponse> selectSimpleFolderOffsetById(SimpleFolderOffsetConditionByFolderId condition);
+    List<SimpleFolderResponse> selectSimpleFolderOffsetById(SimplePrivateFolderOffsetConditionByFolderId condition);
     List<SimpleFolderResponse> selectSimpleFolderOffsetByUuid(SimpleFolderOffsetConditionByUuid condition);
-    int selectSimpleFolderTotalCountById(SimpleFolderOffsetConditionByFolderId condition);
+    int selectSimpleFolderTotalCountById(SimplePrivateFolderOffsetConditionByFolderId condition);
     int selectSimpleFolderTotalCountByUuid(SimpleFolderOffsetConditionByUuid condition);
     List<SimpleFolderResponse> selectSimpleFolderKeyBaseById(SimpleFolderKeyBaseConditionByFolderId condition);
     List<SimpleFolderResponse> selectSimpleFolderKeyBaseByUuid(SimpleFolderKeyBaseConditionByUuid condition);
