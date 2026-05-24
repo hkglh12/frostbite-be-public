@@ -2,10 +2,12 @@ package com.uruz.frostbite.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
 public enum PermissionBitMask {
+    NONE(0, "DENIED"),
     // 브라우징 (폴더/파일 리스팅 가능)
     BROWSE(1, "BROWSE"),
     // 다운로드, 읽기
@@ -46,7 +48,7 @@ public enum PermissionBitMask {
         EnumSet<PermissionBitMask> result = EnumSet.noneOf(PermissionBitMask.class);
 
         for (PermissionBitMask permission : values()) {
-            if ((mask & permission.value) == permission.value) {
+            if (permission.value != 0 && (mask & permission.value) == permission.value) {
                 result.add(permission);
             }
         }
@@ -54,8 +56,65 @@ public enum PermissionBitMask {
         return result;
     }
 
-    public static boolean hasPermission(int mask, PermissionBitMask permission) {
-        return (mask & permission.getValue()) == permission.getValue();
+    public static PermissionBitMask[] fromMaskToArray(Integer mask) {
+        if (mask == null || mask == 0) {
+            return new PermissionBitMask[0];
+        }
+
+        return fromMask(mask).toArray(new PermissionBitMask[0]);
     }
 
+    // 비트마스크를 통해 Integer 연산
+    public static int of(PermissionBitMask... permissions) {
+        int bitMask = 0;
+
+        for (PermissionBitMask permission : permissions) {
+            if (permission == null) {
+                continue;
+            }
+            bitMask |= permission.value;
+        }
+
+        return bitMask;
+    }
+
+    public static PermissionBitMask[] allMasks() {
+        return Arrays.stream(values())
+                .filter(permission -> permission.value != 0)
+                .toArray(PermissionBitMask[]::new);
+    }
+
+    public static boolean has(Integer bitMask, PermissionBitMask permission) {
+        if (bitMask == null || permission == null || permission.value == 0) {
+            return false;
+        }
+
+        return (bitMask & permission.value) == permission.value;
+    }
+
+    public static boolean hasAny(Integer bitMask, PermissionBitMask... permissions) {
+        if (bitMask == null || permissions == null) {
+            return false;
+        }
+
+        for (PermissionBitMask permission : permissions) {
+            if (has(bitMask, permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasAll(Integer bitMask, PermissionBitMask... permissions) {
+        if (bitMask == null || permissions == null) {
+            return false;
+        }
+
+        for (PermissionBitMask permission : permissions) {
+            if (!has(bitMask, permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
