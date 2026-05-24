@@ -10,6 +10,8 @@
     - ACL은 Folder 도메인과 조합해 생각해야 한다.
         - Folder.folderType 이 폴더 종류를 설명하고(팀폴더 / 개인폴더)
           Folder.accessPolicy가 "폴더의 접근제어 종류" 를 설명한다. 이로부터 ACL의 의미가 달라질 수 있다.
+            - Folder.folderType = TEAM이면 Folder.resourceScopeTeamId만 값을 가지고 Folder.resourceScopeUserId는 NULL이다.
+            - Folder.folderType = PRIVATE이면 Folder.resourceScopeUserId만 값을 가지고 Folder.resourceScopeTeamId는 NULL이다.
             - Folder.folderType = TEAM + Folder.accessPolicy = USER -> 팀 폴더이지만 특정 사용자에게만 접근허용
                 - 이경우, 해당 폴더 ACL은 subjectType = TEAM을 가질 수 없다. 특정 사용자에게만 허용된 종류이기 때문
     
@@ -38,7 +40,7 @@
     - subjectUserId
         - subjectType이 TEAM -> temaId에 team PK를 입력하며, 팀의 행동을 제어한다.
         - subjectType이 USER -> userId에 User Pk를 입력하며, 사용자의 행동을 제어한다.
-        - 상기 두개 컬럼은 상호 베타적으로 null 이어야 한다.
+        - 두 컬럼은 상호 배타적이며, 정확히 하나만 NOT NULL이어야 한다.
     - permissionBitMask : 이 ACL이 허용하는 접근주체의 동작을 의미한다.
         - BROWSE(1): 폴더/파일 리스팅 가능
         - READ(2): 다운로드, 읽기, 폴더 진입 후 내용 조회
@@ -67,25 +69,25 @@
             - Implicit DENY를 사용하면, "100명 중 1명에게만 거부" 생성 시, "ALLOW를 100개 만들어야함"
     - 팀 폴더는 아래의 대표 케이스를 가진다.
         - 팀 폴더, 전체팀에게 허용
-            - Folder.folderType = TEAM + Folder.resourceScopeId = teamPk + Folder.accessPolicy = TEAM
+            - Folder.folderType = TEAM + Folder.resourceScopeTeamId = teamPk + Folder.resourceScopeUserId = NULL + Folder.accessPolicy = TEAM
             + FolderAcl.effectType = ALLOW + FolderAcl.subjectType = TEAM + FolderAcl.subjectTeamId = teamPk
         - 팀 폴더, 특정 사용자에게만 허용
-            - Folder.folderType = TEAM + Folder.resourceScopeId = teamPk + Folder.accessPolicy = USER
+            - Folder.folderType = TEAM + Folder.resourceScopeTeamId = teamPk + Folder.resourceScopeUserId = NULL + Folder.accessPolicy = USER
             + FolderAcl.effectType = ALLOW + FolderAcl.subjectType = USER + FolderAcl.subjectUserId = userPk
             - 위 조합으로 허용 사용자 N개 만큼 ACL이 존재해야 한다.
         - 팀 폴더, 특정 사용자만 불허
-            - Folder.folderType = TEAM + Folder.resourceScopeId = teamPk + Folder.accessPolicy = TEAM
+            - Folder.folderType = TEAM + Folder.resourceScopeTeamId = teamPk + Folder.resourceScopeUserId = NULL + Folder.accessPolicy = TEAM
             + FolderAcl.effectType = ALLOW + FolderAcl.subjectType = TEAM + FolderAcl.subjectTeamId = teamPk
             
             - 위 ACL에 더해, 아래 ACL이 접근 불가할 사용자 N개 만큼 있어야 한다.            
-            - Folder.folderType = TEAM + Folder.resourceScopeId = teamPk + Folder.accessPolicy = TEAM
+            - Folder.folderType = TEAM + Folder.resourceScopeTeamId = teamPk + Folder.resourceScopeUserId = NULL + Folder.accessPolicy = TEAM
             + FolderAcl.effectType = DENY + FolderAcl.subjectType = USER + FolderAcl.subjectUserId = userPk
     - 단, effectType = DENY인 경우 "접근 자체를 막는 것" 이므로, permissionBitMask는 값이 있어서는 안된다. NULL로 할당되어야 함
         - 구현 시 permissionBitMask는 nullable이어야 하며, DB 컬럼도 NULL을 허용해야 한다.
 
 ## Folder ACL : Private Folder 유의 사항
     - 개인폴더는 ACL이 사용자 단위로 떨어져야 하며, 폴더와 조합해서 판단해야 한다.
-        - Folder.folderType = PRIVATE + Folder.resourceScopeId = userPk + Folder.accessPolicy = USER
+        - Folder.folderType = PRIVATE + Folder.resourceScopeTeamId = NULL + Folder.resourceScopeUserId = userPk + Folder.accessPolicy = USER
         + FolderAcl.effectType = ALLOW + FolderAcl.subjectType = USER + FolderAcl.subjectUserId = userPk
 
 ### ACL 사용 유의사항

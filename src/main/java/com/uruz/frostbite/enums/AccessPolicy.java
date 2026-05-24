@@ -2,8 +2,7 @@ package com.uruz.frostbite.enums;
 
 public enum AccessPolicy {
     USER(1),
-    TEAM(2),
-    TEAM_MEMBER_SPECIFIC(2);
+    TEAM(2);
 
     private final int value;
 
