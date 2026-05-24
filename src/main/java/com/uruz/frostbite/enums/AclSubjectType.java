@@ -3,7 +3,7 @@ package com.uruz.frostbite.enums;
 /** ACL 접근 허가 대상 종류 (팀 || 개인) */
 public enum AclSubjectType {
     // FolderType과 같은 값을 가지지만, 목적이 다르므로 분리
-    PRIVATE(1),
+    USER(1),
     TEAM(2);
 
     private final int value;

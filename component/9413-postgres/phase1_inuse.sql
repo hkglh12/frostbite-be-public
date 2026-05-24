@@ -222,62 +222,39 @@ create table file_status_tb(
 );
 alter table file_status_tb add constraint file_tb_ver_file_fk foreign key (file_id) references file_tb(file_id);
 
-comment on table file_status_tb is '파일 작업 상태'
+comment on table file_status_tb is '파일 작업 상태';
 comment on column file_status_tb.file_id is '파일 식별자';
 comment on column file_status_tb.upload_status is '압로드 상태';
 
-
-
---create table folder_acl_tb(
---    acl_id bigserial primary key ,
---    user_id int,
---    folder_id bigint,
---    access_type smallint, -- 1 -> 프라이빗폴더 대상 , 2 --> 팀 폴더 대상, 3 --> 공유폴더 대상
---    subject int, -- - READ, CREATE(==update 포함), DELETE, SAHRE 등등 가능한 기능과 권한에 대해 서술, ENUM으로 관리
---    create_time timestamp,
---    create_user int, -- 이 권한을 생성한 사람
---    is_delete smallint
---);
-
--- 개선안 : effect_type 추가, subject_type 추가
--- 원래 구조는 TF_1팀이 사업폴더에 접근권한을 받게되면 -> 모든 사람을 하나씩 다추가해줘야했음
--- 문제점 -> 새로 신입이 들어오면 수동으로 추가해줘함
--- 팀원이 1천명에 대해 "전사폴더" 같은거 만들면 1천 row가 추가됨
--- 팀 공유 자체를 캔슬하려면 -> "row 1000개 지워야함"
--- 따라서, effect_type : "ALLOW || DENY" (접근허가 / 명시적 접근거부)
--- subject -> subject_type: 팀을 대상으로 하는지, user를 대상으로 하는지 (TEAM || USER)
--- 기존의 "권한"을 표현하던 subject -> 컬럼명 변경 : permission
--- user_id -> subject_id : 대상의 PK를 저장
--- access_type -> is_shared : 굳이 (개인폴더인데->팀 공유), (팀폴더인데 ->팀공유) 를 enum으로 표현하면 enum 해석이 한번 더들어감. is_shared로 충분할것같음
-create table folder_acl_tb(
-                              acl_id bigserial primary key ,
-                              user_id int,
-                              folder_id bigint,
-                              effect_type smallint, -- ALLOW || DENY (범위 공유 시, 명시적 거부대상 선언이 필요할경우 활용)
-                              subject_type smallint, -- 대상 종류 (팀 || 사용자)
-                              subject_id int, -- 대상의 PK
-                              permission_bit_mask smallint,-- - READ, CREATE(==update 포함), DELETE, SAHRE 등등 가능한 기능과 권한에 대해 서술, ENUM으로 관리
-                              is_shared smallint,
-                              create_time timestamp,
-                              create_user int, -- 이 권한을 생성한 사람
-                              status smallint
+create table folder_acl_tb
+(
+    acl_id              bigserial
+        primary key,
+    folder_id           bigint,
+    subject_type        smallint,
+    effect_type         smallint,
+    subject_team_id          integer,
+    subject_user_id         integer,
+    permission_bit_mask smallint,
+    status              smallint,
+    create_time         timestamp,
+    create_user_id      integer,
+    modify_time         timestamp,
+    modify_user_id      integer,
+    delete_time         timestamp,
+    delete_user_id       integer
 );
-
--- alter table folder_acl_tb add constraint folder_acl_tb_folder_fk foreign key (folder_id) references folder_tb(folder_id);
--- alter table folder_acl_tb add constraint folder_acl_tb_user_fk foreign key (user_id) references user_tb(user_id);
--- alter table folder_acl_tb add constraint folder_acl_tb_create_user_fk foreign key (create_user) references user_tb(user_id);
 
 comment on table folder_acl_tb is '폴더 접근제어';
 comment on column folder_acl_tb.acl_id is '접근제어 식별자';
-comment on column folder_acl_tb.user_id is '피접근제어 대상';
 comment on column folder_acl_tb.folder_id is '접근제어 폴더 식별자';
-comment on column folder_acl_tb.effect_type is '접근제어 종류';
-comment on column folder_acl_tb.subject_type is '피접근제어 종류';
-comment on column folder_acl_tb.subject_id is '피 접근제어 식별자';
-comment on column folder_acl_tb.permission_bit_mask is '제약 권한';
-comment on column folder_acl_tb.is_shared is '공유로 생성된 제약 여부';
+comment on column folder_acl_tb.effect_type is '접근제어 종류(허용||거부)';
+comment on column folder_acl_tb.subject_type is '접근제어 적용 대상 종류 (팀||사용자)';
+comment on column folder_acl_tb.subject_team_id is '적용 접근제어 대상 팀 식별자';
+comment on column folder_acl_tb.subject_user_id is '적용 접근제어 대상 사용자 식별자';
+comment on column folder_acl_tb.permission_bit_mask is '동작권한';
 comment on column folder_acl_tb.create_time is '접근제어 생성시각';
-comment on column folder_acl_tb.create_user is '제약 생성자';
+comment on column folder_acl_tb.create_user_id is '제약 생성자';
 comment on column folder_acl_tb.status is '삭제여부';
 
 -- 파일 접근권한 : file acl 검사 전, folder acl 검사, ->  해당 폴더에 접근권한이 있으면 직접 접근권한이 있는검임. 즉 file_acl 은 "공유" 로만 유효한 값을 가지게 될거임

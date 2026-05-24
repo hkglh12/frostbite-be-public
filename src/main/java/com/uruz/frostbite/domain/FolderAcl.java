@@ -19,24 +19,32 @@ public class FolderAcl {
     /** 접근제어 보호대상 Object (폴더) 식별자 */
     private Long folderId;
 
-    /** 접근제어 종류 (ALLOW || DENY) */
-    private AclEffectType effectType;
-
     /** 접근제어 주체 종류 (팀 || 사용자) */
     private AclSubjectType subjectType;
 
+    /** 접근제어 종류 (ALLOW || DENY) */
+    private AclEffectType effectType;
+
     /** 접근제어 주체 식별자 */
-    private Integer subjectId;
+    // 각 subjectType 별로 subjectType=team -> teamId , subjectType=user -> userId 값을 넣어야함.
+    private Integer subjectTeamId;
+    private Integer subjectUserId;
 
     /** 제약 권한 (READ, CREATE, DELETE, SHARE 등 ENUM) */
     private PermissionBitMask permissionBitMask;
 
-    /** 접근제어 생성시각 */
-    private LocalDateTime createTime;
-
-    /** 제약 생성자 (user_id) */
-    private Integer createUser;
-
     /** 삭제여부 */
     private AclStatus status;
+
+    /** 접근제어 생성시각 */
+    private LocalDateTime createTime;
+    private LocalDateTime modifyTime;
+    private LocalDateTime deleteTime;
+
+    /** 제약 생성자 (user_id) */
+    private Integer createUserId;
+    private Integer modifyUserId;
+    private Integer deleteUserId;
+
+
 }
