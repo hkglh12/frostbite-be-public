@@ -115,7 +115,7 @@
         AND
             status = #{status}
     </select>
-    <select id="selectSimpleFolderOffsetById" parameterType="SimpleFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
+    <select id="selectSimpleFolderOffsetById" parameterType="SimplePrivateFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
             /** selectSimpleFolderOffsetById */
             SELECT folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
                   parent.uuid as parent_folder_uuid, folder.status
@@ -137,7 +137,7 @@
         ORDER BY folder.render_sequence ASC NULLS LAST, folder.folder_id ASC
         OFFSET #{offset} LIMIT #{limit}
     </select>
-    <select id="selectSimpleFolderTotalCountById" parameterType="SimpleFolderOffsetConditionByFolderId" resultType="integer">
+    <select id="selectSimpleFolderTotalCountById" parameterType="SimplePrivateFolderOffsetConditionByFolderId" resultType="integer">
         SELECT count(folder_id)
         FROM folder_tb folder
         WHERE parent_folder_id = #{parentFolderId}
@@ -149,7 +149,7 @@
         WHERE parent_folder_id = (select folder_id from folder_tb where uuid = #{parentFolderUuid})
           AND status = #{status}
     </select>
-    <select id="selectSimpleFolderKeyBaseById" parameterType="SimpleFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
+    <select id="selectSimpleFolderKeyBaseById" parameterType="SimplePrivateFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
             SELECT
                 folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
                 parent.uuid AS parent_folder_uuid, folder.status
