@@ -10,8 +10,11 @@ import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.mapper.FolderMapper;
+import com.uruz.frostbite.service.resolver.TeamResolverService;
+import com.uruz.frostbite.service.resolver.UserResolverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -22,18 +25,22 @@ import java.util.UUID;
 public class FolderService {
 
     private final FolderMapper folderMapper;
+    private final AclService aclService;
 
     private final UserResolverService userResolverService;
     private final TeamResolverService teamResolverService;
 
     @Autowired
-    public FolderService(FolderMapper folderMapper, UserResolverService userResolverService,
+    public FolderService(FolderMapper folderMapper, AclService aclService, UserResolverService userResolverService,
                          TeamResolverService teamResolverService){
         this.folderMapper = folderMapper;
+        this.aclService = aclService;
         this.userResolverService = userResolverService;
         this.teamResolverService = teamResolverService;
     }
 
+    // 부모메서드 transactional에 참여
+    @Transactional(propagation = Propagation.REQUIRED)
     /** 최초 사용자 가입 시 개인폴더 할당 */
     public void createEntryPrivateFolder(String initialFolderName, Integer userId){
         // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
@@ -42,8 +49,9 @@ public class FolderService {
         // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
         Folder initialPrivateRootFolder = Folder.createPrivateEntryFolder(initialFolderName, userId);
         folderMapper.insertEntryFolder(initialPrivateRootFolder);
-        // TODO : 폴더 생성 후 ACL 제어 추가 필요
 
+        // TODO : 폴더 생성 후 ACL 제어 추가 필요
+        aclService.createPrivateFolderAcl(userId, initialPrivateRootFolder.getFolderId());
     }
 
     /** 사용자 UUID로 부터 개인 엔트리폴더 아래 루트폴더 생성 */

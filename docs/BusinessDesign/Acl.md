@@ -42,6 +42,7 @@
         - subjectType이 USER -> userId에 User Pk를 입력하며, 사용자의 행동을 제어한다.
         - 두 컬럼은 상호 배타적이며, 정확히 하나만 NOT NULL이어야 한다.
     - permissionBitMask : 이 ACL이 허용하는 접근주체의 동작을 의미한다.
+        - NONE(0) : 그 어떠한 권한도 갖지 못함
         - BROWSE(1): 폴더/파일 리스팅 가능
         - READ(2): 다운로드, 읽기, 폴더 진입 후 내용 조회
         - WRITE(4): 생성, 수정, 덮어쓰기, 삭제, 폴더/파일명 수정
@@ -82,7 +83,7 @@
             - 위 ACL에 더해, 아래 ACL이 접근 불가할 사용자 N개 만큼 있어야 한다.            
             - Folder.folderType = TEAM + Folder.resourceScopeTeamId = teamPk + Folder.resourceScopeUserId = NULL + Folder.accessPolicy = TEAM
             + FolderAcl.effectType = DENY + FolderAcl.subjectType = USER + FolderAcl.subjectUserId = userPk
-    - 단, effectType = DENY인 경우 "접근 자체를 막는 것" 이므로, permissionBitMask는 값이 있어서는 안된다. NULL로 할당되어야 함
+    - 단, effectType = DENY인 경우 "접근 자체를 막는 것" 이므로, permissionBitMask는 값은 반드시 0이어야 한다.
         - 구현 시 permissionBitMask는 nullable이어야 하며, DB 컬럼도 NULL을 허용해야 한다.
 
 ## Folder ACL : Private Folder 유의 사항
@@ -99,4 +100,4 @@
         - FolderAcl.subjectType = PRIVATE 사용 금지
     
     - 아래의 케이스는 허용되지 않는다.
-        - FolderAcl.effectType = DENY + FolderAcl.permissionBitMask != NULL
+        - FolderAcl.effectType = DENY + FolderAcl.permissionBitMask != 0

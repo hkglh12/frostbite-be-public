@@ -7,14 +7,20 @@
 
     <!-- selectKey Before실행 -> POJO 값 바인드 -> 그 POJO로 <tag> 실행-->
     <!-- selectKey 사용시 useGeneratedKeys 불필요, 사용하려면 values에 PK가 안들어가고, useGeneratedKeys + KeyProperty -->
-    <insert id = "insertRootFolder" parameterType="Folder" keyProperty="folderId">
-        /* folderMapper insertRootFolder */
-        <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
-            SELECT nextval('folder_tb_folder_id_seq')
+    <insert id="insertFolderAcl" parameterType="FolderAcl" keyProperty="aclId">
+        <selectKey keyProperty="aclId" resultType="long" order="BEFORE">
+            SELECT nextval('folder_acl_tb_acl_id_seq')
         </selectKey>
-        INSERT INTO FOLDER_TB (folder_id, name, folder_type, owner_id, create_user, create_time, modify_user, modify_time,
-                               parent_id, render_sequence, uuid, status)
-            VALUES (#{folderId}, #{name}, #{folderType}, #{ownerId}, #{createUser}, #{createTime}, #{modifyUser}, #{modifyTime},
-                #{parentId}, #{renderSequence}, #{uuid}, #{status})
+
+        INSERT INTO FOLDER_ACL_TB (
+        acl_id, folder_id, subject_type, effect_type, subject_team_id, subject_user_id,
+        permission_bit_mask, status, create_time, modify_time, delete_time,
+        create_user_id, modify_user_id, delete_user_id
+        )
+        VALUES (
+        #{aclId}, #{folderId}, #{subjectType}, #{effectType}, #{subjectTeamId}, #{subjectUserId},
+        #{permissionBitMask}, #{status}, #{createTime}, #{modifyTime}, #{deleteTime},
+        #{createUserId}, #{modifyUserId}, #{deleteUserId}
+        )
     </insert>
 </mapper>

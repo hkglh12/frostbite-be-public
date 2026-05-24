@@ -4,6 +4,7 @@ import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.dto.folder.FolderCreateRequest;
 import com.uruz.frostbite.dto.folder.FolderMoveRequest;
+import com.uruz.frostbite.dto.folder.SimpleFolderResponse;
 import com.uruz.frostbite.dto.folder.TeamRootFolderCreateRequest;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
@@ -115,16 +116,14 @@ class FolderServiceTest {
     @DisplayName("[createPrivateRootFolder] 개인 엔트리폴더 하위에 루트폴더가 생성된다")
     void createPrivateRootFolder_inserts_folder_under_private_entry() {
 
-        Folder result = folderService.createPrivateRootFolder(TEST_USER_ID, TEST_FOLDER_NAME);
+        SimpleFolderResponse result = folderService.createPrivateRootFolder(TEST_USER_ID, TEST_FOLDER_NAME);
 
         // NOTE: 현재 서비스 메서드가 null 을 리턴하는 WIP 상태이므로
         //       아래 단언은 리턴값 버그 수정 후 주석 해제하여 사용할 것.
 
         assertNotNull(result,                             "생성된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_FOLDER_NAME, result.getName(), "폴더명이 요청과 일치해야 합니다");
-        assertNotNull(result.getFolderId(),              "DB sequence 로 folderId 가 채워져야 합니다");
         assertNotNull(result.getUuid(),                  "UUID 가 생성되어야 합니다");
-        assertNotNull(result.getParentFolderId(),              "엔트리폴더 id 가 parentId 로 설정되어야 합니다");
         assertEquals(FolderType.PRIVATE, result.getFolderType(), "폴더 타입이 PRIVATE 이어야 합니다");
         assertEquals(FolderStatus.ACTIVE, result.getStatus(),    "초기 상태는 ACTIVE 여야 합니다");
 
@@ -139,13 +138,11 @@ class FolderServiceTest {
         request.setName(TEST_TEAM_FOLDER_NAME);
         request.setTeamUuid(TEST_TEAM_UUID);
 
-        Folder result = folderService.createTeamRootFolder(TEST_USER_ID, request);
+        SimpleFolderResponse result = folderService.createTeamRootFolder(TEST_USER_ID, request);
 
         assertNotNull(result,                                  "생성된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_TEAM_FOLDER_NAME, result.getName(), "폴더명이 요청과 일치해야 합니다");
-        assertNotNull(result.getFolderId(),                    "DB sequence 로 folderId 가 채워져야 합니다");
         assertNotNull(result.getUuid(),                        "UUID 가 생성되어야 합니다");
-        assertNotNull(result.getParentFolderId(),                    "팀 엔트리폴더 id 가 parentId 로 설정되어야 합니다");
         assertEquals(FolderType.TEAM, result.getFolderType(),  "폴더 타입이 TEAM 이어야 합니다");
         assertEquals(FolderStatus.ACTIVE, result.getStatus(),  "초기 상태는 ACTIVE 여야 합니다");
     }
@@ -157,18 +154,13 @@ class FolderServiceTest {
 
         FolderCreateRequest request = new FolderCreateRequest();
         request.setName(TEST_PRIVATE_SUB_FOLDER_NAME);
-        request.setParentFolderUuid(TEST_PRIVATE_SUB_PARENT_FOLDER_UUID);folder_acl_tb
-        request.setFolderType(FolderType.PRIVATE);
-
-        Folder result = folderService.createFolder(TEST_USER_ID, request);
+        request.setParentFolderUuid(TEST_PRIVATE_SUB_PARENT_FOLDER_UUID);
+        SimpleFolderResponse result = folderService.createFolder(TEST_USER_ID, request);
 
 
         assertNotNull(result,                                          "생성된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_PRIVATE_SUB_FOLDER_NAME, result.getName(),  "폴더명이 요청과 일치해야 합니다");
-        assertNotNull(result.getFolderId(),                            "DB sequence 로 folderId 가 채워져야 합니다");
         assertNotNull(result.getUuid(),                                "UUID 가 생성되어야 합니다");
-        assertNotNull(result.getParentFolderId(),                      "부모 폴더 id 가 parentFolderId 로 설정되어야 합니다");
-        assertNotNull(result.getOwnerId(),                             "userId 가 ownerId 로 설정되어야 합니다");
         assertEquals(FolderType.PRIVATE, result.getFolderType(),       "폴더 타입이 PRIVATE 이어야 합니다");
         assertEquals(FolderStatus.ACTIVE, result.getStatus(),          "초기 상태는 ACTIVE 여야 합니다");
     }
@@ -181,16 +173,11 @@ class FolderServiceTest {
         FolderCreateRequest request = new FolderCreateRequest();
         request.setName(TEST_TEAM_SUB_FOLDER_NAME);
         request.setParentFolderUuid(TEST_TEAM_SUB_PARENT_FOLDER_UUID);
-        request.setFolderType(FolderType.TEAM);
-
-        Folder result = folderService.createFolder(TEST_USER_ID, request);
+        SimpleFolderResponse result = folderService.createFolder(TEST_USER_ID, request);
 
         assertNotNull(result,                                        "생성된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_TEAM_SUB_FOLDER_NAME, result.getName(),   "폴더명이 요청과 일치해야 합니다");
-        assertNotNull(result.getFolderId(),                          "DB sequence 로 folderId 가 채워져야 합니다");
         assertNotNull(result.getUuid(),                              "UUID 가 생성되어야 합니다");
-        assertNotNull(result.getParentFolderId(),                    "부모 폴더 id 가 parentFolderId 로 설정되어야 합니다");
-        assertNotNull(result.getOwnerId(),                           "팀 id 가 ownerId 로 설정되어야 합니다");
         assertEquals(FolderType.TEAM, result.getFolderType(),        "폴더 타입이 TEAM 이어야 합니다");
         assertEquals(FolderStatus.ACTIVE, result.getStatus(),        "초기 상태는 ACTIVE 여야 합니다");
     }
@@ -221,7 +208,7 @@ class FolderServiceTest {
 
         // ── Depth 1: 지정 루트 폴더 하위에 10개 ──────────────────────────────
         for (int i = 1; i <= DEPTH_1_COUNT; i++) {
-            Folder created = folderService.createFolder(
+            SimpleFolderResponse created = folderService.createFolder(
                     TEST_USER_ID, buildPerfRequest("d1-" + i, TEST_PERF_ROOT_UUID));
             currentLevel.add(created.getUuid());
         }
@@ -239,7 +226,7 @@ class FolderServiceTest {
 
                 for (UUID parentUuid : batch) {
                     for (int c = 1; c <= CHILD_PER_NODE; c++) {
-                        Folder created = folderService.createFolder(
+                        SimpleFolderResponse created = folderService.createFolder(
                                 TEST_USER_ID, buildPerfRequest("d" + depth + "-" + c, parentUuid));
                         if (!isLastDepth) nextLevel.add(created.getUuid());
                         depthCreated++;
@@ -260,21 +247,16 @@ class FolderServiceTest {
     @DisplayName("[moveSubFolder] 서브폴더가 지정한 목적지 부모폴더 아래로 이동한다")
     void moveSubFolder_moves_subfolder_to_destination() {
 
-        Folder destinationFolder = folderService.selectSimpleFolderByFolderUuid(TEST_MOVE_DEST_UUID);
+        SimpleFolderResponse destinationFolder = folderService.selectSimpleFolderByFolderUuid(TEST_MOVE_DEST_UUID);
 
         FolderMoveRequest request = new FolderMoveRequest();
-        request.setTargetFolderUuid(TEST_MOVE_TARGET_UUID);
         request.setDestinationFolderUuid(TEST_MOVE_DEST_UUID);
 
-        Folder result = folderService.moveFolder(TEST_MOVE_USER_ID, request);
+        SimpleFolderResponse result = folderService.moveFolder(TEST_MOVE_USER_ID, TEST_MOVE_TARGET_UUID, request);
 
         assertNotNull(result,                                                   "이동된 폴더 객체가 반환되어야 합니다");
         assertEquals(TEST_MOVE_TARGET_UUID, result.getUuid(),                   "반환된 폴더의 UUID 가 이동 대상 UUID 와 일치해야 합니다");
-        assertEquals(destinationFolder.getFolderId(), result.getParentFolderId(), "parentFolderId 가 목적지 폴더의 folderId 로 변경되어야 합니다");
         assertEquals(destinationFolder.getFolderType(), result.getFolderType(), "이동 후 folderType 이 유지되어야 합니다");
-        assertEquals(destinationFolder.getOwnerId(), result.getOwnerId(),       "이동 후 ownerId 가 유지되어야 합니다");
-        assertTrue(result.getFolderIdPath().startsWith(destinationFolder.getFolderIdPath()),
-                "이동된 폴더의 idPath 가 목적지 폴더의 idPath 로 시작해야 합니다");
     }
 
     @Test
@@ -283,12 +265,11 @@ class FolderServiceTest {
     void moveSubFolder_throws_when_folder_type_mismatch() {
 
         FolderMoveRequest request = new FolderMoveRequest();
-        request.setTargetFolderUuid(TEST_MOVE_TYPE_MISMATCH_TARGET_UUID);
         request.setDestinationFolderUuid(TEST_MOVE_TYPE_MISMATCH_DEST_UUID);
 
         GeneralCustomException ex = assertThrows(
                 GeneralCustomException.class,
-                () -> folderService.moveFolder(TEST_MOVE_TYPE_MISMATCH_USER_ID, request),
+                () -> folderService.moveFolder(TEST_MOVE_TYPE_MISMATCH_USER_ID, TEST_MOVE_TYPE_MISMATCH_TARGET_UUID, request),
                 "FolderType 이 다를 때 GeneralCustomException 이 발생해야 합니다"
         );
 
@@ -301,12 +282,11 @@ class FolderServiceTest {
     void moveSubFolder_throws_when_owner_mismatch() {
 
         FolderMoveRequest request = new FolderMoveRequest();
-        request.setTargetFolderUuid(TEST_MOVE_OWNER_MISMATCH_TARGET_UUID);
         request.setDestinationFolderUuid(TEST_MOVE_OWNER_MISMATCH_DEST_UUID);
 
         GeneralCustomException ex = assertThrows(
                 GeneralCustomException.class,
-                () -> folderService.moveFolder(TEST_MOVE_OWNER_MISMATCH_USER_ID, request),
+                () -> folderService.moveFolder(TEST_MOVE_OWNER_MISMATCH_USER_ID, TEST_MOVE_OWNER_MISMATCH_TARGET_UUID, request),
                 "Owner 가 다를 때 GeneralCustomException 이 발생해야 합니다"
         );
 
@@ -317,7 +297,6 @@ class FolderServiceTest {
         FolderCreateRequest req = new FolderCreateRequest();
         req.setName(name);
         req.setParentFolderUuid(parentUuid);
-        req.setFolderType(TEST_PERF_FOLDER_TYPE);
         return req;
     }
 

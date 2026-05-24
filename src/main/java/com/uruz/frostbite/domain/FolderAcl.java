@@ -10,7 +10,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
+// bit mask 직접 접근 방지
 public class FolderAcl {
 
     /** 접근제어 식별자 */
@@ -30,8 +30,8 @@ public class FolderAcl {
     private Integer subjectTeamId;
     private Integer subjectUserId;
 
-    /** 제약 권한 (READ, CREATE, DELETE, SHARE 등 ENUM) */
-    private PermissionBitMask permissionBitMask;
+    /** 제약 권한 (READ, CREATE, DELETE, SHARE 등 ENUM) 비트연산 처리 */
+    private Integer permissionBitMask;
 
     /** 삭제여부 */
     private AclStatus status;
@@ -46,5 +46,36 @@ public class FolderAcl {
     private Integer modifyUserId;
     private Integer deleteUserId;
 
+    public static FolderAcl createUserAllow(
+            Long folderId,
+            Integer subjectUserId,
+            Integer createUserId,
+            PermissionBitMask... permissions
+    ) {
+        FolderAcl acl = new FolderAcl();
+        acl.folderId = folderId;
+        acl.effectType = AclEffectType.ALLOW;
+        acl.subjectType = AclSubjectType.USER;
+        acl.subjectUserId = subjectUserId;
+        acl.subjectTeamId = null;
+        acl.permissionBitMask = PermissionBitMask.of(permissions);
+        acl.createUserId = createUserId;
+        acl.createTime = LocalDateTime.now();
+        acl.status = AclStatus.ACTIVE;
+        return acl;
+    }
+
+    /** 비트마스크 검사 메서드 */
+    public boolean hasPermission(PermissionBitMask permission) {
+        return PermissionBitMask.has(permissionBitMask, permission);
+    }
+
+    public boolean hasAllPermissions(PermissionBitMask... permissions) {
+        return PermissionBitMask.hasAll(permissionBitMask, permissions);
+    }
+
+    public boolean hasAnyPermission(PermissionBitMask... permissions) {
+        return PermissionBitMask.hasAny(permissionBitMask, permissions);
+    }
 
 }
