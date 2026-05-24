@@ -75,7 +75,7 @@ public class Folder {
             throw new IllegalArgumentException("Name constraint violated");
         }
 
-        return new Folder(UUID.randomUUID(),null, name, FolderType.PRIVATE, null , ownerId, null,
+        return new Folder(UUID.randomUUID(),null, name, FolderType.PRIVATE, null , null, ownerId,
                 ownerId, AccessPolicy.USER, null, null, 0, FolderStatus.ACTIVE,
                 ownerId, LocalDateTime.now(), ownerId, LocalDateTime.now(), null, null);
     }
@@ -85,8 +85,8 @@ public class Folder {
             throw new IllegalArgumentException("Name constraint violated");
         }
 
-        return new Folder(UUID.randomUUID(),null, name, FolderType.TEAM, null ,null,
-                teamId, createUserId, AccessPolicy.TEAM, null, null, 0, FolderStatus.ACTIVE,
+        return new Folder(UUID.randomUUID(),null, name, FolderType.TEAM, null ,teamId,null
+                , createUserId, AccessPolicy.TEAM, null, null, 0, FolderStatus.ACTIVE,
                 createUserId, LocalDateTime.now(), createUserId, LocalDateTime.now(), null, null);
     }
 
