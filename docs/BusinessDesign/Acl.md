@@ -14,9 +14,28 @@
             - Folder.folderType = PRIVATE이면 Folder.resourceScopeUserId만 값을 가지고 Folder.resourceScopeTeamId는 NULL이다.
             - Folder.folderType = TEAM + Folder.accessPolicy = USER -> 팀 폴더이지만 특정 사용자에게만 접근허용
                 - 이경우, 해당 폴더 ACL은 subjectType = TEAM을 가질 수 없다. 특정 사용자에게만 허용된 종류이기 때문
-    
-    - 하위 폴더 생성시, ACL은 아래와 같이 동작한다.
-        - 상위 폴더의 유효 ACL 전체 복제 후 재할당한다. 즉, 명시적 복제 방식으로 동작한다.
+    - Entry Folder 생성 시 ACL은 아래와 같이 동작한다.
+        - 팀 Entry Folder :
+            - 팀 Entry Folder는 반드시 "모든 팀원 ALLOW, 모든 팀원에게 * 동작권한"을 제공한다.
+                - 실제 ACL Entry는 subjectType = TEAM, subjectTeamId = 생성된 팀 PK, PermissionBitMask = 모든 권한 비트 합산값. 단, NONE(0)은 권한 비트가 아니므로 제외한다.
+                - 일부 인원 ALLOW 시 -> 일부는 팀 폴더 이용이 아예 불가능. 이경우 팀을 나누는게 옳은 케이스가 된다.
+                - 일부 동작권한만 제공 시 -> 팀 폴더 전체에 대해 해당 제약이 생성되어 관리가 오히려 불편해질 수 있음. 혹은 공지사항폴더가 됨.
+        - 개인 Entry Folder:
+            - 개인 Entry Folder는 "소유자 ALLOW, 소유자 * 동작권한" 을 제공한다. 여기서 소유자는 resourceScopeUserId 식별자를 사용하는 사용자.
+                - 실제 ACL Entry는 subjectType = USER, subjectUserId = 생성한 사용자PK, PermissionBitMask = 모든 권한 비트 합산값. 단, NONE(0)은 권한 비트가 아니므로 제외한다.
+                - 개인 Entry Folder에서는 사용자가 직접 ACL을 조작할 수 없다. 접근권한의 변경은 "공유" 기능을 통해서만 조작 가능하다.
+    - Root Folder 생성 시 ACL은 아래와 같이 동작한다.
+        - 팀 Root Folder : 
+            - 팀 Root Folder는 default "모든 팀원 ALLOW, 모든 팀원 * 동작권한" 을 제공한다.
+                - 실제 ACL Entry는 subjectType = TEAM, subjectTeamId = 생성된 팀 PK, PermissionBitMask = 모든 권한 비트 합산값. 단, NONE(0)은 권한 비트가 아니므로 제외한다.
+                - 폴더 생성 시점에 사용자가 직접 ACL 제약을 지정할 수 있다. 이경우 folder 생성 -> 기본 acl 생성 -> acl 제약변경 으로 처리한다.
+        - 개인 Root Folder:
+            - 개인 Root Folder는 "소유자 ALLOW, 소유자 * 동작권한"을 제공한다. 여기서 소유자는 resourceScopeUserId 식별자를 사용하는 사용자.
+                - 실제 ACL Entry는 subjectType = USER, subjectUserId = 생성한 사용자PK, PermissionBitMask = 모든 권한 비트 합산값. 단, NONE(0)은 권한 비트가 아니므로 제외한다.
+                - 개인 Root Folder에서는 사용자가 직접 ACL을 조작할 수 없다. 접근권한의 변경은 "공유" 기능을 통해서만 조작 가능하다.
+    - Sub 폴더 생성시, ACL은 아래와 같이 동작한다.
+        - 상위 폴더의 유효 ACL (status = ACTIVE) 전체 복제 후 재할당한다. 즉, 명시적 복제 방식으로 동작한다.
+        - 위의 원칙을 위해, 한개의 폴더는 최소 1개의 AclStatus.ACTIVE + AclEffectType.ALLOW인 ACL을 가지고 있어야만 한다. 해당 ACL이 단 한개도 없는 폴더는 허용되어서는 안된다.
     - ACL의 적용 범위
         - ACL은 선언된 folderId에만 동작한다.
     
