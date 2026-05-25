@@ -55,6 +55,7 @@ public class FolderService {
     }
 
     /** 사용자 UUID로 부터 개인 엔트리폴더 아래 루트폴더 생성 */
+    @Transactional
     public SimpleFolderResponse createPrivateRootFolder(Integer userId, String folderName){
 
         PrivateEntryFolderCondition condition = PrivateEntryFolderCondition.fromUserId(userId);
@@ -66,6 +67,7 @@ public class FolderService {
         );
 
         folderMapper.insertRootFolder(newFolder);
+        aclService.createPrivateFolderAcl(userId, newFolder.getFolderId());
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
