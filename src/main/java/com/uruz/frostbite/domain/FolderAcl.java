@@ -65,6 +65,25 @@ public class FolderAcl {
         return acl;
     }
 
+    public static FolderAcl createTeamAllow(
+            Long folderId,
+            Integer subjectTeamId,
+            Integer createUserId,
+            PermissionBitMask... permissions
+    ) {
+        FolderAcl acl = new FolderAcl();
+        acl.folderId = folderId;
+        acl.effectType = AclEffectType.ALLOW;
+        acl.subjectType = AclSubjectType.TEAM;
+        acl.subjectUserId = null;
+        acl.subjectTeamId = subjectTeamId;
+        acl.permissionBitMask = PermissionBitMask.of(permissions);
+        acl.createUserId = createUserId;
+        acl.createTime = LocalDateTime.now();
+        acl.status = AclStatus.ACTIVE;
+        return acl;
+    }
+
     /** 비트마스크 검사 메서드 */
     public boolean hasPermission(PermissionBitMask permission) {
         return PermissionBitMask.has(permissionBitMask, permission);

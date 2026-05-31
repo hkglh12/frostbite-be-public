@@ -41,17 +41,31 @@ public class FolderService {
 
     // 부모메서드 transactional에 참여
     @Transactional(propagation = Propagation.REQUIRED)
-    /** 최초 사용자 가입 시 개인폴더 할당 */
-    public void createEntryPrivateFolder(String initialFolderName, Integer userId){
+    /** 최초 사용자 가입 시 개인 엔트리 폴더 할당 */
+    public void createPrivateEntryFolder(String initialFolderName, Integer userId){
         // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
         // 따라서 별도 메서드로 처리
 
         // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
-        Folder initialPrivateRootFolder = Folder.createPrivateEntryFolder(initialFolderName, userId);
-        folderMapper.insertEntryFolder(initialPrivateRootFolder);
+        Folder initialPrivateEntryFolder = Folder.createPrivateEntryFolder(initialFolderName, userId);
+        folderMapper.insertEntryFolder(initialPrivateEntryFolder);
 
         // TODO : 폴더 생성 후 ACL 제어 추가 필요
-        aclService.createPrivateFolderAcl(userId, initialPrivateRootFolder.getFolderId());
+        aclService.createPrivateDefaultFolderAcl(initialPrivateEntryFolder.getFolderId(), userId);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    /** 최초 사용자 가입 시 팀 엔트리 폴더 할당 */
+    public void createTeamEntryFolder(String initialFolderName, Integer teamId, Integer createUserId){
+        // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
+        // 따라서 별도 메서드로 처리
+
+        // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
+        Folder initialTeamEntryFolder = Folder.createTeamEntryFolder(initialFolderName, teamId, createUserId);
+        folderMapper.insertEntryFolder(initialTeamEntryFolder);
+
+        // TODO : 폴더 생성 후 ACL 제어 추가 필요
+        aclService.createTeamDefaultFolderAcl(initialTeamEntryFolder.getFolderId(), teamId, createUserId);
     }
 
     /** 사용자 UUID로 부터 개인 엔트리폴더 아래 루트폴더 생성 */
@@ -67,7 +81,7 @@ public class FolderService {
         );
 
         folderMapper.insertRootFolder(newFolder);
-        aclService.createPrivateFolderAcl(userId, newFolder.getFolderId());
+        aclService.createPrivateDefaultFolderAcl(newFolder.getFolderId(), userId);
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
@@ -81,11 +95,13 @@ public class FolderService {
                 teamEntryFolder.getResourceScopeTeamId(), userId);
 
         folderMapper.insertRootFolder(newFolder);
+        aclService.createTeamDefaultFolderAcl(newFolder.getFolderId(), teamEntryFolder.getResourceScopeTeamId(), userId);
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
     /** 부모 폴더 UUID로부터 서브폴더 생성 */
-    public SimpleFolderResponse createFolder(Integer userId, FolderCreateRequest request) {
+    @Transactional
+    public SimpleFolderResponse createSubFolder(Integer userId, FolderCreateRequest request) {
         Folder parentFolder = selectFolderByUuid(request.getParentFolderUuid());
         // 폴더타입은 이미 Context 상 부모폴더에 있음.
         FolderType folderType = parentFolder.getFolderType();
@@ -97,6 +113,7 @@ public class FolderService {
         }
 
         folderMapper.insertSubFolder(newFolder);
+        aclService.createSubFolderAcl(parentFolder.getFolderId(), newFolder.getFolderId(), userId);
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 

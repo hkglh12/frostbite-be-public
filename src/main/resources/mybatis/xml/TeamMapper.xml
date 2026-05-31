@@ -25,20 +25,22 @@
     </select>
 
     <select id="selectTeam" resultType="Team">
-        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user, team.uuid,
-               team.status,
+        /** selectTeam*/
+        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user_id, team.uuid,
+               team.status
         FROM team_tb team
-                 JOIN user_tb user
-        ON user.user_id = team.create_user_id
+                 JOIN user_tb user_tb
+        ON user_tb.user_id = team.create_user_id
         WHERE team.uuid = #{teamUuid}
     </select>
 
     <select id="selectTeamByTeamId" resultType="Team">
-        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user, team.uuid,
-               team.status,
+        /** selectTeamByTeamId*/
+        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user_id, team.uuid,
+               team.status
         FROM team_tb team
-                 JOIN user_tb user
-        ON user.user_id = team.create_user_id
+                 JOIN user_tb user_tb
+        ON user_tb.user_id = team.create_user_id
         WHERE team.team_id = #{teamId}
     </select>
 

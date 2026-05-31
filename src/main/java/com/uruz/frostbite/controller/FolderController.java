@@ -68,7 +68,7 @@ public class FolderController {
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @Validated  @RequestBody FolderCreateRequest request
     ){
-        SimpleFolderResponse folder = folderService.createFolder(userId, request);
+        SimpleFolderResponse folder = folderService.createSubFolder(userId, request);
 
         return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
     }

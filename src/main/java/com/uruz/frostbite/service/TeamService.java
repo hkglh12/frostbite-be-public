@@ -26,11 +26,14 @@ public class TeamService {
     private final TeamService self;
     private final UserService userService;
 
+    private final FolderService folderService;
+
     @Autowired
-    public TeamService(TeamMapper teamMapper, UserService userService, @Lazy TeamService self){
+    public TeamService(TeamMapper teamMapper, UserService userService, FolderService folderService, @Lazy TeamService self){
         this.teamMapper = teamMapper;
         this.self = self;
         this.userService = userService;
+        this.folderService = folderService;
 
     }
 
@@ -51,6 +54,7 @@ public class TeamService {
 
         RelUserTeam relation = self.createUserTeamRelation(createUserId, team.getTeamId());
 
+        folderService.createTeamEntryFolder(team.getName() + "의 팀 폴더", team.getTeamId(), createUserId);
 
         // TODO 팀 최상위 폴더 자동생성 및 ACL 추가 필요
         return TeamDetailResponse.builder()

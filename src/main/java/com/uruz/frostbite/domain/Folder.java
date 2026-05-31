@@ -66,8 +66,6 @@ public class Folder {
 
 
 
-
-
     /** 회원가입 직후 entryFolder 생성*/
 
     public static Folder createPrivateEntryFolder(String name, Integer ownerId){

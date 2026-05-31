@@ -35,6 +35,8 @@
                 - 개인 Root Folder에서는 사용자가 직접 ACL을 조작할 수 없다. 접근권한의 변경은 "공유" 기능을 통해서만 조작 가능하다.
     - Sub 폴더 생성시, ACL은 아래와 같이 동작한다.
         - 상위 폴더의 유효 ACL (status = ACTIVE) 전체 복제 후 재할당한다. 즉, 명시적 복제 방식으로 동작한다.
+            - Clone의 대상은 접근제어 대상종류(subject_type), 제어종류 (effect_type), 제어적용대상(subject_[team||user_id]), 권한비트(permission_bit_mask) 로 제한한다.
+            - 이후, 직접적 메타정보는 현재 ACL을 생성/수정하는 사용자의 메타정보로 대체한다.
         - 위의 원칙을 위해, 한개의 폴더는 최소 1개의 AclStatus.ACTIVE + AclEffectType.ALLOW인 ACL을 가지고 있어야만 한다. 해당 ACL이 단 한개도 없는 폴더는 허용되어서는 안된다.
     - ACL의 적용 범위
         - ACL은 선언된 folderId에만 동작한다.

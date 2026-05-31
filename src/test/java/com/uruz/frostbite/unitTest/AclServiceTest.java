@@ -36,7 +36,7 @@ public class AclServiceTest {
         ArgumentCaptor<FolderAcl> captor = ArgumentCaptor.forClass(FolderAcl.class);
         // when : 실제 실행
         // 호출 -> @Mock은 호출되면 호출기록을 내부에 남김
-        int result = aclService.createPrivateFolderAcl(userId, folderId);
+        int result = aclService.createPrivateDefaultFolderAcl(folderId, userId);
 
 
         // then : 검증
