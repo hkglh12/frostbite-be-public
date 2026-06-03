@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 
 @Service
 public class AclService {
+    /** 동작 실행 요청에 대한 "동작 허용", "접근 허용" 등의 데이터를 가진 ACL을 조작 및 CRUD 하기 위한 서비스  */
+
     private AclMapper aclMapper;
 
     @Autowired
