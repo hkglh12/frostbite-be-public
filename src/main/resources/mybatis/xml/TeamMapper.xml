@@ -89,4 +89,20 @@
         INSERT INTO rel_user_team_tb(rel_id, user_id, team_id, create_user_id, join_time, role, status)
         VALUES (#{relId}, #{userId}, #{teamId}, #{createUser}, #{joinTime}, #{role}, #{status})
     </insert>
+
+    <!-- Resolvers -->
+
+    <select id ="selectTeamUserRelation" resultType = "TeamUserRelationProjection">
+
+        SELECT
+            rel_id, user_id, team_id, role
+        FROM
+            rel_user_team_tb
+        WHERE
+            status = #{status}
+        AND
+            user_id = #{userId}
+        AND
+            team_id = #{teamId}
+    </select>
 </mapper>

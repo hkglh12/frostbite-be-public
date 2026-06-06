@@ -5,6 +5,7 @@ import com.uruz.frostbite.dto.folder.SimpleFolderResponse;
 import com.uruz.frostbite.dto.folder.internal.MovedSubFolderPathCommand;
 import com.uruz.frostbite.dto.folder.internal.*;
 import com.uruz.frostbite.enums.FolderStatus;
+import com.uruz.frostbite.dto.folder.internal.FolderTargetAccessControlProjection;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -49,6 +50,7 @@ public interface FolderMapper {
     int updateFolderStatusAsDelete(@Param("folderUuid") UUID folderUuid, @Param("status")FolderStatus status);
 
 
+    FolderTargetAccessControlProjection selectFolderWithAccessControlResources(@Param("folderId") Long folderId);
     /*
     Folder selectFolderDetailByFolderId(Long folderId);
 

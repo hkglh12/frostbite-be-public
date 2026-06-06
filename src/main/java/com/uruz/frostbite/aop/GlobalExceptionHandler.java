@@ -1,10 +1,13 @@
 package com.uruz.frostbite.aop;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.ResourceAccessDeniedException;
+import com.uruz.frostbite.customException.ResourceActionForbiddenException;
 import com.uruz.frostbite.dto.wrapper.ApiErrorResponse;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -45,6 +48,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.internalServerError()
                 .body(new ApiErrorResponse(ApiErrorCode.INTERNAL_ERROR, GE.getMessage()));
     }
+
+    @ExceptionHandler({
+            ResourceAccessDeniedException.class
+    })
+    protected ResponseEntity<ApiErrorResponse> handleRestrictedAccess(ResourceAccessDeniedException GE){
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiErrorResponse(ApiErrorCode.ACCESS_DENIED, GE.getMessage()));
+    }
+
+    @ExceptionHandler({
+            ResourceActionForbiddenException.class
+    })
+    protected ResponseEntity<ApiErrorResponse> handleForbiddenAction(ResourceActionForbiddenException GE){
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiErrorResponse(ApiErrorCode.ACCESS_DENIED, GE.getMessage()));
+    }
+
     @ExceptionHandler({
             Exception.class
     })

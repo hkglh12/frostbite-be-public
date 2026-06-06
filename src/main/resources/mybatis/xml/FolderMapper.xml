@@ -356,4 +356,18 @@
         WHERE
             uuid = #{folderUuid}
     </update>
+
+
+    <!-- RESOLVERS -->
+    <select id="selectFolderWithAccessControlResources" resultType="FolderTargetAccessControlProjection">
+        /** selectFolderWithAccessControlResources */
+        SELECT
+            folder.uuid, folder.folder_id, folder.folder_type, folder.parent_folder_id, folder.resource_scope_user_id,
+            folder.resource_scope_team_id, folder.resource_owner_id, folder.access_policy
+        FROM
+            folder_tb folder
+        WHERE
+            folder_id = #{folderId}
+    </select>
+
 </mapper>

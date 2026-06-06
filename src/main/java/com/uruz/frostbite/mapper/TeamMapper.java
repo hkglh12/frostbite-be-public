@@ -1,12 +1,16 @@
 package com.uruz.frostbite.mapper;
 
+import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.RelUserTeam;
 import com.uruz.frostbite.domain.Team;
 import com.uruz.frostbite.dto.team.TeamDetailResponse;
 import com.uruz.frostbite.dto.team.TeamModifyCommand;
 import com.uruz.frostbite.dto.team.TeamProjection;
 import com.uruz.frostbite.dto.team.TeamStatusChangeCommand;
+import com.uruz.frostbite.dto.team.internal.TeamUserRelationProjection;
+import com.uruz.frostbite.enums.common.GeneralRelationStatus;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,5 +39,9 @@ public interface TeamMapper {
 
     /** 팀 권한 생성*/
     public int insertUserTeamRelation(RelUserTeam relation);
+
+    public TeamUserRelationProjection selectTeamUserRelation(@Param("userId") Integer userId,
+                                                             @Param("teamId") Integer teamId,
+                                                             @Param("status")GeneralRelationStatus status);
 
 }

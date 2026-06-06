@@ -11,7 +11,7 @@ import com.uruz.frostbite.enums.FolderType;
 import com.uruz.frostbite.enums.PermissionBitMask;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.mapper.FolderMapper;
-import com.uruz.frostbite.service.resolver.AccessControlService;
+import com.uruz.frostbite.service.resolver.AccessControlResolverService;
 import com.uruz.frostbite.service.resolver.TeamResolverService;
 import com.uruz.frostbite.service.resolver.UserResolverService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,17 +31,17 @@ public class FolderService {
 
     private final UserResolverService userResolverService;
     private final TeamResolverService teamResolverService;
-    private final AccessControlService accessControlService;
+    private final AccessControlResolverService accessControlResolverService;
 
     @Autowired
     public FolderService(FolderMapper folderMapper, AclService aclService, UserResolverService userResolverService,
                          TeamResolverService teamResolverService,
-                         AccessControlService accessControlService){
+                         AccessControlResolverService accessControlResolverService){
         this.folderMapper = folderMapper;
         this.aclService = aclService;
         this.userResolverService = userResolverService;
         this.teamResolverService = teamResolverService;
-        this.accessControlService = accessControlService;
+        this.accessControlResolverService = accessControlResolverService;
     }
 
     // 부모메서드 transactional에 참여
@@ -356,10 +356,10 @@ public class FolderService {
     // 6. 사용자가 해당 폴더에 ALLOW ACL이 있다면, permissionBitMask MAX()로 가져올것. (더 큰 권한을 판정에 사용하기로 했음)
     // 7. 현재 수행하려는 동작이 ACL의 permissionBit에 포함된 상태인지 검증 -> 포함되었다면 조회 허용
     // 8. 포함되어있지 않거나, ACL이 조회되지 않는다면 -> 조회 거절
-    public boolean checkUserAccessibleForFolder(Integer userId, Long folderId, PermissionBitMask bitMask) throws GeneralCustomException{
+    public boolean validateUserActionPermissionForFolder(Integer userId, Long folderId, PermissionBitMask bitMask) throws GeneralCustomException{
 
         // Denied 조회, 있을경우 바로 throw
-        return accessControlService.validateAccessingUserForFolder(userId, folderId, bitMask);
+        return accessControlResolverService.validateUserActionPermissionForFolder(userId, folderId, bitMask);
 
     }
     /**

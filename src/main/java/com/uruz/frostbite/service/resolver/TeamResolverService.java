@@ -2,12 +2,15 @@ package com.uruz.frostbite.service.resolver;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.Team;
+import com.uruz.frostbite.dto.team.internal.TeamUserRelationProjection;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
+import com.uruz.frostbite.enums.common.GeneralRelationStatus;
 import com.uruz.frostbite.mapper.TeamMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import javax.management.relation.RoleStatus;
 import java.util.UUID;
 
 @Service
@@ -28,5 +31,9 @@ public class TeamResolverService {
 
     public Team getTeambyTeamId(Integer teamId){
         return teamMapper.selectTeamByTeamId(teamId).orElseThrow(() -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "Target team not found"));
+    }
+
+    public TeamUserRelationProjection selectValidTeamUserRelation(Integer userId, Integer teamId){
+        return teamMapper.selectTeamUserRelation(userId, teamId, GeneralRelationStatus.ACTIVE);
     }
 }
