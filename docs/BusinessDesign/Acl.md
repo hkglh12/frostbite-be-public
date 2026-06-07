@@ -35,13 +35,17 @@
                 - 개인 Root Folder에서는 사용자가 직접 ACL을 조작할 수 없다. 접근권한의 변경은 "공유" 기능을 통해서만 조작 가능하다.
     - Sub 폴더 생성시, ACL은 아래와 같이 동작한다.
         - 상위 폴더의 유효 ACL (status = ACTIVE) 전체 복제 후 재할당한다. 즉, 명시적 복제 방식으로 동작한다.
+            - Clone의 대상은 접근제어 대상종류(subject_type), 제어종류 (effect_type), 제어적용대상(subject_[team||user_id]), 권한비트(permission_bit_mask) 로 제한한다.
+            - 이후, 직접적 메타정보는 현재 ACL을 생성/수정하는 사용자의 메타정보로 대체한다.
         - 위의 원칙을 위해, 한개의 폴더는 최소 1개의 AclStatus.ACTIVE + AclEffectType.ALLOW인 ACL을 가지고 있어야만 한다. 해당 ACL이 단 한개도 없는 폴더는 허용되어서는 안된다.
     - ACL의 적용 범위
         - ACL은 선언된 folderId에만 동작한다.
     
     - FILE ACL의 적용
         - FILE ACL은 Implicitly 폴더 ACL을 따라간다.
-          직접 제어가 필요할 경우 File별 ACL을 생성한다.
+        - 직접 제어가 필요할 경우 File별 ACL을 생성한다.
+            - resource_owner_id 모든사람 건들수없음
+            - 특정 인원만 deny
 
 ## 도메인 객체 설명
 
@@ -75,6 +79,25 @@
     - createUserId : 생성자 식별자
     - modifyUserId : 수정자 식별자
     - deleteUserId : 삭제자 식별자
+
+### permissionBitmask 이용
+    - permissionBitmask ENUM 내, 각 권한은 각각의 독립적인 비트값을 가진다.
+    - DB 저장 시 permissionBitMask는 Integer 형으로 저장하며
+      해당 권한 이하의 하위 권한을 모두 허가한것으로 간주해, 하위 권한을 모두 포함한 누적값으로 저장해야 한다. 
+      단, ACL effect_type이 ALLOW일 경우 0 (NONE)은 제외한것으로 간주해야 하며, ACL 생성시에도 ALLOW Type일 경우 permissinoBitMask.NONE 의 삽입을 비즈니스 로직에서 방지해야 한다.
+    - 예시 : WRITE = 7 (Browse 1 + READ 2 + WRITE 4) = 7
+
+### permissionBitMask 권한 판정
+- ACL의 `permissionBitMask`는 하위 권한을 포함한 누적 비트마스크 값으로 저장한다.
+    - 예: WRITE 권한은 BROWSE(1) + READ(2) + WRITE(4) = 7로 저장한다.
+    - 예: MANAGE 권한은 BROWSE(1) + READ(2) + WRITE(4) + CONTROL(8) + MANAGE(16) = 31로 저장한다.
+  - 동일 사용자가 USER ACL과 TEAM ACL을 동시에 만족할 수 있으므로, ALLOW 판정 시에는 적용 가능한 ALLOW ACL 중 가장 큰 `permissionBitMask` 값을 대표 권한으로 사용한다.
+      - 예: `ALLOW USER:7, permissionBitMask = 7`
+      - 예: `ALLOW TEAM:13, permissionBitMask = 31`
+      - 이 경우 최종 판정값은 `31`이다.
+  - 단, `permissionBitMask = 0`은 DENY ACL에서만 사용할 수 있다.
+      - ALLOW ACL 생성 시 `NONE(0)`은 허용하지 않는다.
+      - 따라서 ALLOW 판정 흐름에서는 `0`을 고려하지 않는다.
 
 ### 접근 허용 판정 우선순위
     1. 팀 폴더에서는 팀 내 역할 (TeamRole.MEMBER, TeamRole.MANAGER, TeamRole.HEAD) 중, HEAD와 MANAGER는 ACL을 무시하고 동작한다.

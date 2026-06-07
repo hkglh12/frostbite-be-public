@@ -78,6 +78,21 @@ public enum PermissionBitMask {
         return bitMask;
     }
 
+    // 비트마스크를 통해 Integer 연산
+    public static int ofLowerOrEqual(PermissionBitMask claimedPermission) {
+        int bitMask = 0;
+
+        for (PermissionBitMask permission : values()) {
+            if (permission.value != 0 && ( permission.value <= claimedPermission.getValue())) {
+                bitMask |= permission.value;
+            }
+        }
+
+        return bitMask;
+
+    }
+
+
     public static PermissionBitMask[] allMasks() {
         return Arrays.stream(values())
                 .filter(permission -> permission.value != 0)

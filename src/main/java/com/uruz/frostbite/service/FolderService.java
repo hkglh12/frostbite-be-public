@@ -8,8 +8,10 @@ import com.uruz.frostbite.dto.folder.*;
 import com.uruz.frostbite.dto.folder.internal.*;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
+import com.uruz.frostbite.enums.PermissionBitMask;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.mapper.FolderMapper;
+import com.uruz.frostbite.service.resolver.AccessControlResolverService;
 import com.uruz.frostbite.service.resolver.TeamResolverService;
 import com.uruz.frostbite.service.resolver.UserResolverService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,35 +25,52 @@ import java.util.UUID;
 
 @Service
 public class FolderService {
-
+    /** folder 도메인에서 폴더 정보를 조작하고 관리 및 조회 할 때 사용하는 서비스 */
     private final FolderMapper folderMapper;
     private final AclService aclService;
 
     private final UserResolverService userResolverService;
     private final TeamResolverService teamResolverService;
+    private final AccessControlResolverService accessControlResolverService;
 
     @Autowired
     public FolderService(FolderMapper folderMapper, AclService aclService, UserResolverService userResolverService,
-                         TeamResolverService teamResolverService){
+                         TeamResolverService teamResolverService,
+                         AccessControlResolverService accessControlResolverService){
         this.folderMapper = folderMapper;
         this.aclService = aclService;
         this.userResolverService = userResolverService;
         this.teamResolverService = teamResolverService;
+        this.accessControlResolverService = accessControlResolverService;
     }
 
     // 부모메서드 transactional에 참여
     @Transactional(propagation = Propagation.REQUIRED)
-    /** 최초 사용자 가입 시 개인폴더 할당 */
-    public void createEntryPrivateFolder(String initialFolderName, Integer userId){
+    /** 최초 사용자 가입 시 개인 엔트리 폴더 할당 */
+    public void createPrivateEntryFolder(String initialFolderName, Integer userId){
         // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
         // 따라서 별도 메서드로 처리
 
         // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
-        Folder initialPrivateRootFolder = Folder.createPrivateEntryFolder(initialFolderName, userId);
-        folderMapper.insertEntryFolder(initialPrivateRootFolder);
+        Folder initialPrivateEntryFolder = Folder.createPrivateEntryFolder(initialFolderName, userId);
+        folderMapper.insertEntryFolder(initialPrivateEntryFolder);
 
         // TODO : 폴더 생성 후 ACL 제어 추가 필요
-        aclService.createPrivateFolderAcl(userId, initialPrivateRootFolder.getFolderId());
+        aclService.createPrivateDefaultFolderAcl(initialPrivateEntryFolder.getFolderId(), userId);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    /** 최초 사용자 가입 시 팀 엔트리 폴더 할당 */
+    public void createTeamEntryFolder(String initialFolderName, Integer teamId, Integer createUserId){
+        // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
+        // 따라서 별도 메서드로 처리
+
+        // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
+        Folder initialTeamEntryFolder = Folder.createTeamEntryFolder(initialFolderName, teamId, createUserId);
+        folderMapper.insertEntryFolder(initialTeamEntryFolder);
+
+        // TODO : 폴더 생성 후 ACL 제어 추가 필요
+        aclService.createTeamDefaultFolderAcl(initialTeamEntryFolder.getFolderId(), teamId, createUserId);
     }
 
     /** 사용자 UUID로 부터 개인 엔트리폴더 아래 루트폴더 생성 */
@@ -67,7 +86,7 @@ public class FolderService {
         );
 
         folderMapper.insertRootFolder(newFolder);
-        aclService.createPrivateFolderAcl(userId, newFolder.getFolderId());
+        aclService.createPrivateDefaultFolderAcl(newFolder.getFolderId(), userId);
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
@@ -81,11 +100,13 @@ public class FolderService {
                 teamEntryFolder.getResourceScopeTeamId(), userId);
 
         folderMapper.insertRootFolder(newFolder);
+        aclService.createTeamDefaultFolderAcl(newFolder.getFolderId(), teamEntryFolder.getResourceScopeTeamId(), userId);
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
     /** 부모 폴더 UUID로부터 서브폴더 생성 */
-    public SimpleFolderResponse createFolder(Integer userId, FolderCreateRequest request) {
+    @Transactional
+    public SimpleFolderResponse createSubFolder(Integer userId, FolderCreateRequest request) {
         Folder parentFolder = selectFolderByUuid(request.getParentFolderUuid());
         // 폴더타입은 이미 Context 상 부모폴더에 있음.
         FolderType folderType = parentFolder.getFolderType();
@@ -97,6 +118,7 @@ public class FolderService {
         }
 
         folderMapper.insertSubFolder(newFolder);
+        aclService.createSubFolderAcl(parentFolder.getFolderId(), newFolder.getFolderId(), userId);
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
@@ -321,6 +343,25 @@ public class FolderService {
         }
     }
 
+    /** 폴더 조회 시 ACL 조회 */
+    // 폴더 진입시 (폴더 조회시) -> 폴더 조회 이상의 권한이 있는지 확인해야함
+    // 이건 keyset folder list 도, folder entries도 마찬가지임
+
+    // 1. 폴더 조회 진입 -> 폴더 정보 조회
+    // 2. 사용자가 진입하려는 폴더의 scope에 정말 사용자가 속해있는지 확인 필요
+    // 3-1. 개인폴더일 경우, USER에게 deny가 떨어질 수 없음. ACL도 ALLOW ALL, PermissinoBitmask 도 all 권한임. 검증 종료 -> 조회 허용
+    // 3-2. 팀 폴더일 경우 (4부터 시작)
+    // 4. 사용자가 해당 팀의 ^Manager Role인지 검증, 맞다면 ACL 무시하고 동작하기로 했으므로 통과 -> 조회 허용
+    // 5. 사용자가 해당 폴더에 Deny ACL이 있는지 검증. 있다면 검증 종료, -> 조회 거절
+    // 6. 사용자가 해당 폴더에 ALLOW ACL이 있다면, permissionBitMask MAX()로 가져올것. (더 큰 권한을 판정에 사용하기로 했음)
+    // 7. 현재 수행하려는 동작이 ACL의 permissionBit에 포함된 상태인지 검증 -> 포함되었다면 조회 허용
+    // 8. 포함되어있지 않거나, ACL이 조회되지 않는다면 -> 조회 거절
+    public boolean validateUserActionPermissionForFolder(Integer userId, Long folderId, PermissionBitMask bitMask) throws GeneralCustomException{
+
+        // 허용일경우 true 리턴, 허용되지 않을경우 throw
+        return accessControlResolverService.validateUserActionPermissionForFolder(userId, folderId, bitMask);
+
+    }
     /**
      * Offset base로 폴더 조회 헬퍼메서드. -> 이 경우 메인 컨텐츠 뷰 offset base 조회에 사용. Entries 와 함께 사용해야 할듯
      * ROOT List, Sub Folder 리스트 구분없이 사용 가능.

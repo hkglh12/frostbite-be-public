@@ -8,6 +8,7 @@
 ### 행위에 대한 메서드 명
 - repository 레이어를 제외하고 조회/리스팅/생성/수정/삭제 는 get/get*s/Create/Modify/Remove 로 명칭한다
 - repository 레이어에서 조회/리스팅/생성/수정/삭제 는 select/select*s/insert/update/delete 로 명칭한다.
+  - 단, 조회 내용이 단순 "존재여부" 일 경우 is* 로 명명한다.
 
 ### 명칭 규칙
 - 메서드명은 행위와 대상을 표현하도록 선언한다.

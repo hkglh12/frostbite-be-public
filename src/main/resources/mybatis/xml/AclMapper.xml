@@ -23,4 +23,66 @@
         #{createUserId}, #{modifyUserId}, #{deleteUserId}
         )
     </insert>
+
+    <insert id="cloneParentFolderAclIntoSubFolder">
+        INSERT INTO folder_acl_tb (
+            acl_id,
+            folder_id,
+            effect_type,
+            subject_type,
+            subject_team_id,
+            subject_user_id,
+            permission_bit_mask,
+            status,
+            create_user_id,
+            create_time
+        )
+        SELECT
+            nextval('folder_acl_tb_acl_id_seq'),
+            #{targetFolderId},
+            effect_type,
+            subject_type,
+            subject_team_id,
+            subject_user_id,
+            permission_bit_mask,
+            status,
+            #{createUserId},
+            #{createTime}
+        FROM folder_acl_tb
+        WHERE folder_id = #{parentFolderId}
+          AND status = #{status}
+    </insert>
+
+    <!-- Resolver(AccessControlService) -->
+    <select id="isUserDeniedByAcl" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM
+                folder_acl_tb
+            WHERE
+                folder_id = #{folderId}
+            AND
+                subject_user_id = #{userId}
+            AND
+                effect_type = #{effectType}
+            AND
+                status = #{status}
+        )
+
+    </select>
+    <select id="selectActiveFolderMaxPermAclForEval" resultType="FolderAcl">
+        SELECT *
+        FROM folder_acl_tb
+        WHERE folder_id = #{folderId}
+        AND status = #{status}
+        AND effect_type = #{effectType}
+        AND (
+        subject_user_id = #{userId}
+        <if test="teamId != null">
+            OR subject_team_id = #{teamId}
+        </if>
+        )
+        ORDER BY permission_bit_mask DESC, acl_id DESC
+        LIMIT 1
+    </select>
 </mapper>

@@ -11,7 +11,7 @@ public enum ApiErrorCode implements ResponseCode{
     BAD_REQUEST("EE0001", "Constraint not complied"),
 
 
-    ACCESS_DENIED("EG0001", "Not enough role authority"),
+    ACCESS_DENIED("EG0001", "Not enough role or authority"),
     AUTHENTICATION_REQUIRED("EG0002", "Proceed login first"),
     AUTHENTICATION_FAILED("EG0003", "Authentication failed"),
     /** USER */

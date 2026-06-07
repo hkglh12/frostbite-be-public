@@ -20,25 +20,27 @@
         JOIN user_tb creator
         ON creator.user_id = team.create_user_id
         LEFT JOIN user_tb modifier
-        on modifier.user_id = team.modify_user
+        on modifier.user_id = team.modify_user_id
         WHERE team.uuid = #{teamUuid}
     </select>
 
     <select id="selectTeam" resultType="Team">
-        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user, team.uuid,
-               team.status,
+        /** selectTeam*/
+        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user_id, team.uuid,
+               team.status
         FROM team_tb team
-                 JOIN user_tb user
-        ON user.user_id = team.create_user_id
+                 JOIN user_tb user_tb
+        ON user_tb.user_id = team.create_user_id
         WHERE team.uuid = #{teamUuid}
     </select>
 
     <select id="selectTeamByTeamId" resultType="Team">
-        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user, team.uuid,
-               team.status,
+        /** selectTeamByTeamId*/
+        SELECT team.team_id, team.name, team.create_time, team.create_user_id as createUser, team.modify_time, team.modify_user_id, team.uuid,
+               team.status
         FROM team_tb team
-                 JOIN user_tb user
-        ON user.user_id = team.create_user_id
+                 JOIN user_tb user_tb
+        ON user_tb.user_id = team.create_user_id
         WHERE team.team_id = #{teamId}
     </select>
 
@@ -56,7 +58,7 @@
         UPDATE
             team_tb
         SET
-            status = #{teamStatus},
+            status = #{status},
             modify_time = #{currentTime}
         WHERE
             uuid = #{uuid}
@@ -87,4 +89,20 @@
         INSERT INTO rel_user_team_tb(rel_id, user_id, team_id, create_user_id, join_time, role, status)
         VALUES (#{relId}, #{userId}, #{teamId}, #{createUser}, #{joinTime}, #{role}, #{status})
     </insert>
+
+    <!-- Resolvers -->
+
+    <select id ="selectTeamUserRelation" resultType = "TeamUserRelationProjection">
+
+        SELECT
+            rel_id, user_id, team_id, role
+        FROM
+            rel_user_team_tb
+        WHERE
+            status = #{status}
+        AND
+            user_id = #{userId}
+        AND
+            team_id = #{teamId}
+    </select>
 </mapper>

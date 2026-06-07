@@ -73,6 +73,11 @@ comment on column rel_user_team_tb.join_time is '합류시각';
 comment on column rel_user_team_tb.role is '팀 내 역할';
 comment on column rel_user_team_tb.status is '관계상태';
 
+/* 원래 전역 역할을 표현하기 위함이었으나, ADMIN과 USER밖에 없음
+   굳이 테이블을 나누어서 표현하는건 과하다고 판단, ENUM으로 전환 */
+
+/*
+
 create table role_tb(
                         role_id serial primary key ,
                         role_name varchar(256)
@@ -81,6 +86,7 @@ create table role_tb(
 comment on table role_tb is '역할';
 comment on column role_tb.role_id is '역할 식별자';
 comment on column role_tb.role_name is '역할명';
+
 
 create table rel_user_role_tb(
                                  rel_id serial primary key ,
@@ -95,7 +101,7 @@ comment on table rel_user_role_tb is '사용자-역할 관계';
 comment on column rel_user_role_tb.rel_id is '관계 식별자';
 comment on column rel_user_role_tb.user_id is '사용자 식별자';
 comment on column rel_user_role_tb.role_id is '역할 식별자';
-
+*/
 create table folder_tb
 (
     uuid                   varchar(50),
