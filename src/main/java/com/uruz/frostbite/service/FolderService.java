@@ -358,7 +358,7 @@ public class FolderService {
     // 8. 포함되어있지 않거나, ACL이 조회되지 않는다면 -> 조회 거절
     public boolean validateUserActionPermissionForFolder(Integer userId, Long folderId, PermissionBitMask bitMask) throws GeneralCustomException{
 
-        // Denied 조회, 있을경우 바로 throw
+        // 허용일경우 true 리턴, 허용되지 않을경우 throw
         return accessControlResolverService.validateUserActionPermissionForFolder(userId, folderId, bitMask);
 
     }

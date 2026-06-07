@@ -60,9 +60,9 @@
             FROM
                 folder_acl_tb
             WHERE
-                folder_id = #{folder_id}
+                folder_id = #{folderId}
             AND
-                subject_user_id = #{user_id}
+                subject_user_id = #{userId}
             AND
                 effect_type = #{effectType}
             AND

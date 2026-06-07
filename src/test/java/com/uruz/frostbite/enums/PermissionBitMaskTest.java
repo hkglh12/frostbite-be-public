@@ -6,12 +6,13 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@DisplayName("PermissionBitMask 단위 테스트")
 class PermissionBitMaskTest {
 
     @Test
-    @DisplayName("of는 여러 권한을 하나의 integer bitmask로 합친다")
-    void of_combines_permissions_to_integer_bitmask() {
-        // given & when
+    @DisplayName("여러 권한을 하나의 정수 비트마스크로 합친다")
+    void combinesPermissions() {
+        // when
         int mask = PermissionBitMask.of(
                 PermissionBitMask.BROWSE,
                 PermissionBitMask.READ,
@@ -23,8 +24,8 @@ class PermissionBitMaskTest {
     }
 
     @Test
-    @DisplayName("has는 bitmask에 특정 권한이 포함되어 있는지 검사한다")
-    void has_returns_whether_mask_contains_permission() {
+    @DisplayName("비트마스크에 특정 권한이 포함되어 있는지 판별한다")
+    void checksSinglePermission() {
         // given
         int mask = PermissionBitMask.of(PermissionBitMask.BROWSE, PermissionBitMask.READ);
 
@@ -35,19 +36,15 @@ class PermissionBitMaskTest {
     }
 
     @Test
-    @DisplayName("NONE은 실제 권한이 아니므로 has 검사에서 true가 되지 않는다")
-    void has_returns_false_for_none_permission() {
-        // given
-        int mask = PermissionBitMask.of(PermissionBitMask.BROWSE, PermissionBitMask.READ);
-
-        // when & then
-        assertThat(PermissionBitMask.has(mask, PermissionBitMask.NONE)).isFalse();
+    @DisplayName("NONE은 실제 권한이 아니므로 항상 포함되지 않은 것으로 판별한다")
+    void noneIsNeverIncluded() {
+        assertThat(PermissionBitMask.has(PermissionBitMask.of(PermissionBitMask.BROWSE), PermissionBitMask.NONE)).isFalse();
         assertThat(PermissionBitMask.has(0, PermissionBitMask.NONE)).isFalse();
     }
 
     @Test
-    @DisplayName("hasAll은 요청한 모든 권한이 포함될 때만 true를 반환한다")
-    void hasAll_returns_true_only_when_all_permissions_are_included() {
+    @DisplayName("요청한 모든 권한이 포함된 경우에만 hasAll이 참이다")
+    void checksAllPermissions() {
         // given
         int mask = PermissionBitMask.of(PermissionBitMask.BROWSE, PermissionBitMask.READ);
 
@@ -57,8 +54,8 @@ class PermissionBitMaskTest {
     }
 
     @Test
-    @DisplayName("hasAny는 요청한 권한 중 하나라도 포함되면 true를 반환한다")
-    void hasAny_returns_true_when_any_permission_is_included() {
+    @DisplayName("요청한 권한 중 하나라도 포함되면 hasAny가 참이다")
+    void checksAnyPermission() {
         // given
         int mask = PermissionBitMask.of(PermissionBitMask.BROWSE, PermissionBitMask.READ);
 
@@ -68,8 +65,8 @@ class PermissionBitMaskTest {
     }
 
     @Test
-    @DisplayName("fromMaskToArray는 integer bitmask를 권한 배열로 복원한다")
-    void fromMaskToArray_restores_permissions_from_integer_bitmask() {
+    @DisplayName("정수 비트마스크를 권한 배열로 복원한다")
+    void restoresPermissionsFromMask() {
         // given
         int mask = PermissionBitMask.of(PermissionBitMask.BROWSE, PermissionBitMask.MANAGE);
 
@@ -77,39 +74,31 @@ class PermissionBitMaskTest {
         PermissionBitMask[] permissions = PermissionBitMask.fromMaskToArray(mask);
 
         // then
-        assertThat(permissions)
-                .containsExactly(PermissionBitMask.BROWSE, PermissionBitMask.MANAGE);
+        assertThat(permissions).containsExactly(PermissionBitMask.BROWSE, PermissionBitMask.MANAGE);
     }
 
     @Test
-    @DisplayName("fromMaskToArray는 null 또는 0을 빈 배열로 복원한다")
-    void fromMaskToArray_returns_empty_array_for_null_or_zero() {
-        // when & then
+    @DisplayName("null과 0은 빈 권한 배열로 복원한다")
+    void restoresEmptyPermissionsFromNullOrZero() {
         assertThat(PermissionBitMask.fromMaskToArray(null)).isEmpty();
         assertThat(PermissionBitMask.fromMaskToArray(0)).isEmpty();
     }
 
     @Test
     @DisplayName("allMasks는 NONE을 제외한 실제 권한만 반환한다")
-    void allMasks_returns_real_permissions_only() {
-        // when
-        PermissionBitMask[] permissions = PermissionBitMask.allMasks();
-
-        // then
-        assertThat(permissions)
-                .containsExactly(
-                        PermissionBitMask.BROWSE,
-                        PermissionBitMask.READ,
-                        PermissionBitMask.WRITE,
-                        PermissionBitMask.CONTROL,
-                        PermissionBitMask.MANAGE
-                );
+    void returnsAllRealPermissions() {
+        assertThat(PermissionBitMask.allMasks()).containsExactly(
+                PermissionBitMask.BROWSE,
+                PermissionBitMask.READ,
+                PermissionBitMask.WRITE,
+                PermissionBitMask.CONTROL,
+                PermissionBitMask.MANAGE
+        );
     }
 
     @Test
-    @DisplayName("fromValue는 알 수 없는 값을 받으면 예외를 던진다")
-    void fromValue_throws_exception_for_unknown_value() {
-        // when & then
+    @DisplayName("정의되지 않은 값으로 enum을 조회하면 예외가 발생한다")
+    void rejectsUnknownValue() {
         assertThatThrownBy(() -> PermissionBitMask.fromValue(999))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unknown PermissionBitMask value");
