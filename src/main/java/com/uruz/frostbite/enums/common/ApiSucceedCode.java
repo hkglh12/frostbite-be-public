@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ApiSucceedCode implements ResponseCode{
 
-    SUCCEED("S00000", "SUCCEED");
+    SUCCEED("S00000", "SUCCEED"),
+    REQUEST_SUCCEED("S00001", "REQUEST_SUCCEED_FURTHER_WORKFLOW_WILL_PROCEED_SOON");
 
     private final String code;
     private final String message;

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.uruz.frostbite.mapper.FileMapper">
+
+    <insert id="insertInitial" parameterType="File" keyProperty="fileId">
+        <selectKey keyProperty="fileId" resultType="long" order="BEFORE">
+            SELECT nextval('file_tb_file_id_seq')
+        </selectKey>
+
+        INSERT INTO FILE_TB(
+            file_id, folder_id, uuid, original_file_name, file_name, description, file_size, file_extension, create_user_id,
+            create_time, status
+        ) VALUES(
+                 #{fileId}, #{folderId}, #{uuid}, #{originalFileName}, #{fileName}, #{description}, #{fileSize}, #{fileExtension},
+                 #{createUserId}, #{createTime}, #{status}
+        )
+
+
+    </insert>
+
+    <insert id = "insertFileWorkflowStatus" parameterType="FileWorkflowStatus">
+        INSERT INTO file_workflow_status_tb (file_id, file_regist_status)
+        VALUES (#{fileId}, #{fileRegistStatus})
+    </insert>
+
+    <update id="updateFileMetaInfoByRegistDone">
+        UPDATE file_tb
+        SET
+            storage_file_name = #{storageFileName},
+            storage_file_path = #{storageFilePath},
+            status = #{status}
+        WHERE
+            file_id = #{fileId}
+    </update>
+
+    <!-- 임시파일 관리 -->
+    <insert id = "insertFileTemp" parameterType="FileTemp">
+    /** insertFileTemp */
+    INSERT INTO FILE_TEMP_TB(
+        target_file_uuid, original_file_name, file_extension, file_size, create_user_id, create_time, expire_time, status
+    ) VALUES (
+        #{targetFileUuid}, #{originalFileName}, #{fileExtension}, #{fileSize}, #{createUserId}, #{createTime}, #{expireTime},
+              #{status}
+    )
+    </insert>
+
+    <select id="selectTempFileByUuid" resultType="FileTemp">
+        /** selectTempFileByUuid */
+        SELECT
+            target_file_uuid, original_file_name, file_extension, file_size, create_user_id, create_time, expire_time, status
+        FROM FILE_TEMP_TB
+        WHERE
+            target_file_uuid = #{uuid}
+    </select>
+
+
+</mapper>
