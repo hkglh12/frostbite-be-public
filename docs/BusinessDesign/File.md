@@ -53,8 +53,10 @@
 ```
 file_id bigserial primary key,
 folder_id  bigint,
-file_uuid UUID,
+uuid UUID,
 original_file_name varchar(1024),
+file_name varchar(1024), 
+description varchar(2048),
 file_size bigint,
 file_extension varchar(32),
 mime_type varchar(256),
@@ -73,15 +75,50 @@ status int
 - 이때 status는 FileStatus.ENUM(ACTIVE, SOFTDELETED) 으로 표현한다.
 - 이떄 파일이 영구삭제 되었다면, file_tb_del 테이블로 이동되어야 한다.
 
+- File이 가지는 uuid와 실제 물리 저장 경로에 사용되는 UUID는 책임 분리를 위해 서로 다른 값으로 관리한다.
+    - uuid는 외부 식별자이자 API 식별자다.
+        - file의 uuid 아는 것 = 파일 도메인 리소스를 식별할 수 있음.
+        - 단, 실제 조회/다운로드 가능 여부는 ACL 검증을 통해 결정된다.
+    - storage_file_name 및 temp_file_uuid는 실제 파일 저장 경로 구성에 사용되는 물리 저장 식별자다.
+        - storage_file_name을 아는 것 = 물리 파일 저장 위치를 추론할 수 있음.
+    - 따라서 외부 API 식별자와 물리 저장 식별자는 분리한다.
+    - 임시파일 UUID는 파일 등록 절차를 이어가기 위한 임시 업로드 식별자로만 사용한다.
+    - File UUID는 등록 완료 이후 파일 도메인 리소스를 식별하기 위한 값으로 사용한다.
+* workflow와 엮어서 생각하면, File의 storage_file_name 과 storage_file_path는 레지스트워크플로우가 동작할 때,
+  영속성 저장소에 파일을 옮기면서 UUID를 별도로 생성해서 관리한다. 따라서, file UUID =/= storage_file_name 일 수 있다.
+
+
+### file_temp_tb
+- 등록 흐름에서 임시 파일 정보를 서버에서 관리해야 할 필요성이 대두됨에 따라, 해당 테이블 신규 추가
+- file_workflow_status_tb 내 temp_file_name 제거
+
+- file_temp_tb
+```
+
+target_file_uuid UUID,
+original_file_name varchar(1024),
+file_extension varchar(128),
+file_size bigint,
+create_user_id int,
+create_time timestamp,
+expire_time timestamp,
+status int
+```
+
+- 추후 고도화 포인트로, 임시파일 만료날짜를 추가
+
 ### file_tb_del
 
 ```
-file_id bigserial primary key,
+file_id bigint primary key,
+folder_id  bigint,
+uuid UUID,
 original_file_name varchar(1024),
+file_name varchar(1024), 
+description varchar(2048),
 file_size bigint,
 file_extension varchar(32),
 mime_type varchar(256),
-folder_id  bigint,
 storage_mount_point_id int,
 storage_file_path varchar(1024),
 storage_file_name varchar(1024),
@@ -103,13 +140,10 @@ status int
 - file_workflow_status_tb
 ```
 file_id bigint primary key,
-temp_file_name varchar(2048),
 file_regist_start_time timestamp,
 file_regist_status int,
-file_regist_progress int,
-file_regist_allow_retry int,
 file_regist_complete_time timestamp,
-message jsonb
+file_regist_last_error_message text
 ```
 - file_workflow_status_tb 는 file_tb 와 1:1 매핑, Foreign primary key.
 - 파일 후속 처리 상태값이 추가되어야 할 경우 이 파일만 변경하면 되고, 메타정보 전체 출력시 view로 출력한다.
@@ -117,24 +151,37 @@ message jsonb
   - file_*_status.ENUM
     - (READY, 실행전, 0), (PROCESSING, 진행중, 1), (SUCCESS, 완료, 2), (FAILED_RETRYABLE, 최초시도실패, 3), (FAILED_FINAL, 재시도실패, 4)
 - *_progress 는 퍼센티지 저장을 고려하나, 물리적으로 퍼센티지 처리가 불가능하다면 0 -> 100 으로 한번에 점프도 허용한다.
-- temp_file_name은 "application이 관리할 임시 경로 에 존재하는 파일명" 을 대전제로 함. 따라서 file UUID 정보를 저장한다.
-  - 단, 파일 등록이 끝나는 시점에서 file_tb에는 경로정보가 저장이 되어야 한다.
+
+- 왜 workflow_status 를 분리했는가? "파일" 의 속성에 불과하지 않는가?
+  1. 파일 메타데이터와 워크플로우 상태의 책임을 분리하기 위함
+  2. 사용자 조회 중심의 file_tb와 시스템 상태 갱신 중심의 workflow 상태 정보를 분리하여 갱신 경합을 줄이기 위함
+  3. 향후 미리보기 생성, 검색엔진 동기화 등 추가 워크플로우 상태값 확장 시 file_tb 비대화를 방지하기 위함
+  4. 워크플로우 상태 정보와 파일 메타정보는 생명주기가 다르므로 별도 관리하기 위함
+  5. 짧게 말하자면, file_tb가 비즈니스 흐름상 큰 의미를 가지지 않는 상태값들로 인해 테이블이 비대해지는걸 원하지 않았다.
+
+- 위 내용에 따라, file_workflow_status가 하나의 상태 전이 과정을 관리하게 되므로, 엔티티로 승격
+
+- 추가 내용으로, workflow_request가 별도 테이블로 격상됨에 따라, allow_retry 정보는 file_workflow_status에서 제거.
+
 ### File version entity 설계
 
 - file_ver_tb
 ```
 file_ver_id bigserial primary key,
+version_sequence integer,
 file_id bigint,
+folder_id  bigint,
+uuid UUID,
 original_file_name varchar(1024),
+file_name varchar(1024), 
+description varchar(2048),
 file_size bigint,
 file_extension varchar(32),
 mime_type varchar(256),
-folder_id  bigint,
 storage_mount_point_id int,
 storage_file_path varchar(1024),
 storage_file_name varchar(1024),
 checksum_sha256 varchar(1024),
-version_number int,
 create_user_id int,
 create_time timestamp,
 modify_user_id int,
@@ -249,14 +296,8 @@ status int
     비교적 낮은 cost로 관리 관할을 옮기려면 MultipartFile.transferTo 로 동일 파일시스템 내에 rename 하는게 가장 바람직
 
 
-### 워크플로우 실패 및  종료
-
-- 워크플로우 실패 시, catch에서 allow_retry=1, _status=3 로 바꾸고 jsonb에 java exception message를 넣어둔다.
-- WAS 스케쥴을 통해, file_workflow_status_tb 에 allow_retry = 1 && _status=3 인것들을 찾아서, 재시도를 수행한다. 시작 시 allow_retry=0 으로 업데이트
-- 재시도 실패시 *_status=4로  바꾸고, message(jsonb)에 재시도 실패 메시지를 추가해둔다.
-
-- 수행 결과를 SSE가 체결되어있으면 FE에 리턴하고, 체결되있지 않다면 서버에서 메시지를 삼킨다.
-- 사용자는 추후 메타정보 조회시에 확인이 가능하며, 사용자가 명시적으로 재시도를 요청할 수 있다.
+### 워크플로우
+- 워크플로우 요청 테이블이 별도 테이블 및 엔티티로 격상됨에 따라 Workflow.md로 이관
 
 ### 파일 다운로드 흐름
 
@@ -322,3 +363,24 @@ status int
     - BE가 임시파일을 전혀 관리하지 않는 방향으로 설계해, FE가 임시파일에서 추출한 데이터를 다시 그대로 던져야 하는 위화감 발생
     - 따라서, temp_file_tb 를 신규로 열고 해당 테이블을 활용하는 방향으로 개선
     - 위 변경 사항에 따라, file_workflow_status_tb 내 temp_file_name 제거, temp_file_tb에서 관리하도록 전환
+
+## 구현중 어려운 점 인식 3
+    - 인식 1로부터 분리체계를 고안했음.
+```
+      * FileController <- FileService <- DirectFileHandleComponent
+      * FileController <- FileWorkflowService <- FileService 
+      * FileWorkflowService <- DirectFileHandleComponent
+``` 
+    - 해당 개선안에서는 "워크플로우 요청 테이블"을 고려하지 않았음. 즉, 현재 구조라면
+    - 파일 등록 API 호출 -> 컨트롤러가 파일서비스 호출 -> 컨트롤러가 workflowService.createWorkflows() 요청 목록 생성 호출 -> 컨트롤러가 workflowService.runWorkflow 호출
+    - 컨트롤러의 역할을 벗어나서 비즈니스 로직을 너무 깊게 알게됨.
+
+    - 따라서 추가 개선안으로 파일서비스 제어 객체를 만들어 프록시, 라우터 개념으로 내부 구현을 숨기고 추상화 함
+        - 추가적으로, "비즈니스 도메인 내에서 File 메타 정보를 조작" 한다는 FileService에 DirectFileHandleComponent가 존재하는것은 컨벤션 위반
+        - 따라서, 기존의 "임시파일 임시경로 적재" 역할을 수행하던 uploadTempFile 은 일종의 단발성 워크플로우로 간주, FileWorkflowService로 이관
+
+    - 따라서, 아래와 같이 수정
+    * FileController <- FileOrchestrationService
+    * FileOrchestrationService <- FileService
+    * FileOrchestrationService <- FileWorkflowService <- FileService
+    * FileOrchestrationService <- FileWorkflowService <- DirectFileHandleComponent
