@@ -43,7 +43,8 @@
    CASE4. 조회 비즈니스 로직, Condition으로 유지
 3. Service -> Mapper
    CASE1. Create의 경우 domain entity로 진입
-   CASE2. update의 경우 command로 진입
+   CASE2-1. update의 경우 command로 진입
+   CASE2-2. 단순 상태변이/전파의 경우, 상태 전파 메서드를 통한 인자값으로 update 진입
    CASE3. Read/Listing의 경우 condition으로 진입
    CASE4. Delete의 경우 단순 삭제일경우 식별자전달, 복합삭제일경우 command로 진입
    CASE4. Delete의 경우 단순 삭제일경우 식별자전달, 복합삭제일경우 command로 진입
