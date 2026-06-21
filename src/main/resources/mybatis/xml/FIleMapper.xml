@@ -57,4 +57,39 @@
     </select>
 
 
+    <!-- @Deprecated -->
+    <update id="updateFileWorkflowStatusStarted">
+        update file_workflow_status_tb
+        set
+            file_regist_status = #{status},
+            file_regist_start_time = #{currentTime}
+        WHERE
+            file_id = #{targetFileId}
+    </update>
+
+    <update id="updateFileWorkflowStatus">
+        update file_workflow_status_tb
+        set
+            file_regist_status = #{status},
+            file_regist_start_time = #{currentTime}
+        WHERE
+            file_id = #{targetFileId}
+    </update>
+    <update id="markFileWorkflowRegistFailed">
+        update file_workflow_status_tb
+        set
+            file_regist_status = #{status},
+            file_regist_complete_time = #{currentTime},
+            file_regist_last_error_message = #{failedMessage}
+        WHERE
+            file_id = #{targetFileId}
+    </update>
+    <update id="updateFileWorkflowEndStatus">
+        update file_workflow_status_tb
+        set
+            file_regist_status = #{status},
+            file_regist_complete_time = #{currentTime}
+        WHERE
+            file_id = #{targetFileId}
+    </update>
 </mapper>

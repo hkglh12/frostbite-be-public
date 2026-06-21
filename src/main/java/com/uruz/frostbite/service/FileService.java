@@ -7,18 +7,16 @@ import com.uruz.frostbite.domain.FileTemp;
 import com.uruz.frostbite.domain.FileWorkflowStatus;
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.dto.file.FileCreateRequest;
-import com.uruz.frostbite.dto.file.SimpleFileResponse;
-import com.uruz.frostbite.dto.file.TempFileMetaInfoDraft;
 import com.uruz.frostbite.enums.FileStatus;
+import com.uruz.frostbite.enums.WorkflowStatus;
+import com.uruz.frostbite.enums.workflow.Workflow;
 import com.uruz.frostbite.mapper.FileMapper;
 import com.uruz.frostbite.service.resolver.FolderResolverService;
-import com.uruz.frostbite.utils.TempFileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -44,7 +42,8 @@ public class FileService {
         this.folderResolverService = folderResolverService;
     }
 
-    public File uploadFile(FileCreateRequest request, UUID folderUuid, Integer createUserId){
+    @Transactional(propagation = Propagation.REQUIRED)
+    public File registInitialFile(FileCreateRequest request, UUID folderUuid, Integer createUserId){
         // Temp UUID로부터 유효한 UUID인지 검증
         FileTemp fileTemp = fileMapper.selectTempFileByUuid(request.getTempFileUuid());
         if(fileTemp == null){
@@ -58,7 +57,7 @@ public class FileService {
 
         // file_tb에 저장
         File initialFile = File.createInitial(folder.getFolderId(), UUID.randomUUID(), fileTemp.getOriginalFileName(),
-                request.getFileName(), request.getDescrption(),
+                request.getFileName(), request.getDescription(),
                 fileTemp.getFileSize(), fileTemp.getFileExtension(), createUserId, fileTemp.getCreateTime());
 
 
@@ -70,9 +69,14 @@ public class FileService {
         return initialFile;
     }
 
-    /** 외부 호출 헬퍼 메서드*/
+    /** 외부 호출 헬퍼 메서드
+     * 임시파일 테이블에 저장
+     * */
     public void insertFileTemp(FileTemp fileTemp){
         fileMapper.insertFileTemp(fileTemp);
+    }
+    public FileTemp selectFileTempByUuid(UUID targetUuid){
+        return fileMapper.selectTempFileByUuid(targetUuid);
     }
 
     public void completeRegistWorkflow(Long fileId,  LocalDateTime currentTime, Map<String, String> destInfo){
@@ -80,6 +84,18 @@ public class FileService {
         // 현재 Stroage_mount_table을 사용하지 않음. 임시완성이 현 시점 절대적 목표
         // 따라서 storage_mount_point_id null로 유지
         fileMapper.updateFileMetaInfoByRegistDone(fileId, destInfo.get("destFilePath"), destInfo.get("destFileName"), FileStatus.ACTIVE);
+    }
+
+    public void markFileWorkflowRegistStarted(Long fileId, LocalDateTime currentTime){
+        fileMapper.updateFileWorkflowStatus(fileId, WorkflowStatus.PROCESSING, currentTime);
+    }
+
+    public void markFileWorkflowRegistSucceed(Long fileId, LocalDateTime currentTime){
+        fileMapper.updateFileWorkflowEndStatus(fileId, WorkflowStatus.SUCCESS, currentTime);
+    }
+
+    public void markFileWorkflowRegistFailed(Long fileId, LocalDateTime startedTime, String failedMessage){
+        fileMapper.markFileWorkflowRegistFailed(fileId, WorkflowStatus.FAILED_FINAL, startedTime, failedMessage);
     }
 
 }

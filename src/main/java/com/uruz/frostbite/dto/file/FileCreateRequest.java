@@ -1,12 +1,10 @@
 package com.uruz.frostbite.dto.file;
 
+import com.uruz.frostbite.enums.workflow.Workflow;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
 
@@ -16,7 +14,7 @@ import java.util.UUID;
 public class FileCreateRequest {
 
     @NotNull
-    @Schema(description = "임시 파일 업로드 API로붙 수령한 UUID")
+    @Schema(description = "임시 파일 업로드 API로 수령한 UUID")
     private UUID tempFileUuid;
 
     @NotNull
@@ -27,5 +25,8 @@ public class FileCreateRequest {
     String fileName;
 
     @Schema(description = "사용자 지정 추가 설명")
-    String descrption;
+    String description;
+
+    @Schema(description = "요청 WorkflowName")
+    Workflow workflowName = Workflow.WF_FILE_PROVISION_NORMAL;
 }

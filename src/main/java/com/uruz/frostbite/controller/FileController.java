@@ -34,11 +34,14 @@ public class FileController {
             @PathVariable(name="folderUuid") UUID folderUuid,
             @AuthenticationPrincipal(expression = "userId") Integer userId
     ) throws IOException {
-        SimpleFileResponse response = fileOrchestrationService.uploadFile(request, folderUuid,  userId);
+        SimpleFileResponse response = fileOrchestrationService.registFile(request, folderUuid,  userId);
         return ResponseEntity.ok(new ApiSucceedResponse<>(response, ApiSucceedCode.REQUEST_SUCCEED));
     }
 
-    /** 임시 파일 업로드 포인트*/
+    /** 임시 파일 업로드 포인트
+     *
+     * MultiPart(java.temp.io) -> forstbite temp까지 이동
+     * */
     @PostMapping(value = "/{folderUuid}/temporal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadTemporalFile(
             @RequestPart("file") MultipartFile file,

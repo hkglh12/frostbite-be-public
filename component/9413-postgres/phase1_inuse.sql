@@ -335,8 +335,9 @@ comment on column file_acl_tb.is_delete is '삭제여부'
 create table workflow_request_tb (
                                      workflow_request_id bigserial primary key,
                                      workflow_name varchar(1024),
-                                     target_domain varchar(128),
+                                     workflow_domain_type varchar(128),  -- 파일 || 폴더
                                      target_id bigint,
+                                    request_payload jsonb, -- 파라미터 연결 (Workflow.md 변경점 (2026.06.21) 참고
                                      error_message text,
                                      status smallint,
                                      create_time timestamp,
@@ -345,13 +346,15 @@ create table workflow_request_tb (
                                      end_time timestamp
 );
 
-create table workflow_unit_request_tb (
-                                          workflow_unit_request_id bigserial primary key,
-                                          workflow_request_id bigint,
-                                          work_unit_name varchar(1024),
-                                          unit_sequence_in_workflow int,
+create table unit_task_request_tb (
+                                          unit_task_request_id bigserial primary key,
+                                          workflow_request_id bigint, -- ref : workflow_request_tb
+                                          unit_task_name varchar(1024),
+                                          task_order int, -- 해당 유닛태스크가 워크플로우 내 몇번째 작업이었는지. (유지보수관리용 : 어디쯤 실패한건지 보기 위해 코드를 까보지 않도록 + 유닛 동일 워크플로우 내 재사용 관리회도록)
+                                          workflow_domain_type varchar(128),
+                                          target_id bigint,
                                           error_message text,
-                                          status smallint,
+                                          status smallint, -- succeed, failed_retriable, failed_final,
                                           allow_retry smallint,
                                           retry_count int,
                                           create_time timestamp,

@@ -1,111 +1,104 @@
 package com.uruz.frostbite.service;
 
-import com.uruz.frostbite.customException.GeneralCustomException;
-import com.uruz.frostbite.dto.file.FileCreateRequest;
-import com.uruz.frostbite.dto.file.TempFileMetaInfoDraft;
+import com.uruz.frostbite.domain.UnitTaskRequest;
+import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.enums.WorkflowStatus;
-import com.uruz.frostbite.mapper.WorkflowMapper;
+import com.uruz.frostbite.enums.workflow.UnitTaskRequestStatus;
+import com.uruz.frostbite.enums.workflow.Workflow;
+import com.uruz.frostbite.enums.workflow.WorkflowDomainType;
+import com.uruz.frostbite.enums.workflow.WorkflowRequestStatus;
+import com.uruz.frostbite.mapper.WorkflowRequestMapper;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class WorkflowService {
     /**
-     * 실제 물리 파일을 핸들링하고, 워크플로우 단위유닛을 호출하는 객체
+     * 워크플로우 및 유닛테스크의 메타데이터를 핸들링하는 서비스.
      * */
 
-    // TODO : 메타정보 수정된 이력을 직접 관리할것인가? Orchestrator까지 Async로 묶어서 Orchestrator에서 보고할것인가?
-    private final FileService fileService;
-    private final DirectFileHandleComponent directFileHandleComponent;
-    private final WorkflowMapper workflowMapper;
-
-    // 우선 self로 처리. 추후 별도 분리 필요
-    private final WorkflowService workflowService;
-
+    private final WorkflowRequestMapper workflowRequestMapper;
 
     @Autowired
-    public WorkflowService(FileService fileService, DirectFileHandleComponent directFileHandleComponent, WorkflowMapper workflowMapper,
-        @Lazy WorkflowService workflowService
-    ){
-        this.fileService = fileService;
-        this.directFileHandleComponent = directFileHandleComponent;
-        this.workflowMapper = workflowMapper;
-        this.workflowService = workflowService;
-
+    public WorkflowService(WorkflowRequestMapper workflowRequestMapper){
+        this.workflowRequestMapper = workflowRequestMapper;
     }
 
-    /** 임시파일을 일종의 단발성 워크플로우로 간주하고, 메타 정보를 관리하는 fileService로부터 분리,
-     * 실제 물리파일을 건드리는 fileWorkflowService에서 통합관리*/
-    public TempFileMetaInfoDraft uploadTempFile(MultipartFile tempFile, UUID folderUuid, Integer createUserId){
-        return directFileHandleComponent.reallocateTempFile(tempFile);
-    }
+    /** 워크플로우 요청 등록 */
 
-    public void deleteTempFile(UUID uuid) throws Exception{
-        directFileHandleComponent.deleteTempFile(uuid.toString());
-    }
-    public void deleteFile(String path) throws IOException{
-        directFileHandleComponent.deleteFile(path);
-    }
-
-    public void registFile(FileCreateRequest request, Long fileId, Integer createUserId) throws IOException{
-        Map<String, String> destInfo = null;
-        UUID destinationUuid = UUID.randomUUID();
-        String[] uuids = destinationUuid.toString().split("-");
-        String attemptFileName = uuids[4];
-        String persistedFilePath =
-                directFileHandleComponent.resolvePersistedFilePath(destinationUuid.toString().replace("-"+attemptFileName, "").replace("-","/"));
-
-        try {
-            destInfo = workflowService.attempRegist(request, fileId, createUserId, persistedFilePath,attemptFileName);
-        } catch (Exception e) {
-            directFileHandleComponent.deleteFile(persistedFilePath + "/" + attemptFileName);
-            workflowService.updateFileRegistFailed(
-                    LocalDateTime.now(),
-                    fileId,
-                    WorkflowStatus.FAILED_FINAL
-            );
-
-            throw new GeneralCustomException("REGIST WORKFLOW FAILED");
-        }
-    }
-    @Transactional
-    public Map<String, String>  attempRegist(FileCreateRequest request, Long fileId, Integer createUserId,
-                                             String attemptDestPath, String attemptFileName) {
-        workflowMapper.updateFileRegistStartTime(
-                LocalDateTime.now(),
-                fileId,
-                WorkflowStatus.PROCESSING
-        );
-
-        Map<String, String> destInfo =
-                directFileHandleComponent.transferFileToPersistPath(
-                        request.getTempFileUuid(),
-                        attemptDestPath, attemptFileName
+    public WorkflowRequest registerWorkflowRequest(WorkflowDomainType workflowDomainType, Long targetId,
+                                                   Workflow requestWorkflow, String requestPayloadString, int createUserId){
+        WorkflowRequest workflowRequest =
+                WorkflowRequest.createReady(
+                        requestWorkflow,
+                        workflowDomainType,
+                        targetId,
+                        requestPayloadString,
+                        createUserId,
+                        LocalDateTime.now()
                 );
 
-        fileService.completeRegistWorkflow(fileId, LocalDateTime.now(), destInfo);
+        workflowRequestMapper.insertWorkflowRequest(workflowRequest);
 
-        workflowMapper.updateFileRegistDone(
-                LocalDateTime.now(),
-                fileId,
-                WorkflowStatus.SUCCESS
-        );
-
-        return destInfo;
+        return workflowRequest;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateFileRegistFailed(LocalDateTime current, Long fileId, WorkflowStatus status){
-        workflowMapper.updateFileRegistDone(LocalDateTime.now(), fileId, WorkflowStatus.FAILED_FINAL);
+    public void updateFileRegisterFailed(LocalDateTime current, Long fileId, WorkflowStatus status){
+        workflowRequestMapper.updateFileRegisterDone(LocalDateTime.now(), fileId, WorkflowRequestStatus.FAILED_FINAL);
+    }
+
+
+    void updateFileRegisterStartTime(LocalDateTime startTime, Long fileId, WorkflowStatus workflowStatus){
+        workflowRequestMapper.updateFileRegisterStartTime(startTime, fileId, workflowStatus);
+    }
+
+    void updateFileRegisterDone(@Param("endTime")LocalDateTime endTime, @Param("fileId") Long fileId, @Param("fileRegistStatus")WorkflowRequestStatus workflowStatus) {
+        workflowRequestMapper.updateFileRegisterDone(endTime, fileId, workflowStatus);
+    }
+
+    public WorkflowRequest getWorkflowRequest(long workflowRequestId){
+        return workflowRequestMapper.selectWorkflowRequest(workflowRequestId);
+    }
+
+    public void markWorkflowRequestStarted(long workflowRequestId, LocalDateTime currentTime){
+        workflowRequestMapper.updateWorkflowRequestAsProcessing(workflowRequestId, WorkflowRequestStatus.PROCESSING, currentTime);
+    }
+
+    public void markWorkflowRequestSucceed(long workflowRequestId, LocalDateTime currentTime){
+        workflowRequestMapper.updateWorkflowRequestAsSucceed(workflowRequestId, WorkflowRequestStatus.SUCCEEDED, currentTime);
+    }
+
+    public void markWorkflowRequestFailed(long workflowRequestId, LocalDateTime currentTime, String failedMessage){
+        workflowRequestMapper.updateWorkflowRequestAsFailedFinal(workflowRequestId, WorkflowRequestStatus.FAILED_FINAL, currentTime, failedMessage);
+    }
+
+    /** 추후 UnitTask 관련 메서드 모두 UnitTaskService로 분리 예정 */
+
+    public UnitTaskRequest getLatestUnitTaskRequest(long workflowRequestId){
+        return workflowRequestMapper.selectLatestUnitTaskRequest(workflowRequestId);
+    }
+
+    public void insertCurrentUnitTask(UnitTaskRequest unitTaskRequest) {
+        workflowRequestMapper.insertUnitTaskRequest(unitTaskRequest);
+    }
+
+    public void markUnitTaskAsProcessing(long unitTaskRequestId, LocalDateTime currentTime){
+        workflowRequestMapper.updateUnitTaskRequestStatus(unitTaskRequestId, UnitTaskRequestStatus.PROCESSING, currentTime);
+    }
+
+    public void markUnitTaskToSucceed(long unitTaskRequestId, LocalDateTime currentTime){
+        workflowRequestMapper.updateUnitTaskRequestEndStatus(unitTaskRequestId, UnitTaskRequestStatus.SUCCEEDED, currentTime);
+    }
+    public void markUnitTaskToFailedFinal(long unitTaskRequestId, LocalDateTime currentTime){
+        workflowRequestMapper.updateUnitTaskRequestEndStatus(unitTaskRequestId, UnitTaskRequestStatus.FAILED_FINAL, currentTime);
+    }
+    public void markUnitTaskToFailedRetryable(long unitTaskRequestId, LocalDateTime currentTime){
+        workflowRequestMapper.updateUnitTaskRequestEndStatus(unitTaskRequestId, UnitTaskRequestStatus.FAILED_RETRYABLE, currentTime);
     }
 }

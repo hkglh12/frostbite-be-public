@@ -2,6 +2,8 @@
 
 - 작업의 흐름, 즉 단위 작업의 뭉치로 특정 순서를 지켜서 수행되어야 하는 작업 뭉치를 워크플로우라고 명칭한다.
 - 워크플로우의 각각 단위 작업을 유닛태스크 (단위작업)이라 명칭한다.
+- 친숙한 명칭을 위해 workflow 라는 이름으로 개발을 시작했으나, 개발하다보니 PipeLine에 더 가까운것 같다. PipeLine으로 인식하면 좋을듯.
+
 
 ## 개정
 - 최초 workflow는 file에만 적용되는 개념이었음
@@ -10,6 +12,7 @@
 - 단, 폴더단위 워크플로우는 Phase3에 추가하고 Phase1에서는 파일을 대상으로 In Was Code 식으로 개발
   - Phase2에서는 Was code에서 분리해서 엔진방식 || none WEB JAR 방식 || Python 단위모듈 호출 방식으로 전환
 
+* Phase3에서 중간값 보존 후 재시작 / 재요청 지원
 
 # Phase1
 - 각 단위작업을 수행하는 워크플로우 @Service 개발, 추상화 한 Interface Implement로 다형성 제공
@@ -36,15 +39,23 @@
 ```
 workflow_request_id bigserial primary key,
 workflow_name varchar(1024),
-target_domain varchar(128),  -- 파일 || 폴더
+workflow_domain_type varchar(128),  -- 파일 || 폴더
+request_payload jsonb, -- 워크플로우 동작 시 요구 정보
 target_id bigint,
 error_message text,
-status smallint,
+status varchar(128),
 create_time timestamp,
 create_user_id integer,
 start_time timestamp,
 end_time timestamp,
 ```
+
+- 변경점 (2026.06.21) request_payload 추가
+  - 기존 @Async 메서드체이닝으로 워크플로우를 처리할때는 메모리에 모든 데이터가 있었으므로 문제가 없었음
+  - UnitTask / Workflow로 실행주체를 나누고 UnitTaskExecutor를 만들어서 각 유닛태스크를 Proxy 패턴으로 호출하게 된 시점에서
+    workflowId만 인자로 넘겨서 워크플로우를 호출하다 보니, 컨텍스트정보가 모두 소실됨.
+    - 특히, copy_storage unit task 실행 시, file 과 fileTemp를 연결시킬 고리가 없었음.
+  - 이를 해결하기 위해, request_payload를 생성, workflow 삽입 시에 unitTask가 필요로 할 모든 정보를 삽입해두는 방향으로 처리
 
 ## 유닛 태스크 실행 이력 및 상태관리
 - 유닛태스크 실행 이력을 관리한다.
@@ -54,10 +65,10 @@ unit_task_request_id bigserial primary key,
 workflow_request_id bigint, -- ref : workflow_request_tb
 unit_task_name varchar(1024),
 task_order int, -- 해당 유닛태스크가 워크플로우 내 몇번째 작업이었는지. (유지보수관리용 : 어디쯤 실패한건지 보기 위해 코드를 까보지 않도록 + 유닛 동일 워크플로우 내 재사용 관리회도록)
-target_domain varchar(128),  -- 파일 || 폴더
+workflow_domain_type varchar(128),  -- 파일 || 폴더 <- UnitTask는 DB만 보고도 어느 도메인에 대한 작업이었는가 가 추적이 되길 바래서 넣음
 target_id bigint,
 error_message text,
-status smallint, -- succeed, failed_retriable, failed_final,
+status varchar(128), -- succeed, failed_retriable, failed_final,
 allow_retry smallint,
 retry_count int,
 create_time timestamp,
@@ -70,18 +81,15 @@ end_time timestamp,
 
 - 워크플로우 요청 흐름은 아래와 같이 동작하도록 한다
   - FE에서 파일 등록 호출 시 -> 파라미터로 적용할 Workflow명 제출
-    -> BE에서 파일 DB 등록 -> 이후, AsyncOrchestrator(가칭) 의 <CompletableFuture> orchestroWorkflow@Async 메서드 (가칭) 호출
-    -> AsyncOrchestrator 워크플로우 설정 조회 -> workflow request 요청 삽입, 첫번째 UnitTask @Service의 processWorkflow()(가칭) 호출
-    -> 각 UnitTask는 DB에 자기 자신 Unit Task 시작시간과 종료시간, 상태를 기록한다. 또한 유닛태스크는 파일전용 / 폴더전용이 구분될 수 있으므로,
-        각 유닛태스크는 본인이 작업한 엔티티의 상태값 (예 : file_workflow_status_tb) 를 변경한다.
-    -> UnitTask가 작업 완료로 return하면 CompletableFuture를 통해 콜백으로 AsyncOrchestrator가 리턴받는다 
-    -> 다음 유닛태스크 작업을 조회한뒤 다시 unitTask를 호출한다. 단, 두가지 방식을 고려해 볼 수 있다.
-        - 직전 작업이 성공했다면 -> 문제없이 다음 유닛태스크 호출
-        - 직전 작업이 실패했다면 -> FAILED_RETRYABLE : 다시 해당 메서드 호출 || 혹은 지연호출?  / FAILED_FINAL : 해당 워크플로우 정지.
-    -> 위 과정을 통해 워크플로우 내 호출할 UnitTask가 없다면, 워크플로우 종료로 선언한다.
+    -> BE에서 파일 DB 등록 -> 이후, fileOrchestrationService 에서 workflowService.registerWorkflow() 호출 로 워크플로우 요청 등록
+    -> fileOrchestrationService가 @Async workflowService.processWorkflow() 호출
+    -> @Async workflowService.procesWorkflow()에서 While로 -> 직전 작업 조회, 금번 작업 조회, 재시도여부, 판별 후 UnitTask 시작시간 기록
+    -> UnitTask 작업 호출 (UnitTask 호출은 @Async 아님에 유의. 이미 워크플로우 전체가 @Async로 빠져나왔으므로 재처리 불필요)
+    -> Try/Catch 로 성공, 실패 여부 캐치 후 UnitTask 상태 DB Update
+    -> While 빠져나왔으면 Workflow상태 업데이트, EventPublisher 활용 -> SSE 등으로 캐치해서 프론트에 노티파이
     
-- 워크플로우 재호청이 접수될 경우, request row 재활용 하지 말고 새로 생성해서 처리한다.
-  
+- 워크플로우 재요청이 접수될 경우, request row 재활용 하지 말고 새로 생성해서 처리한다.
+  - 단, 워크플로우 재요청은 Phase3에서 개발 (중간값 보관 개발 필요)
 - 위 방식의 특징:
   - workflow 수행 중 서버가 뻗어도, 중단점을 찾을 수 있다. 별도 개발은 필요하지만 문제 생긴 unittask부터 다시 시작할 수 있다.
   - @Async 를 사용할 때, 메모리 관리나 비동기관리전략 (큐 풀 시 거절, 큐 풀 시 호출메서드가 직접수행 등..)이 필요하다.
@@ -94,3 +102,21 @@ end_time timestamp,
     - 중도 실패시 재시도 애매함을 제거 가능
     - Task 연결이 최초 체인 생성 시점에 고정되는것을 방지 가능
     - 서버 재시작 후 복구 쉬움 (재시작 시에 AsyncOrchestrator의 최초 조립에 의존적이지 않게되며, 실패 유닛태스크부터 재시작 가능)
+
+## Workflow / UnitTask 상태값 관리
+
+workflow_request.status
+
+READY
+PROCESSING
+SUCCEEDED
+FAILED_RETRYABLE
+FAILED_FINAL
+
+unit_task_request.status
+
+READY
+PROCESSING
+SUCCEEDED
+FAILED_RETRYABLE
+FAILED_FINAL
