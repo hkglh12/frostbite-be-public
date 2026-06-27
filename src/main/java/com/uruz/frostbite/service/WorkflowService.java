@@ -78,27 +78,4 @@ public class WorkflowService {
         workflowRequestMapper.updateWorkflowRequestAsFailedFinal(workflowRequestId, WorkflowRequestStatus.FAILED_FINAL, currentTime, failedMessage);
     }
 
-    /** 추후 UnitTask 관련 메서드 모두 UnitTaskService로 분리 예정 */
-
-    public UnitTaskRequest getLatestUnitTaskRequest(long workflowRequestId){
-        return workflowRequestMapper.selectLatestUnitTaskRequest(workflowRequestId);
-    }
-
-    public void insertCurrentUnitTask(UnitTaskRequest unitTaskRequest) {
-        workflowRequestMapper.insertUnitTaskRequest(unitTaskRequest);
-    }
-
-    public void markUnitTaskAsProcessing(long unitTaskRequestId, LocalDateTime currentTime){
-        workflowRequestMapper.updateUnitTaskRequestStatus(unitTaskRequestId, UnitTaskRequestStatus.PROCESSING, currentTime);
-    }
-
-    public void markUnitTaskToSucceed(long unitTaskRequestId, LocalDateTime currentTime){
-        workflowRequestMapper.updateUnitTaskRequestEndStatus(unitTaskRequestId, UnitTaskRequestStatus.SUCCEEDED, currentTime);
-    }
-    public void markUnitTaskToFailedFinal(long unitTaskRequestId, LocalDateTime currentTime){
-        workflowRequestMapper.updateUnitTaskRequestEndStatus(unitTaskRequestId, UnitTaskRequestStatus.FAILED_FINAL, currentTime);
-    }
-    public void markUnitTaskToFailedRetryable(long unitTaskRequestId, LocalDateTime currentTime){
-        workflowRequestMapper.updateUnitTaskRequestEndStatus(unitTaskRequestId, UnitTaskRequestStatus.FAILED_RETRYABLE, currentTime);
-    }
 }

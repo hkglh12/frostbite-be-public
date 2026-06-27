@@ -37,6 +37,7 @@ public class WorkflowProcessor {
     private final DirectFileHandleComponent directFileHandleComponent;
 
     private final WorkflowService workflowService;
+    private final UnitTaskService unitTaskService;
 
     private final List<UnitTaskExecutor> executors;
 
@@ -46,12 +47,14 @@ public class WorkflowProcessor {
     @Autowired
     public WorkflowProcessor(FileService fileService, DirectFileHandleComponent directFileHandleComponent,
                              WorkflowService workflowService,
+                             UnitTaskService unitTaskService,
                              List<UnitTaskExecutor> executors,
                              ObjectMapper mapper
     ){
         this.fileService = fileService;
         this.directFileHandleComponent = directFileHandleComponent;
         this.workflowService = workflowService;
+        this.unitTaskService = unitTaskService;
         this.executors = executors;
         this.mapper = mapper;
 
@@ -95,8 +98,6 @@ public class WorkflowProcessor {
 */
 
 
-
-    @Async
     public void processWorkflow(Long workflowRequestId){
         // 워크플로우가 실행 가능한 상태인지 확인
         WorkflowRequest request = workflowService.getWorkflowRequest(workflowRequestId);
@@ -122,8 +123,8 @@ public class WorkflowProcessor {
         FileWorkflowDraft draft = FileWorkflowDraft.createInitialForMoveOnly(request, requestPayload);
         try {
             while (true) {
-                UnitTaskRequest previousUnitTask = workflowService.getLatestUnitTaskRequest(workflowRequestId);
-                UnitTask task = resolveNextUnitTask(request.getWorkflowName().getUnitTasks(), previousUnitTask);
+                UnitTaskRequest previousUnitTask = unitTaskService.getLatestUnitTaskRequest(workflowRequestId);
+                UnitTask task = unitTaskService.resolveNextUnitTask(request.getWorkflowName().getUnitTasks(), previousUnitTask);
 
                 if(task == null){
                     break;
@@ -160,35 +161,5 @@ public class WorkflowProcessor {
         }
     }
 
-    private UnitTask resolveNextUnitTask(
-            List<UnitTask> unitTasks,
-            UnitTaskRequest previous
-    ) {
-        if (previous == null) {
-            return unitTasks.get(0);
-        }
 
-        if (previous.isFailedFinal()) {
-            return null;
-        }
-
-        if (previous.isFailedRetryable()) {
-            return previous.getUnitTaskName();
-        }
-
-        if (previous.isSucceeded()) {
-            int previousIndex =
-                    unitTasks.indexOf(previous.getUnitTaskName());
-
-            int nextIndex = previousIndex + 1;
-
-            if (nextIndex >= unitTasks.size()) {
-                return null;
-            }
-
-            return unitTasks.get(nextIndex);
-        }
-
-        throw new IllegalStateException("처리 불가능한 UnitTask 상태");
-    }
 }

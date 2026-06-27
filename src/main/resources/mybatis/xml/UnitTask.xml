@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.uruz.frostbite.mapper.UnitTaskMapper">
+    <!-- unitTask -->
+    <insert id="insertUnitTaskRequest" parameterType="UnitTaskRequest" keyProperty="unitTaskRequestId">
+        <selectKey keyProperty="unitTaskRequestId" resultType="long" order="BEFORE">
+            select nextval('unit_task_request_tb_unit_task_request_id_seq')
+        </selectKey>
+
+        INSERT INTO unit_task_request_tb(unit_task_request_id, workflow_request_id,
+        unit_task_name, task_order, workflow_domain_type, target_id, status, allow_retry, create_time, create_user_id)
+        VALUES (
+        #{unitTaskRequestId}, #{workflowRequestId}, #{unitTaskName}, #{taskOrder}, #{workflowDomainType}, #{targetId},
+        #{status}, #{allowRetry}, #{createTime}, #{createUserId}
+        )
+
+    </insert>
+
+    <select id="selectLatestUnitTaskRequest" resultType="UnitTaskRequest">
+    /** selectLatestUnitTaskRequest*/
+    SELECT
+    unit_task_request_id, workflow_request_id, unit_task_name, task_order,
+    target_id, error_message, status, allow_retry, retry_count, create_time
+    FROM unit_task_request_tb
+    WHERE workflow_request_id = #{workflowRequestId}
+    ORDER BY create_time desc, unit_task_request_id desc
+    LIMIT 1
+    </select>
+    <update id="updateUnitTaskRequestStatus">
+    update unit_task_request_tb
+    set status = #{status},
+    start_time = #{currentTime}
+    WHERE
+    unit_task_request_id = #{unitTaskRequestId}
+    </update>
+
+    <update id="updateUnitTaskRequestEndStatus">
+    update unit_task_request_tb
+    set status = #{status},
+    end_time = #{currentTime}
+    WHERE
+    unit_task_request_id = #{unitTaskRequestId}
+    </update>
+</mapper>

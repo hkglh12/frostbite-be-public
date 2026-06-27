@@ -27,14 +27,5 @@ public interface WorkflowRequestMapper {
     void updateWorkflowRequestAsSucceed(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime);
     void updateWorkflowRequestAsFailedFinal(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime,
     @Param("failedMessage") String failedMessage);
-    void insertUnitTaskRequest(UnitTaskRequest unitTaskRequest);
-    UnitTaskRequest selectLatestUnitTaskRequest(@Param("workflowRequestId") long workflowRequestId);
 
-    void updateUnitTaskRequestStatus(@Param("unitTaskRequestId") long unitTaskRequestId,
-                                     @Param("status") UnitTaskRequestStatus status,
-                                     @Param("currentTime") LocalDateTime currentTime);
-
-    void updateUnitTaskRequestEndStatus(@Param("unitTaskRequestId") long unitTaskRequestId,
-                                   @Param("status") UnitTaskRequestStatus status,
-                                   @Param("currentTime") LocalDateTime currentTime);
 }

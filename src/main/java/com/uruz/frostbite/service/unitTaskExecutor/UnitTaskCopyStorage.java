@@ -9,6 +9,7 @@ import com.uruz.frostbite.enums.WorkflowStatus;
 import com.uruz.frostbite.enums.workflow.UnitTask;
 import com.uruz.frostbite.service.DirectFileHandleComponent;
 import com.uruz.frostbite.service.FileService;
+import com.uruz.frostbite.service.UnitTaskService;
 import com.uruz.frostbite.service.WorkflowService;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.stereotype.Component;
@@ -23,15 +24,18 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
 
     private final DirectFileHandleComponent directFileHandleComponent;
     private final FileService fileService;
+    private final UnitTaskService unitTaskService;
 
 
     private final WorkflowService workflowService;
 
     public UnitTaskCopyStorage(DirectFileHandleComponent directFileHandleComponent, FileService fileService,
-                               WorkflowService workflowService){
+                               WorkflowService workflowService,
+                               UnitTaskService unitTaskService){
         this.directFileHandleComponent = directFileHandleComponent;
         this.fileService = fileService;
         this.workflowService = workflowService;
+        this.unitTaskService = unitTaskService;
     }
     @Override
     public UnitTask getUnitTask() {
@@ -48,8 +52,8 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
 
         LocalDateTime startedTime = LocalDateTime.now();
         // unitTask 작업시작 정보는 직접 UnitTask에서
-        workflowService.insertCurrentUnitTask(unitTaskRequest);
-        workflowService.markUnitTaskAsProcessing(unitTaskRequest.getUnitTaskRequestId(), startedTime);
+        unitTaskService.insertCurrentUnitTask(unitTaskRequest);
+        unitTaskService.markUnitTaskAsProcessing(unitTaskRequest.getUnitTaskRequestId(), startedTime);
 
         fileService.markFileWorkflowRegistStarted(request.getTargetId(), startedTime);
         UUID tempFileUuid = UUID.fromString(MapUtils.getString(draft.getRequestPayload(), "tempFileUuid"));
@@ -71,7 +75,7 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
 
             LocalDateTime succeedTime = LocalDateTime.now();
             // 성공 기록
-            workflowService.markUnitTaskToSucceed(unitTaskRequest.getUnitTaskRequestId(), succeedTime);
+            unitTaskService.markUnitTaskToSucceed(unitTaskRequest.getUnitTaskRequestId(), succeedTime);
             fileService.markFileWorkflowRegistSucceed(request.getTargetId(), succeedTime);
             fileService.completeRegistWorkflow(request.getTargetId(), succeedTime, destInfo);
 
@@ -79,7 +83,7 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
         } catch (Exception e) {
             LocalDateTime failedTime = LocalDateTime.now();
             // 파일 이동 실패 -> DB UnitTask 실패기록
-            workflowService.markUnitTaskToFailedFinal(unitTaskRequest.getUnitTaskRequestId(), failedTime);
+            unitTaskService.markUnitTaskToFailedFinal(unitTaskRequest.getUnitTaskRequestId(), failedTime);
             fileService.markFileWorkflowRegistFailed(request.getTargetId(), failedTime, e.getMessage());
 
             throw new GeneralCustomException("UNITTASK FAILED");
