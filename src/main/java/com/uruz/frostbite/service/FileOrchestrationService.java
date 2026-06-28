@@ -12,13 +12,18 @@ import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.workflow.Workflow;
 import com.uruz.frostbite.enums.workflow.WorkflowDomainType;
 import com.uruz.frostbite.utils.TempFileUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskRejectedException;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.concurrent.RejectedExecutionException;
 
 
 @Service
@@ -51,23 +56,26 @@ public class FileOrchestrationService {
     private final TempFileUtils tempFileUtils;
     private final DirectFileHandleComponent directFileHandleComponent;
     private final ObjectMapper mapper;
+    private final ThreadPoolTaskExecutor workflowExecutor;
 
 
     public FileOrchestrationService(FileService fileService,
                                     WorkflowService workflowService,
                                     WorkflowProcessor workflowProcessor, TempFileUtils tempFileUtils,
                                     DirectFileHandleComponent directFileHandleComponent,
+                                    @Qualifier("workflowExecutorPool") ThreadPoolTaskExecutor workflowExecutor,
                                     ObjectMapper mapper){
         this.fileService = fileService;
         this.workflowService = workflowService;
         this.workflowProcessor = workflowProcessor;
         this.tempFileUtils = tempFileUtils;
+        this.workflowExecutor = workflowExecutor;
         this.directFileHandleComponent = directFileHandleComponent;
         this.mapper = mapper;
     }
     /** 임시파일 정보를 parameter로 file_tb 초안 등록 */
     @Transactional
-    public SimpleFileResponse registFile(FileCreateRequest request, UUID folderUuid, Integer createUserId) throws IOException {
+    public SimpleFileResponse registFile(FileCreateRequest request, UUID folderUuid, Integer createUserId) {
 
         // 파일 메타정보 등록
         // 해당 파일 메타등록 에서는 "파일의 스토리지 저장소" 를 저장하지 않음!
@@ -76,16 +84,44 @@ public class FileOrchestrationService {
 
         Workflow inDevWorkflow = Workflow.WF_FILE_PROVISION_MOVEONLY;
 
-        String requestPayloadString = mapper.writeValueAsString(request);
-
+        String requestPayloadString = null;
+        try{
+            requestPayloadString = mapper.writeValueAsString(request);
+        } catch(IOException IOE) {
+            // IOE는 @Transactional 에 안걸린다.
+            throw new GeneralCustomException("JSON PARSING ERROR");
+        }
         WorkflowRequest workflowRequest = workflowService.registerWorkflowRequest(WorkflowDomainType.WF_TYPE_FILE,
                 initialFile.getFileId(), inDevWorkflow, requestPayloadString, createUserId);
 
+        // commit 이후 실행할 콜백을 등록
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
+                    // 이 메서드가 실행되는 시점, 이미 메서드 흐름 밖으로 나와 commit에 대한 콜백이 호출
+                    // 따라서 해당 위치에서 throw 해도 메인 코드 흐름으로는 못들어간다.
+                    // 즉, 메서드 리턴 -> commit() -> 함수 호출 스택 따라서 리턴
+                    //                           -> 커밋 콜백 실행
                     @Override
                     public void afterCommit() {
-                        workflowProcessor.processWorkflow(workflowRequest.getWorkflowRequestId());
+                        // submit은 exception 을 Future 안에 감추는 성향이 있다고..
+                        try {
+                            // 왜 직접 executor에 execute 호출?
+                            // 1. @Async 호출 사용 시, Policy를 Abort로 잡으면 예외 발생시 Spring Proxy 내에서 Exception이 터짐
+                            // 2. Asybc 진입 중 Proxy 내에서 터진 Exception을 관리하려면 별도 설정을 잡아줘야함. 비즈니스 로직 외부로 튕겨나가서
+                            // 잡히므로 흐름 따라가기 힘들것 같기도 하고, 설정 공부가 오버헤드 같기도 함.
+                            //  -> 추후 다시 공부하기로 하고, 현시점 execute() 호출로 변경
+                            // * 유의점 : 이 execute는 "진입시" exception만 잡힘. 비동기 진입 후 Exception을 잡지는 못함을 명심할것
+                            workflowExecutor.execute(() -> {
+                                workflowProcessor.processWorkflow(workflowRequest.getWorkflowRequestId());
+                            });
+
+                        }catch(RejectedExecutionException e){
+                            // DO SOMETHING
+                            // 이 위치에서 DB 접근할거면 REQUIRED 로도 가능
+                            // 커밋 되고 신규 트렌잭션이 열리니까. 다만 의도적으로 "원래 흐름과는 별개로 관리되서 mother transaction이 실패해도
+                            // 이 코드는 실행되고 별도 커밋되어야 함. 을 명시하기 위해 Requires_new 가 낫다고.
+                            workflowService.markWorkflowRequestFailed(workflowRequest.getWorkflowRequestId(), LocalDateTime.now(), e.getMessage());
+                        }
                     }
                 }
         );
