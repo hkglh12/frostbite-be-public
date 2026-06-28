@@ -64,7 +64,7 @@ public class FileWorkflowDraft {
     private long targetId;
     private int createUserId;
 
-    private String applicationTempFilePath;
+    private String applicationTempFileUuid;
 
     private boolean copySucceed;
     private String destFilePath;

@@ -69,6 +69,7 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
         // 파일 이동
         try {
             destInfo = directFileHandleComponent.transferFileToPersistPath(tempFileUuid, persistedFilePath, attemptFileName);
+            draft.setApplicationTempFileUuid(fileTemp.getTargetFileUuid().toString());
             draft.setCopySucceed(true);
             draft.setDestFileName(MapUtils.getString(destInfo, "destFileName"));
             draft.setDestFilePath(MapUtils.getString(destInfo, "destFilePath"));

@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
@@ -93,7 +94,7 @@ public class DirectFileHandleComponent {
     }
     public TempFileMetaInfoDraft reallocateTempFile(MultipartFile tempFile) throws GeneralCustomException {
         String uuidString = UUID.randomUUID().toString();
-        File tempFilePath = new File(FROSTBITE_TEMP_LOCATION + uuidString);
+        File tempFilePath = new File(resolveTempFilePathByUuid(uuidString).toString());
 
         String originalFileName = tempFile.getOriginalFilename();
         String extension = null;
@@ -131,6 +132,10 @@ public class DirectFileHandleComponent {
         File tempFolder = new File(FROSTBITE_TEMP_LOCATION+folderPath);
 
          */
+    }
+
+    public Path resolveTempFilePathByUuid(String tempFileUuidString){
+        return Path.of(FROSTBITE_TEMP_LOCATION + tempFileUuidString);
     }
 
 }
