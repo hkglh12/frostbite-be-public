@@ -124,7 +124,6 @@ public class File {
             String fileName,
             String description,
             Long fileSize,
-            String fileExtension,
             Integer createUserId,
             LocalDateTime createTime
     ) {
@@ -135,7 +134,6 @@ public class File {
                 .fileName(fileName)
                 .description(description)
                 .fileSize(fileSize)
-                .fileExtension(fileExtension)
                 .createUserId(createUserId)
                 .createTime(createTime)
                 .status(FileStatus.UNREGISTERED)

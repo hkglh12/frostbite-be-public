@@ -9,7 +9,6 @@ import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.dto.file.FileCreateRequest;
 import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.WorkflowStatus;
-import com.uruz.frostbite.enums.workflow.Workflow;
 import com.uruz.frostbite.mapper.FileMapper;
 import com.uruz.frostbite.service.resolver.FolderResolverService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +42,9 @@ public class FileService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
+    /** 임시파일 -> 파일 DB에 등록 + 파일 워크플로우 상태 테이블 등록 */
     public File registInitialFile(FileCreateRequest request, UUID folderUuid, Integer createUserId){
-        // Temp UUID로부터 유효한 UUID인지 검증
+        // Temp UUID로부터 유효한 UUID인지 검증`
         FileTemp fileTemp = fileMapper.selectTempFileByUuid(request.getTempFileUuid());
         if(fileTemp == null){
             throw new GeneralCustomException("TEMP FILE UUID INVALID");
@@ -58,20 +58,19 @@ public class FileService {
         // file_tb에 저장
         File initialFile = File.createInitial(folder.getFolderId(), UUID.randomUUID(), fileTemp.getOriginalFileName(),
                 request.getFileName(), request.getDescription(),
-                fileTemp.getFileSize(), fileTemp.getFileExtension(), createUserId, fileTemp.getCreateTime());
+                fileTemp.getFileSize(), createUserId, fileTemp.getCreateTime());
 
-
+        // 파일 등록
         fileMapper.insertInitial(initialFile);
-
-        FileWorkflowStatus workflowStatus = FileWorkflowStatus.createReady(initialFile.getFileId());
+        // 파일 워크플로우 상태 1:1 row 등록
+        FileWorkflowStatus workflowStatus = FileWorkflowStatus.createWaiting(initialFile.getFileId());
         fileMapper.insertFileWorkflowStatus(workflowStatus);
 
         return initialFile;
     }
 
-    /** 외부 호출 헬퍼 메서드
-     * 임시파일 테이블에 저장
-     * */
+
+    /** 임시파일 테이블에 임시파일 정보 등록 */
     public void insertFileTemp(FileTemp fileTemp){
         fileMapper.insertFileTemp(fileTemp);
     }

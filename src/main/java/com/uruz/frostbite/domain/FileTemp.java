@@ -12,21 +12,21 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter // Mybatis No args -> setting 용
+@Setter
+/** 임시파일 정보 */
 public class FileTemp {
     private UUID targetFileUuid;
     private String originalFileName;
-    private String fileExtension;
     private Long fileSize;
     private Integer createUserId;
     private LocalDateTime createTime;
     private LocalDateTime expireTime;
     private FileStatus status;
 
-    public static FileTemp createReady(
+    /** 임시파일 정보 집합 생성 */
+    public static FileTemp createPreparedTempFile(
             UUID targetFileUuid,
             String originalFileName,
-            String fileExtension,
             Long fileSize,
             Integer createUserId,
             Long ttlSeconds
@@ -36,7 +36,6 @@ public class FileTemp {
         FileTemp fileTemp = new FileTemp();
         fileTemp.targetFileUuid = targetFileUuid;
         fileTemp.originalFileName = originalFileName;
-        fileTemp.fileExtension = fileExtension;
         fileTemp.fileSize = fileSize;
         fileTemp.createUserId = createUserId;
         fileTemp.createTime = now;

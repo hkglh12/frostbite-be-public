@@ -11,10 +11,10 @@
         </selectKey>
 
         INSERT INTO FILE_TB(
-            file_id, folder_id, uuid, original_file_name, file_name, description, file_size, file_extension, create_user_id,
+            file_id, folder_id, uuid, original_file_name, file_name, description, file_size, create_user_id,
             create_time, status
         ) VALUES(
-                 #{fileId}, #{folderId}, #{uuid}, #{originalFileName}, #{fileName}, #{description}, #{fileSize}, #{fileExtension},
+                 #{fileId}, #{folderId}, #{uuid}, #{originalFileName}, #{fileName}, #{description}, #{fileSize},
                  #{createUserId}, #{createTime}, #{status}
         )
 
@@ -40,9 +40,9 @@
     <insert id = "insertFileTemp" parameterType="FileTemp">
     /** insertFileTemp */
     INSERT INTO FILE_TEMP_TB(
-        target_file_uuid, original_file_name, file_extension, file_size, create_user_id, create_time, expire_time, status
+        target_file_uuid, original_file_name, file_size, create_user_id, create_time, expire_time, status
     ) VALUES (
-        #{targetFileUuid}, #{originalFileName}, #{fileExtension}, #{fileSize}, #{createUserId}, #{createTime}, #{expireTime},
+        #{targetFileUuid}, #{originalFileName}, #{fileSize}, #{createUserId}, #{createTime}, #{expireTime},
               #{status}
     )
     </insert>
@@ -50,7 +50,7 @@
     <select id="selectTempFileByUuid" resultType="FileTemp">
         /** selectTempFileByUuid */
         SELECT
-            target_file_uuid, original_file_name, file_extension, file_size, create_user_id, create_time, expire_time, status
+            target_file_uuid, original_file_name, file_size, create_user_id, create_time, expire_time, status
         FROM FILE_TEMP_TB
         WHERE
             target_file_uuid = #{uuid}
@@ -64,7 +64,7 @@
             file_regist_status = #{status},
             file_regist_start_time = #{currentTime}
         WHERE
-            file_id = #{targetFileId}
+            file_id = #{fileId}
     </update>
 
     <update id="updateFileWorkflowStatus">
@@ -73,7 +73,7 @@
             file_regist_status = #{status},
             file_regist_start_time = #{currentTime}
         WHERE
-            file_id = #{targetFileId}
+            file_id = #{fileId}
     </update>
     <update id="markFileWorkflowRegistFailed">
         update file_workflow_status_tb
@@ -82,7 +82,7 @@
             file_regist_complete_time = #{currentTime},
             file_regist_last_error_message = #{failedMessage}
         WHERE
-            file_id = #{targetFileId}
+            file_id = #{fileId}
     </update>
     <update id="updateFileWorkflowEndStatus">
         update file_workflow_status_tb
@@ -90,6 +90,7 @@
             file_regist_status = #{status},
             file_regist_complete_time = #{currentTime}
         WHERE
-            file_id = #{targetFileId}
+            file_id = #{fileId}
     </update>
+
 </mapper>
