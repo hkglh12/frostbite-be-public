@@ -18,11 +18,16 @@ public class FileWorkflowStatus {
     private LocalDateTime fileRegistCompleteTime;
     private String message;
 
-    public static FileWorkflowStatus createReady(Long fileId) {
+    public static FileWorkflowStatus createWaiting(Long fileId) {
         FileWorkflowStatus status = new FileWorkflowStatus();
         status.fileId = fileId;
-        status.fileRegistStatus = WorkflowStatus.READY;
+        status.fileRegistStatus = WorkflowStatus.WAITING;
         return status;
+    }
+
+    public void markReady() {
+        this.fileRegistStatus = WorkflowStatus.READY;
+        this.fileRegistStartTime = LocalDateTime.now();
     }
 
     public void startRegister() {

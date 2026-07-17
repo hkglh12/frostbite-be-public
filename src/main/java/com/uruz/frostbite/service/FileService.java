@@ -29,7 +29,7 @@ public class FileService {
 
      CF) FileWorkflowServie : workflow 오케스트레이터
      CF) DirectFileHandlerComponent : 실제 물리 파일을 핸들링하는 객체
-    */
+     */
 
     private final FileMapper fileMapper;
 
@@ -78,11 +78,11 @@ public class FileService {
         return fileMapper.selectTempFileByUuid(targetUuid);
     }
 
-    public void completeRegistWorkflow(Long fileId,  LocalDateTime currentTime, Map<String, String> destInfo){
+    public void completeRegistWorkflow(Long fileId,  LocalDateTime currentTime, String destFilePath, String destFileName){
 
         // 현재 Stroage_mount_table을 사용하지 않음. 임시완성이 현 시점 절대적 목표
         // 따라서 storage_mount_point_id null로 유지
-        fileMapper.updateFileMetaInfoByRegistDone(fileId, destInfo.get("destFilePath"), destInfo.get("destFileName"), FileStatus.ACTIVE);
+        fileMapper.updateFileMetaInfoByRegistDone(fileId, destFilePath, destFileName, FileStatus.PROCESSING);
     }
 
     public void markFileWorkflowRegistStarted(Long fileId, LocalDateTime currentTime){
@@ -96,5 +96,9 @@ public class FileService {
     public void markFileWorkflowRegistFailed(Long fileId, LocalDateTime startedTime, String failedMessage){
         fileMapper.markFileWorkflowRegistFailed(fileId, WorkflowStatus.FAILED_FINAL, startedTime, failedMessage);
     }
+    public void markFileActive(Long fileId){
+        fileMapper.markFileAsActive(fileId, FileStatus.ACTIVE);
+    }
+
 
 }

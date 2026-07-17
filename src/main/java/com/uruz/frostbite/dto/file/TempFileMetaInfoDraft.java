@@ -1,11 +1,9 @@
 package com.uruz.frostbite.dto.file;
 
 
-import com.uruz.frostbite.domain.FileTemp;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.service.annotation.GetExchange;
 
 import java.util.UUID;
 
@@ -13,8 +11,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class TempFileMetaInfoDraft {
+    /** 임시파일 등록 간 산출된 정보 */
+
+    /** 원본파일명 */
     private String originalFileName;
-    private String extension;
+    /** 파일크기 */
     private Long fileSize;
-    private UUID physicalFileUuid;
+    /** 임시파일 UUID */
+    private UUID tempFileUuid;
 }

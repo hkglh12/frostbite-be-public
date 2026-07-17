@@ -1,9 +1,7 @@
 package com.uruz.frostbite.mapper;
 
-import com.uruz.frostbite.domain.UnitTaskRequest;
 import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.enums.WorkflowStatus;
-import com.uruz.frostbite.enums.workflow.UnitTaskRequestStatus;
 import com.uruz.frostbite.enums.workflow.WorkflowRequestStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -22,9 +20,11 @@ public interface WorkflowRequestMapper {
 
     WorkflowRequest selectWorkflowRequest(@Param("workflowRequestId") long workflowRequestId);
 
+    void updateWorkflowRequestAsReady(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime);
     void updateWorkflowRequestAsProcessing(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime);
-
     void updateWorkflowRequestAsSucceed(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime);
+
+
     void updateWorkflowRequestAsFailedFinal(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime,
     @Param("failedMessage") String failedMessage);
 

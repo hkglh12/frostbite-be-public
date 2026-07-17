@@ -4,7 +4,6 @@ import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.dto.file.TempFileMetaInfoDraft;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -73,11 +71,11 @@ public class DirectFileHandleComponent {
             throw new GeneralCustomException(IOE.getMessage());
         }
     }
-    public String resolvePersistedFilePath(String destUuidPath){
-      return PERSIST_PATH + destUuidPath;
+    public String resolvePersistFilePath(UUID destFileUuid, String attemptFileName){
+      return PERSIST_PATH + destFileUuid.toString().replace("-" + attemptFileName, "").replace("-", "/");
     }
-    public void deleteTempFile(String uuidString) throws IOException{
-        File tempFilePath = new File(FROSTBITE_TEMP_LOCATION + uuidString);
+    public void deleteTempFile(UUID fileUuid) throws IOException{
+        File tempFilePath = new File(FROSTBITE_TEMP_LOCATION + fileUuid.toString());
         try{
             Files.deleteIfExists(tempFilePath.toPath());
         }catch(IOException e){
@@ -92,50 +90,40 @@ public class DirectFileHandleComponent {
             throw e;
         }
     }
-    public TempFileMetaInfoDraft reallocateTempFile(MultipartFile tempFile) throws GeneralCustomException {
-        String uuidString = UUID.randomUUID().toString();
-        File tempFilePath = new File(resolveTempFilePathByUuid(uuidString).toString());
+    /** MultipartFile Spring 임시폴더 경로에서 Application 임시 폴더로 이동*/
+    public TempFileMetaInfoDraft reallocateTempFile(MultipartFile multipartFile) throws GeneralCustomException {
+        // yml 임시폴더겨올 + UUID를 통한 임시파일
+        UUID applicationTempFileUuid = UUID.randomUUID();
+        File tempFile = new File(resolveApplicationTempFilePathByUuid(applicationTempFileUuid).toString());
 
-        String originalFileName = tempFile.getOriginalFilename();
-        String extension = null;
+        String originalFileName = multipartFile.getOriginalFilename();
+        long fileSize = multipartFile.getSize();
 
-        try {
-            extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        } catch(IndexOutOfBoundsException IOFB) {
-            throw new GeneralCustomException("FILE EXTENSION NOT EXISTS");
+        if(fileSize == 0L){
+            throw new GeneralCustomException("FILE SIZE IS 0");
         }
 
-        long fileSize = tempFile.getSize();
-
-        if(fileSize == 0L || StringUtils.isEmpty(extension)){
-            throw new GeneralCustomException("FILE SIZE IS 0 OR FILE EXTENSION NOT EXISTS");
-        }
-
-        if(tempFilePath.exists()) {
-            uuidString = UUID.randomUUID().toString();
-            tempFilePath  = new File(FROSTBITE_TEMP_LOCATION + uuidString);
-            if(tempFilePath.exists()){
+        if(tempFile.exists()) {
+            // UUID 충돌 회피
+            applicationTempFileUuid = UUID.randomUUID();
+            tempFile  = new File(FROSTBITE_TEMP_LOCATION + applicationTempFileUuid.toString());
+            if(tempFile.exists()){
                 throw new GeneralCustomException("UUID PATH DUPLICATED MORE THAN TWICE");
             }
         }
         try {
-            tempFile.transferTo(tempFilePath);
-            return new TempFileMetaInfoDraft(originalFileName, extension, fileSize, UUID.fromString(uuidString));
+            // 임시파일 경로로 이동
+            multipartFile.transferTo(tempFile);
+            return new TempFileMetaInfoDraft(originalFileName, fileSize, applicationTempFileUuid);
         }catch(IOException IOE){
             log.error(IOE.getMessage());
             // multipartFile 은 request 종료시 cleanup 대상. 따라서 transferTo 실패했다면 굳이 명시적으로 삭제할 필요 없음
             throw new GeneralCustomException(IOE.getMessage());
         }
-        /*
-        String folderPath = uuidString.substring(0, uuidString.lastIndexOf("-")).replace('-', File.separatorChar);
-
-        File tempFolder = new File(FROSTBITE_TEMP_LOCATION+folderPath);
-
-         */
     }
 
-    public Path resolveTempFilePathByUuid(String tempFileUuidString){
-        return Path.of(FROSTBITE_TEMP_LOCATION + tempFileUuidString);
+    public Path resolveApplicationTempFilePathByUuid(UUID tempFileUuid){
+        return Path.of(FROSTBITE_TEMP_LOCATION + tempFileUuid.toString());
     }
 
 }

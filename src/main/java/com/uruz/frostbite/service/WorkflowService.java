@@ -1,9 +1,7 @@
 package com.uruz.frostbite.service;
 
-import com.uruz.frostbite.domain.UnitTaskRequest;
 import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.enums.WorkflowStatus;
-import com.uruz.frostbite.enums.workflow.UnitTaskRequestStatus;
 import com.uruz.frostbite.enums.workflow.Workflow;
 import com.uruz.frostbite.enums.workflow.WorkflowDomainType;
 import com.uruz.frostbite.enums.workflow.WorkflowRequestStatus;
@@ -29,12 +27,11 @@ public class WorkflowService {
         this.workflowRequestMapper = workflowRequestMapper;
     }
 
-    /** 워크플로우 요청 등록 */
-
-    public WorkflowRequest registerWorkflowRequest(WorkflowDomainType workflowDomainType, Long targetId,
-                                                   Workflow requestWorkflow, String requestPayloadString, int createUserId){
+    /** 대기상태 워크플로우 요청 등록 */
+    public WorkflowRequest registerWaitingWorkflowRequest(WorkflowDomainType workflowDomainType, Long targetId,
+                                                          Workflow requestWorkflow, String requestPayloadString, int createUserId){
         WorkflowRequest workflowRequest =
-                WorkflowRequest.createReady(
+                WorkflowRequest.createWaiting(
                         requestWorkflow,
                         workflowDomainType,
                         targetId,
@@ -62,13 +59,21 @@ public class WorkflowService {
         workflowRequestMapper.updateFileRegisterDone(endTime, fileId, workflowStatus);
     }
 
+    /** 워크플로우 요청 조회 */
     public WorkflowRequest getWorkflowRequest(long workflowRequestId){
         return workflowRequestMapper.selectWorkflowRequest(workflowRequestId);
     }
 
-    public void markWorkflowRequestStarted(long workflowRequestId, LocalDateTime currentTime){
+    /** 워크플로우 ready 상태 mark -> QUEUE에서 벗어나 worker thread 진입 */
+    public void markWorkflowRequestReady(long workflowRequestId, LocalDateTime currentTime){
+        workflowRequestMapper.updateWorkflowRequestAsReady(workflowRequestId, WorkflowRequestStatus.READY, currentTime);
+    }
+
+    /** 워크플로우 진행중 마킹 */
+    public void markWorkflowRequestProcessing(long workflowRequestId, LocalDateTime currentTime){
         workflowRequestMapper.updateWorkflowRequestAsProcessing(workflowRequestId, WorkflowRequestStatus.PROCESSING, currentTime);
     }
+
 
     public void markWorkflowRequestSucceed(long workflowRequestId, LocalDateTime currentTime){
         workflowRequestMapper.updateWorkflowRequestAsSucceed(workflowRequestId, WorkflowRequestStatus.SUCCEEDED, currentTime);

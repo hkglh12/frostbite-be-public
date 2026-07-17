@@ -103,20 +103,30 @@ end_time timestamp,
     - Task 연결이 최초 체인 생성 시점에 고정되는것을 방지 가능
     - 서버 재시작 후 복구 쉬움 (재시작 시에 AsyncOrchestrator의 최초 조립에 의존적이지 않게되며, 실패 유닛태스크부터 재시작 가능)
 
+## 워크플로우 종류
+
+  - 파일 등록 workflow
+    - 이 workflow 는 현재 설계상 removeTempFile UnitTask가 가장 마지막에 배치되어야 함.
+
 ## Workflow / UnitTask 상태값 관리
 
 workflow_request.status
 
-READY
-PROCESSING
-SUCCEEDED
-FAILED_RETRYABLE
-FAILED_FINAL
+WAITING             : DB에 insert 되었으며, Worker Thread 할당 대기중
+READY               : Worker Thread 진입 완료
+PROCESSING          : Payload 파싱 이후 실제 동작 시작
+SUCCEEDED           : 성공적으로 동작 완료
+FAILED_RETRYABLE    : 실패했으나, 최대 재시도 횟수 미만으로 시도되었음. 재시도 가능
+FAILED_FINAL        : 실패
 
 unit_task_request.status
 
-READY
-PROCESSING
-SUCCEEDED
-FAILED_RETRYABLE
-FAILED_FINAL
+READY               : WorkflowProcessor에 의해 DB에 기록된 상태 
+PROCESSING          : WorkflowProcessor에 의해 unitTaskExecutor.execute() 호출 
+SUCCEEDED           : 처리 성공
+FAILED_RETRYABLE    : 실패했으나, 최대 재시도 횟수 미만으로 시도되었음. 재시도 가능
+FAILED_FINAL        : 실패
+
+* Workflow 흐름 중, 선행작업 실패로 인해 후행작업을 시도조차 못하고 workflow가 종료되었을 경우 UnitTask를 기록하지 않음
+  * UnitTaskReqeust 테이블을 특정 UnitTask가 실제로 실행 대상으로 선택되어, 한 번의 수행 시도가 발생했음을 기록하는 실행 이력으로 사용중이기 때문
+  * 즉, "실행되었다" 가 "실패" 를 기록하는 테이블이므로, 실행실패와 미실행을 굳이 같이 저장할 필요가 없어보임.

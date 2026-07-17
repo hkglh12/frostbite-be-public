@@ -92,5 +92,12 @@
         WHERE
             file_id = #{fileId}
     </update>
+    <update id="markFileAsActive">
+        UPDATE file_tb
+        SET
+            status = #{status}
+        WHERE
+            file_id = #{fileId}
+    </update>
 
 </mapper>

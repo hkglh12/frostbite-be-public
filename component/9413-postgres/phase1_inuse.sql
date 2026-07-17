@@ -180,8 +180,8 @@ comment on column file_tb.file_id is '파일 식별자';
 comment on column file_tb.file_name is '파일명';
 comment on column file_tb.file_size is '파일크기';
 comment on column file_tb.folder_id is '부모 폴더 식별자';
-comment on column file_tb.mount_point is '서버상 파일 최상위경로';
-comment on column file_tb.file_path is '서버상 파일경로';
+comment on column file_tb.storage_mount_point_id is '서버상 파일 최상위경로';
+comment on column file_tb.storage_file_path is '서버상 파일경로';
 comment on column file_tb.create_user_id is '셍성자';
 comment on column file_tb.create_time is '생성시각';
 comment on column file_tb.modify_user_id is '수정자';
@@ -298,6 +298,7 @@ comment on column folder_acl_tb.status is '삭제여부';
 --    is_delete smallint
 --)
 
+-- TODO : file_acl 은 folder_acl 체계 따라가도록 수정 안되었음 아직
 create table file_acl_tb(
                             file_acl_id bigserial primary key,
                             subject_type smallint,
@@ -318,17 +319,15 @@ create table file_acl_tb(
 -- alter table file_acl_tb add constraint file_acl_tb_file_fk foreign key (file_id) references file_tb(file_id);
 
 comment on table file_acl_tb is '파일 접근제어';
-comment on column file_acl_tb.acl_id is '접근제어 식별자';
-comment on column file_acl_tb.user_id is '피접근제어 대상';
+comment on column file_acl_tb.file_acl_id is '접근제어 식별자';
+comment on column file_acl_tb.subject_user_id is '피접근제어 대상';
 comment on column file_acl_tb.file_id is '접근제어 파일 식별자';
 comment on column file_acl_tb.effect_type is '접근제어 종류';
 comment on column file_acl_tb.subject_type is '피접근제어 종류';
 comment on column file_acl_tb.subject_id is '피 접근제어 식별자';
-comment on column file_acl_tb.permission is '제약 권한';
-comment on column file_acl_tb.is_shared is '공유로 생성된 제약 여부';
-comment on column file_acl_tb.create_time is '접근제어 생성시각'
-comment on column file_acl_tb.create_user is '제약 생성자'
-comment on column file_acl_tb.is_delete is '삭제여부'
+comment on column file_acl_tb.create_time is '접근제어 생성시각';
+comment on column file_acl_tb.create_user_id is '제약 생성자';
+comment on column file_acl_tb.status is '상태정보';
 
 
 -- workflow 개념 도입 준비
@@ -339,7 +338,7 @@ create table workflow_request_tb (
                                      target_id bigint,
                                     request_payload jsonb, -- 파라미터 연결 (Workflow.md 변경점 (2026.06.21) 참고
                                      error_message text,
-                                     status smallint,
+                                     status varchar(128),
                                      create_time timestamp,
                                      create_user_id integer,
                                      start_time timestamp,
@@ -354,7 +353,7 @@ create table unit_task_request_tb (
                                           workflow_domain_type varchar(128),
                                           target_id bigint,
                                           error_message text,
-                                          status smallint, -- succeed, failed_retriable, failed_final,
+                                          status varchar(128), -- succeed, failed_retriable, failed_final,
                                           allow_retry smallint,
                                           retry_count int,
                                           create_time timestamp,

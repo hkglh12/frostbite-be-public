@@ -1,19 +1,13 @@
 package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.*;
-import com.uruz.frostbite.dto.folder.SimpleFolderResponse;
-import com.uruz.frostbite.dto.folder.internal.*;
 import com.uruz.frostbite.enums.FileStatus;
-import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.WorkflowStatus;
-import com.uruz.frostbite.enums.workflow.WorkflowRequestStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -32,19 +26,21 @@ public interface FileMapper {
                                         @Param("status")FileStatus status);
 
     @Deprecated(forRemoval = true)
-    void updateFileWorkflowStatusStarted(@Param("targetFileId")Long fileId,
+    void updateFileWorkflowStatusStarted(@Param("fileId")Long fileId,
                                          @Param("status") WorkflowStatus status,
                                          @Param("currentTime")LocalDateTime currentTime);
 
-    void updateFileWorkflowStatus(@Param("targetFileId")Long fileId,
+    void updateFileWorkflowStatus(@Param("fileId")Long fileId,
                                   @Param("status") WorkflowStatus status,
                                   @Param("currentTime")LocalDateTime currentTime);
-    void markFileWorkflowRegistFailed(@Param("targetFileId")Long fileId,
+    void markFileWorkflowRegistFailed(@Param("fileId")Long fileId,
                                       @Param("status") WorkflowStatus status,
                                       @Param("currentTime")LocalDateTime currentTime,
                                       @Param("failedMessage") String failedMessage);
 
-    void updateFileWorkflowEndStatus(@Param("targetFileId")Long fileId,
+    void updateFileWorkflowEndStatus(@Param("fileId")Long fileId,
                                      @Param("status") WorkflowStatus status,
                                      @Param("currentTime")LocalDateTime currentTime);
+
+    void markFileAsActive(@Param("fileId") Long fileId, @Param("status") FileStatus status);
 }

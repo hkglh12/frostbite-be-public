@@ -27,17 +27,6 @@ public class FileController {
         this.fileOrchestrationService = fileOrchestrationService;
     }
 
-    /** 파일 등록 포인트*/
-    @PostMapping(value = "/{folderUuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> uploadFile(
-            @Validated @RequestBody FileCreateRequest request,
-            @PathVariable(name="folderUuid") UUID folderUuid,
-            @AuthenticationPrincipal(expression = "userId") Integer userId
-    ) throws IOException {
-        SimpleFileResponse response = fileOrchestrationService.registFile(request, folderUuid,  userId);
-        return ResponseEntity.ok(new ApiSucceedResponse<>(response, ApiSucceedCode.REQUEST_SUCCEED));
-    }
-
     /** 임시 파일 업로드 포인트
      *
      * MultiPart(java.temp.io) -> forstbite temp까지 이동
@@ -47,10 +36,23 @@ public class FileController {
             @RequestPart("file") MultipartFile file,
             @PathVariable(name="folderUuid") UUID folderUuid,
             @AuthenticationPrincipal(expression = "userId") Integer userId
-            ){
+    ){
 
-        TempFileMetaInfoDraft tempFileDraft = fileOrchestrationService.uploadTempFile(file, folderUuid, userId);
+        TempFileMetaInfoDraft tempFileDraft = fileOrchestrationService.registerTempFile(file, folderUuid, userId);
 
         return ResponseEntity.ok(new ApiSucceedResponse<>(tempFileDraft));
     }
+
+    /** 파일 등록 포인트*/
+    @PostMapping(value = "/{folderUuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> uploadFile(
+            @Validated @RequestBody FileCreateRequest request,
+            @PathVariable(name="folderUuid") UUID folderUuid,
+            @AuthenticationPrincipal(expression = "userId") Integer userId
+    ) throws IOException {
+        SimpleFileResponse response = fileOrchestrationService.registerFile(request, folderUuid,  userId);
+        return ResponseEntity.ok(new ApiSucceedResponse<>(response, ApiSucceedCode.REQUEST_SUCCEED));
+    }
+
+
 }

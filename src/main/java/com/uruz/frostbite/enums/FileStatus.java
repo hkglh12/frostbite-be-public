@@ -2,9 +2,10 @@ package com.uruz.frostbite.enums;
 
 public enum FileStatus {
     UNREGISTERED(1),
-    ACTIVE(2),
-    SOFT_DELETED(3),
-    DELETED(4);
+    PROCESSING(2),
+    ACTIVE(3),
+    SOFT_DELETED(4),
+    DELETED(5);
 
     private final int value;
 

@@ -5,7 +5,6 @@ import com.uruz.frostbite.domain.FileTemp;
 import com.uruz.frostbite.domain.UnitTaskRequest;
 import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.dto.workflow.internal.FileWorkflowDraft;
-import com.uruz.frostbite.enums.WorkflowStatus;
 import com.uruz.frostbite.enums.workflow.UnitTask;
 import com.uruz.frostbite.service.DirectFileHandleComponent;
 import com.uruz.frostbite.service.FileService;
@@ -13,6 +12,8 @@ import com.uruz.frostbite.service.UnitTaskService;
 import com.uruz.frostbite.service.WorkflowService;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -49,63 +50,47 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
          *
          *
          * */
-
         LocalDateTime startedTime = LocalDateTime.now();
-        // unitTask 작업시작 정보는 직접 UnitTask에서
-        unitTaskService.insertCurrentUnitTask(unitTaskRequest);
-        unitTaskService.markUnitTaskAsProcessing(unitTaskRequest.getUnitTaskRequestId(), startedTime);
-
         fileService.markFileWorkflowRegistStarted(request.getTargetId(), startedTime);
+
         UUID tempFileUuid = UUID.fromString(MapUtils.getString(draft.getRequestPayload(), "tempFileUuid"));
         FileTemp fileTemp = fileService.selectFileTempByUuid(tempFileUuid);
+
         Map<String, String> destInfo = null;
+
         UUID destinationUuid = UUID.randomUUID();
         String[] uuids = destinationUuid.toString().split("-");
+        // 사용하게 될 파일명 직접 파싱
         String attemptFileName = uuids[4];
-        // 저장 경로 resolve
-        String persistedFilePath =
-                directFileHandleComponent.resolvePersistedFilePath(destinationUuid.toString().replace("-" + attemptFileName, "").replace("-", "/"));
+        // 저장 경로 resolve ->
+        String persistedFilePath = directFileHandleComponent.resolvePersistFilePath(destinationUuid, attemptFileName);
 
         // 파일 이동
         try {
             destInfo = directFileHandleComponent.transferFileToPersistPath(tempFileUuid, persistedFilePath, attemptFileName);
-            draft.setApplicationTempFileUuid(fileTemp.getTargetFileUuid().toString());
+            draft.setApplicationTempFileUuid(fileTemp.getTargetFileUuid());
             draft.setCopySucceed(true);
             draft.setDestFileName(MapUtils.getString(destInfo, "destFileName"));
             draft.setDestFilePath(MapUtils.getString(destInfo, "destFilePath"));
-
-            LocalDateTime succeedTime = LocalDateTime.now();
-            // 성공 기록
-            unitTaskService.markUnitTaskToSucceed(unitTaskRequest.getUnitTaskRequestId(), succeedTime);
-            fileService.markFileWorkflowRegistSucceed(request.getTargetId(), succeedTime);
-            fileService.completeRegistWorkflow(request.getTargetId(), succeedTime, destInfo);
-
             return draft;
         } catch (Exception e) {
-            LocalDateTime failedTime = LocalDateTime.now();
-            // 파일 이동 실패 -> DB UnitTask 실패기록
-            unitTaskService.markUnitTaskToFailedFinal(unitTaskRequest.getUnitTaskRequestId(), failedTime);
-            fileService.markFileWorkflowRegistFailed(request.getTargetId(), failedTime, e.getMessage());
+            throw new GeneralCustomException("COPY STORAGE UNITTASK FAILED : " + e.getMessage());
 
-            throw new GeneralCustomException("UNITTASK FAILED");
-
-            // 실패시에는 파일 정보 갱신 안함
-            //fileService.completeRegistWorkflow(request.getTargetId(), failedTime, destInfo);
-        /*
-        // 파일 등록 실패 갱신
-        workflowService.updateFileRegistFailed(
-                LocalDateTime.now(),
-                request.getTargetId(),
-                WorkflowStatus.FAILED_FINAL
-        );
-
-         */
         }
     }
 
+    @Override
+    public FileWorkflowDraft markOnSucceed(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft, LocalDateTime succeedTime){
+        String destFilePath = draft.getDestFilePath();
+        String destFileName = draft.getDestFileName();
+        fileService.markFileWorkflowRegistSucceed(request.getTargetId(), succeedTime);
+        fileService.completeRegistWorkflow(request.getTargetId(), succeedTime, destFilePath, destFileName);
+        return null;
+    }
 
     @Override
-    public FileWorkflowDraft compensateOnFailure(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft) {
+    public FileWorkflowDraft compensateOnFailure(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft, LocalDateTime failedTime, String errorMessage) {
+        fileService.markFileWorkflowRegistFailed(unitTask.getTargetId(), failedTime, errorMessage);
         return null;
     }
 

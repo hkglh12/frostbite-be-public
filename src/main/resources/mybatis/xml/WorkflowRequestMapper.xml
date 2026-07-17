@@ -28,6 +28,15 @@
     </select>
 
 
+    <update id="updateWorkflowRequestAsReady">
+        /** updateWorkflowRequestAsProcessing*/
+        UPDATE workflow_request_tb
+        SET
+            status = #{status}
+        WHERE
+            workflow_request_id = #{workflowRequestId}
+    </update>
+
     <update id="updateWorkflowRequestAsProcessing">
         /** updateWorkflowRequestAsProcessing*/
         UPDATE workflow_request_tb
@@ -46,6 +55,7 @@
         WHERE
             workflow_request_id = #{workflowRequestId}
     </update>
+
     <update id="updateWorkflowRequestAsFailedFinal">
         /** updateWorkflowRequestAsProcessing*/
         UPDATE workflow_request_tb

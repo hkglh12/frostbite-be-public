@@ -24,7 +24,6 @@ public class FolderResolverService {
         return folderMapper.selectFolderWithAccessControlResources(folderId);
 
     }
-
     public Folder resolveFolderByUuid(UUID folderUuid){
         return folderMapper.selectFolderByUuid(folderUuid).orElseThrow(() -> new GeneralCustomException("Folder UUID INVALID"));
     }

@@ -1,6 +1,7 @@
 package com.uruz.frostbite.enums;
 
 public enum WorkflowStatus {
+    WAITING(0),
     READY(1),
     PROCESSING(2),
     SUCCESS(3),

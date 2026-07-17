@@ -6,7 +6,6 @@ import com.uruz.frostbite.enums.workflow.WorkflowRequestStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -87,14 +86,14 @@ public class WorkflowRequest {
          */
         private LocalDateTime endTime;
 
-    public static WorkflowRequest createReady(Workflow workflowName, WorkflowDomainType targetType,
-                                              Long targetId, String requestPayloadString, int createUserId, LocalDateTime current) {
+    public static WorkflowRequest createWaiting(Workflow workflowName, WorkflowDomainType targetType,
+                                                Long targetId, String requestPayloadString, int createUserId, LocalDateTime current) {
         return WorkflowRequest.builder()
                 .workflowName(workflowName)
                 .workflowDomainType(targetType)
                 .targetId(targetId)
                 .requestPayload(requestPayloadString)
-                .status(WorkflowRequestStatus.READY)
+                .status(WorkflowRequestStatus.WAITING)
                 .createTime(current)
                 .createUserId(createUserId)
                 .build();

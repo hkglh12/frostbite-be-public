@@ -1,12 +1,10 @@
 package com.uruz.frostbite.domain;
 
-import com.uruz.frostbite.enums.WorkflowStatus;
 import com.uruz.frostbite.enums.workflow.UnitTask;
 import com.uruz.frostbite.enums.workflow.UnitTaskRequestStatus;
 import com.uruz.frostbite.enums.workflow.WorkflowDomainType;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -101,9 +99,9 @@ public class UnitTaskRequest {
      */
     private LocalDateTime endTime;
 
-    public static UnitTaskRequest createUnitTask(UnitTask unitTask, long workflowRequestId,
-                                            int taskOrder, WorkflowDomainType domainType, long targetId,
-                                            int createUserId, LocalDateTime currentTime){
+    public static UnitTaskRequest createCurrentUnitTask(UnitTask unitTask, long workflowRequestId,
+                                                        int taskOrder, WorkflowDomainType domainType, long targetId,
+                                                        int createUserId, LocalDateTime currentTime){
         return UnitTaskRequest.builder()
                 .workflowRequestId(workflowRequestId)
                 .unitTaskName(unitTask)

@@ -5,6 +5,8 @@ import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.dto.workflow.internal.FileWorkflowDraft;
 import com.uruz.frostbite.enums.workflow.UnitTask;
 
+import java.time.LocalDateTime;
+
 public interface UnitTaskExecutor {
     /**
      * Workflow의 단위작업을 직접 실행
@@ -15,5 +17,6 @@ public interface UnitTaskExecutor {
      * */
     UnitTask getUnitTask();
     FileWorkflowDraft process(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft);
-    FileWorkflowDraft compensateOnFailure(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft);
+    FileWorkflowDraft markOnSucceed(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft, LocalDateTime succeedTime);
+    FileWorkflowDraft compensateOnFailure(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft, LocalDateTime failedTime, String errorMessage);
 }

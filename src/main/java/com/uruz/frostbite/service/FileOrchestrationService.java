@@ -12,8 +12,8 @@ import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.workflow.Workflow;
 import com.uruz.frostbite.enums.workflow.WorkflowDomainType;
 import com.uruz.frostbite.utils.TempFileUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskRejectedException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +27,7 @@ import java.util.concurrent.RejectedExecutionException;
 
 
 @Service
+@Slf4j
 public class FileOrchestrationService {
 
     /**
@@ -75,11 +76,9 @@ public class FileOrchestrationService {
     }
     /** 임시파일 정보를 parameter로 file_tb 초안 등록 */
     @Transactional
-    public SimpleFileResponse registFile(FileCreateRequest request, UUID folderUuid, Integer createUserId) {
+    public SimpleFileResponse registerFile(FileCreateRequest request, UUID folderUuid, Integer createUserId) {
 
-        // 파일 메타정보 등록
-        // 해당 파일 메타등록 에서는 "파일의 스토리지 저장소" 를 저장하지 않음!
-        // 해당 파일의 스토리지 저장소는 "암호화 UnitTask -> copy storage Unit Task"가 옮긴 뒤 저장함!
+        // 파일 테이블 등록 + 파일 워크플로우 상태 row 등록
         File initialFile = fileService.registInitialFile(request, folderUuid, createUserId);
 
         Workflow inDevWorkflow = Workflow.WF_FILE_PROVISION_MOVEONLY;
@@ -91,7 +90,8 @@ public class FileOrchestrationService {
             // IOE는 @Transactional 에 안걸린다.
             throw new GeneralCustomException("JSON PARSING ERROR");
         }
-        WorkflowRequest workflowRequest = workflowService.registerWorkflowRequest(WorkflowDomainType.WF_TYPE_FILE,
+        // 대기상태인 워크플로우 요청 등록
+        WorkflowRequest workflowRequest = workflowService.registerWaitingWorkflowRequest(WorkflowDomainType.WF_TYPE_FILE,
                 initialFile.getFileId(), inDevWorkflow, requestPayloadString, createUserId);
 
         // commit 이후 실행할 콜백을 등록
@@ -116,8 +116,7 @@ public class FileOrchestrationService {
                             });
 
                         }catch(RejectedExecutionException e){
-                            // DO SOMETHING
-                            // 이 위치에서 DB 접근할거면 REQUIRED 로도 가능
+                            // 내부에서 벌어진 실패를 잡아내는게 아니라, .execute() 호출 실패 (Queue full 등..)를 잡는다.
                             // 커밋 되고 신규 트렌잭션이 열리니까. 다만 의도적으로 "원래 흐름과는 별개로 관리되서 mother transaction이 실패해도
                             // 이 코드는 실행되고 별도 커밋되어야 함. 을 명시하기 위해 Requires_new 가 낫다고.
                             workflowService.markWorkflowRequestFailed(workflowRequest.getWorkflowRequestId(), LocalDateTime.now(), e.getMessage());
@@ -136,9 +135,9 @@ public class FileOrchestrationService {
         return response;
     }
 
-    /** 임시파일 정보 임시파일테이블 등록, workflow를 통해 임시경로 이동*/
+    /** 임시파일 JAVA -> Application Temp로 이동, 임시파일 정보 등록*/
     @Transactional
-    public TempFileMetaInfoDraft uploadTempFile(MultipartFile file, UUID folderUuid, Integer createUserId){
+    public TempFileMetaInfoDraft registerTempFile(MultipartFile file, UUID folderUuid, Integer createUserId){
         // TODO Folder_Tb 내 폴더에 접근 권한 있는지 확인 필요
         // 업로드하려는 폴더에 권한이 있는지 확인정도는 해줘야함.
 
@@ -146,17 +145,17 @@ public class FileOrchestrationService {
         // 이 작업 까지는 동기로 진행하는게 안전. 동일 FS, 동일 mount 내 move는 파일 디스크립터 수정으로 짧은시간만 쓴다고 들음
         TempFileMetaInfoDraft draft = directFileHandleComponent.reallocateTempFile(file);
 
-        FileTemp fileTemp = FileTemp.createReady(draft.getPhysicalFileUuid(), draft.getOriginalFileName(),
-                draft.getExtension(), draft.getFileSize(), createUserId, tempFileUtils.getTempFileTTLToSeconds());
+        FileTemp fileTemp = FileTemp.createPreparedTempFile(draft.getTempFileUuid(), draft.getOriginalFileName(),
+              draft.getFileSize(), createUserId, tempFileUtils.getTempFileTTLToSeconds());
         try {
             fileService.insertFileTemp(fileTemp);
         }catch(Exception e){
             // DB Insert 실패 시 copy한 임시파일 삭제필요
             try {
-                directFileHandleComponent.deleteTempFile(draft.getPhysicalFileUuid().toString());
+                directFileHandleComponent.deleteTempFile(draft.getTempFileUuid());
             } catch(Exception EE){
                 EE.printStackTrace();
-                throw new GeneralCustomException("FILE REMOVE FAILED IN REGIS TEMP FILE FLOW");
+                throw new GeneralCustomException("FILE REMOVE FAILED IN REGISTER TEMP FILE FLOW");
             }
             throw new GeneralCustomException("TEMP FILE REGISTRATION FAILED");
         }
