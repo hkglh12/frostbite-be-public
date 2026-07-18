@@ -30,17 +30,17 @@ public interface FileMapper {
                                          @Param("status") WorkflowStatus status,
                                          @Param("currentTime")LocalDateTime currentTime);
 
-    void updateFileWorkflowStatus(@Param("fileId")Long fileId,
-                                  @Param("status") WorkflowStatus status,
-                                  @Param("currentTime")LocalDateTime currentTime);
-    void markFileWorkflowRegistFailed(@Param("fileId")Long fileId,
-                                      @Param("status") WorkflowStatus status,
-                                      @Param("currentTime")LocalDateTime currentTime,
-                                      @Param("failedMessage") String failedMessage);
+    void updateFileWorkflowRegisterStatusProcessing(@Param("fileId")Long fileId,
+                                                    @Param("status") WorkflowStatus status,
+                                                    @Param("currentTime")LocalDateTime currentTime);
+    void updateFileWorkflowRegisterStatusFailed(@Param("fileId")Long fileId,
+                                                @Param("status") WorkflowStatus status,
+                                                @Param("currentTime")LocalDateTime currentTime,
+                                                @Param("failedMessage") String failedMessage);
 
-    void updateFileWorkflowEndStatus(@Param("fileId")Long fileId,
-                                     @Param("status") WorkflowStatus status,
-                                     @Param("currentTime")LocalDateTime currentTime);
+    void updateFileWorkflowRegisterStatusSuccess(@Param("fileId")Long fileId,
+                                                 @Param("status") WorkflowStatus status,
+                                                 @Param("currentTime")LocalDateTime currentTime);
 
     void markFileAsActive(@Param("fileId") Long fileId, @Param("status") FileStatus status);
 }

@@ -67,7 +67,7 @@
             file_id = #{fileId}
     </update>
 
-    <update id="updateFileWorkflowStatus">
+    <update id="updateFileWorkflowRegisterStatusProcessing">
         update file_workflow_status_tb
         set
             file_regist_status = #{status},
@@ -75,7 +75,7 @@
         WHERE
             file_id = #{fileId}
     </update>
-    <update id="markFileWorkflowRegistFailed">
+    <update id="updateFileWorkflowRegisterStatusFailed">
         update file_workflow_status_tb
         set
             file_regist_status = #{status},
@@ -84,7 +84,7 @@
         WHERE
             file_id = #{fileId}
     </update>
-    <update id="updateFileWorkflowEndStatus">
+    <update id="updateFileWorkflowRegisterStatusSuccess">
         update file_workflow_status_tb
         set
             file_regist_status = #{status},

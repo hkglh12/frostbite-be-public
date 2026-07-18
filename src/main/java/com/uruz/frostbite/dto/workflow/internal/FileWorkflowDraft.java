@@ -39,6 +39,10 @@ public class FileWorkflowDraft {
     private String destFilePath;
     private String destFileName;
 
+    // TODO 추후 메타데이터 추출 및 Hash 추출 용 UnitTask를 만들어야함
+    // 현재 Extension, Hash 추출 공백임
+    private String extractedExtension;
+
     private String storageFilePath;
     private boolean removeSucceed;
 

@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -78,24 +77,25 @@ public class FileService {
         return fileMapper.selectTempFileByUuid(targetUuid);
     }
 
-    public void completeRegistWorkflow(Long fileId,  LocalDateTime currentTime, String destFilePath, String destFileName){
 
-        // 현재 Stroage_mount_table을 사용하지 않음. 임시완성이 현 시점 절대적 목표
-        // 따라서 storage_mount_point_id null로 유지
+    public void markFileWorkflowRegisterStarted(Long fileId, LocalDateTime currentTime){
+        fileMapper.updateFileWorkflowRegisterStatusProcessing(fileId, WorkflowStatus.PROCESSING, currentTime);
+    }
+
+    public void markFileWorkflowRegisterSucceed(Long fileId, LocalDateTime currentTime){
+        fileMapper.updateFileWorkflowRegisterStatusSuccess(fileId, WorkflowStatus.SUCCESS, currentTime);
+    }
+
+    public void markFileWorkflowRegisterFailed(Long fileId, LocalDateTime startedTime, String failedMessage){
+        fileMapper.updateFileWorkflowRegisterStatusFailed(fileId, WorkflowStatus.FAILED_FINAL, startedTime, failedMessage);
+    }
+    // 파일 등록 자체는 종료. 그러나 파일 워크플로우는
+    /** 파일 Storage 이관 종료 시 -> 파일 등록 자체는 완료된것으로 판단. 파일 워크플로우는 여전히 진행중이므로 PROCESSING으로 update*/
+    public void completeRegistWorkflow(Long fileId,  LocalDateTime currentTime, String destFilePath, String destFileName){
         fileMapper.updateFileMetaInfoByRegistDone(fileId, destFilePath, destFileName, FileStatus.PROCESSING);
     }
 
-    public void markFileWorkflowRegistStarted(Long fileId, LocalDateTime currentTime){
-        fileMapper.updateFileWorkflowStatus(fileId, WorkflowStatus.PROCESSING, currentTime);
-    }
 
-    public void markFileWorkflowRegistSucceed(Long fileId, LocalDateTime currentTime){
-        fileMapper.updateFileWorkflowEndStatus(fileId, WorkflowStatus.SUCCESS, currentTime);
-    }
-
-    public void markFileWorkflowRegistFailed(Long fileId, LocalDateTime startedTime, String failedMessage){
-        fileMapper.markFileWorkflowRegistFailed(fileId, WorkflowStatus.FAILED_FINAL, startedTime, failedMessage);
-    }
     public void markFileActive(Long fileId){
         fileMapper.markFileAsActive(fileId, FileStatus.ACTIVE);
     }
