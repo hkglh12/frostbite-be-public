@@ -12,8 +12,6 @@ import com.uruz.frostbite.service.UnitTaskService;
 import com.uruz.frostbite.service.WorkflowService;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -51,7 +49,7 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
          *
          * */
         LocalDateTime startedTime = LocalDateTime.now();
-        fileService.markFileWorkflowRegistStarted(request.getTargetId(), startedTime);
+        fileService.markFileWorkflowRegisterStarted(request.getTargetId(), startedTime);
 
         UUID tempFileUuid = UUID.fromString(MapUtils.getString(draft.getRequestPayload(), "tempFileUuid"));
         FileTemp fileTemp = fileService.selectFileTempByUuid(tempFileUuid);
@@ -83,14 +81,14 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
     public FileWorkflowDraft markOnSucceed(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft, LocalDateTime succeedTime){
         String destFilePath = draft.getDestFilePath();
         String destFileName = draft.getDestFileName();
-        fileService.markFileWorkflowRegistSucceed(request.getTargetId(), succeedTime);
+        fileService.markFileWorkflowRegisterSucceed(request.getTargetId(), succeedTime);
         fileService.completeRegistWorkflow(request.getTargetId(), succeedTime, destFilePath, destFileName);
         return null;
     }
 
     @Override
     public FileWorkflowDraft compensateOnFailure(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft, LocalDateTime failedTime, String errorMessage) {
-        fileService.markFileWorkflowRegistFailed(unitTask.getTargetId(), failedTime, errorMessage);
+        fileService.markFileWorkflowRegisterFailed(unitTask.getTargetId(), failedTime, errorMessage);
         return null;
     }
 

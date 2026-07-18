@@ -5,7 +5,6 @@ import com.uruz.frostbite.customException.QuitelyPropagationException;
 import com.uruz.frostbite.domain.UnitTaskRequest;
 import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.dto.workflow.internal.FileWorkflowDraft;
-import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.workflow.UnitTask;
 import com.uruz.frostbite.service.DirectFileHandleComponent;
 import com.uruz.frostbite.service.FileService;
@@ -69,7 +68,7 @@ public class UnitTaskTempFileRemove implements UnitTaskExecutor{
 
     @Override
     public FileWorkflowDraft compensateOnFailure(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft, LocalDateTime failedTime, String errorMessage){
-        fileService.markFileWorkflowRegistFailed(request.getTargetId(), LocalDateTime.now(), "FILE REMOVE FAILED");
+        fileService.markFileWorkflowRegisterFailed(request.getTargetId(), LocalDateTime.now(), "FILE REMOVE FAILED");
 
         return null;
     }

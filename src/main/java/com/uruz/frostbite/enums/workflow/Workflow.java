@@ -20,8 +20,8 @@ public enum Workflow {
             "파일등록",
             "일반 파일 등록",
             List.of(
-                    UnitTask.UT_FILE_ENCRYPT,
-                    UnitTask.UT_FILE_COPY_STORAGE,
+                    UnitTask.UT_FILE_ENCRYPT_TO_STORAGE_V1,
+                    //UnitTask.UT_FILE_COPY_STORAGE,
                     UnitTask.UT_FILE_MAKE_PREVIEW,
                     UnitTask.UT_FILE_SYNC_SEARCH,
                     UnitTask.UT_FILE_REMOVE_TEMP
@@ -32,8 +32,8 @@ public enum Workflow {
             "파일등록",
             "내부 전용 파일 등록",
             List.of(
-                    UnitTask.UT_FILE_ENCRYPT,
-                    UnitTask.UT_FILE_COPY_STORAGE,
+                    UnitTask.UT_FILE_ENCRYPT_TO_STORAGE_V1,
+                    //UnitTask.UT_FILE_COPY_STORAGE,
                     UnitTask.UT_FILE_MAKE_PREVIEW,
                     UnitTask.UT_FILE_REMOVE_TEMP
             )
@@ -43,8 +43,8 @@ public enum Workflow {
             "파일등록",
             "제한 파일 등록",
             List.of(
-                    UnitTask.UT_FILE_ENCRYPT,
-                    UnitTask.UT_FILE_COPY_STORAGE,
+                    UnitTask.UT_FILE_ENCRYPT_TO_STORAGE_V1,
+                    //UnitTask.UT_FILE_COPY_STORAGE,
                     UnitTask.UT_FILE_REMOVE_TEMP
             )
     );

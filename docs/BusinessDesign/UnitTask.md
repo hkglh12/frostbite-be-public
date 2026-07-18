@@ -17,3 +17,17 @@
     - 파일 메타데이터 및 원문(문서만 지원) 을 ELS 로 동기화
   - 파일 제거 UnitTask
     - 특히, 업로드 흐름에서 생성된 임시 파일을 업로드 워크플로우 종료시에 삭제하는 Task 
+  
+### UnitTask.UT_FILE_ENCRYPT_TO_STORAGE_V2
+
+- 암호화 된 파일의 경우, 아래와 같은 헤더를 가진다.
+  - [Fixed Prefix : 8Byte]
+    - MAGIC_CHAR_SET = ASCII "FRST" 고정  -> 4byte
+    - ENC Version Marker = ASCII "V" 고정 -> 1byte
+    - ENC Version = (Unsigned integer) "[ENUM NumberValue]" -> 1byte
+    - HEADER_LEGNTH = (Unsigned Integer) "1~65535" -> 2byte
+  - [Variable Header]
+    - IV_LENGTH = 1~255 값 내에서 지정 (초과할경우 Exception)
+    - IV = IV 문자열 
+    - [기타 필요정보, ENUM 따라서 별개]
+    - -------------------------------------- 여기까지 헤더. 이후 Cipher Text
