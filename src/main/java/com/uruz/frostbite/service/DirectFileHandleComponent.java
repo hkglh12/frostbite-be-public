@@ -39,6 +39,22 @@ public class DirectFileHandleComponent {
     private SecretKey masterAesKey;
     private String PERSIST_PATH = "C:/Users/hkglh/Projects/volumes/permenant/";
 
+    // 추후 생성자 생성까지 고민해볼것. (현재는 Endpoint 클래스 개념이 되버려서, 주입받을게 없어서 생성자도 없음.
+    // 그러나, 테스트코드에서 굳이 SpringBootTest까지 이어붙일필요가 없으니
+    // 아래코드 처럼 작성해서, 테스트코드에서 생성자 직접 호출 시 SpringBootTest까지 필요없게됨.
+    // 반대로 Spring Context Initializing 과정에서는 스프링이 만들면서 @Value 생성까지 마치고올라옴
+    /*
+    public DirectFileHandleComponent(
+            @Value("${frostbite.multipart.temp.location}") String tempLocation,
+            @Value("${frostbite.persist.location}") String persistLocation
+    ) {
+        this.tempLocation = tempLocation;
+        this.persistLocation = persistLocation;
+    }
+
+     */
+
+
     @PostConstruct
     public void inspectInitialFolder() throws IllegalStateException{
         File frostbiteRootTempFolder = new File(FROSTBITE_TEMP_LOCATION);

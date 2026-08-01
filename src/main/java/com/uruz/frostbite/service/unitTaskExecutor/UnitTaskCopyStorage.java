@@ -52,7 +52,7 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
         fileService.markFileWorkflowRegisterStarted(request.getTargetId(), startedTime);
 
         UUID tempFileUuid = UUID.fromString(MapUtils.getString(draft.getRequestPayload(), "tempFileUuid"));
-        FileTemp fileTemp = fileService.selectFileTempByUuid(tempFileUuid);
+        FileTemp fileTemp = fileService.selectReadyFileTempByUuid(tempFileUuid);
 
         Map<String, String> destInfo = null;
 

@@ -7,14 +7,15 @@ import java.util.List;
 @Getter
 public enum Workflow {
 
-    WF_FILE_PROVISION_MOVEONLY(
+    WF_FILE_REGISTER_ONLY(
             "파일등록",
             "파일 이동 전용",
             List.of(
-                    UnitTask.UT_FILE_COPY_STORAGE,
+                    UnitTask.UT_FILE_ENCRYPT_TO_STORAGE_V1,
                     UnitTask.UT_FILE_REMOVE_TEMP
             )
     ),
+
 
     WF_FILE_PROVISION_NORMAL(
             "파일등록",

@@ -81,7 +81,7 @@ public class FileOrchestrationService {
         // 파일 테이블 등록 + 파일 워크플로우 상태 row 등록
         File initialFile = fileService.registInitialFile(request, folderUuid, createUserId);
 
-        Workflow inDevWorkflow = Workflow.WF_FILE_PROVISION_MOVEONLY;
+        Workflow inDevWorkflow = Workflow.WF_FILE_REGISTER_ONLY;
 
         String requestPayloadString = null;
         try{

@@ -2,7 +2,7 @@ package com.uruz.frostbite.enums;
 
 public enum FileTempStatus {
     READY(1),
-    ACTIVE(2),
+    REGISTERED(2),
     EXPIRED(3),
     HARD_DELETED(4);
 

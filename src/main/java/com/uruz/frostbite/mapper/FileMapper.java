@@ -2,6 +2,7 @@ package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.*;
 import com.uruz.frostbite.enums.FileStatus;
+import com.uruz.frostbite.enums.FileTempStatus;
 import com.uruz.frostbite.enums.WorkflowStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -20,6 +21,7 @@ public interface FileMapper {
     /** INITIAL */
     void insertFileTemp(FileTemp fileTemp);
     FileTemp selectTempFileByUuid(@Param("uuid") UUID uuid);
+    FileTemp selectReadyTempFileByUuid(@Param("uuid") UUID uuid, @Param("fileTempStatus")FileTempStatus status);
     void updateFileMetaInfoByRegistDone(@Param("fileId") Long fileId,
                                         @Param("storageFilePath") String storageFilePath,
                                         @Param("storageFileName") String storageFileName,

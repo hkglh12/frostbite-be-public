@@ -8,6 +8,7 @@ import com.uruz.frostbite.domain.FileWorkflowStatus;
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.dto.file.FileCreateRequest;
 import com.uruz.frostbite.enums.FileStatus;
+import com.uruz.frostbite.enums.FileTempStatus;
 import com.uruz.frostbite.enums.WorkflowStatus;
 import com.uruz.frostbite.mapper.FileMapper;
 import com.uruz.frostbite.service.resolver.FolderResolverService;
@@ -44,7 +45,7 @@ public class FileService {
     /** 임시파일 -> 파일 DB에 등록 + 파일 워크플로우 상태 테이블 등록 */
     public File registInitialFile(FileCreateRequest request, UUID folderUuid, Integer createUserId){
         // Temp UUID로부터 유효한 UUID인지 검증`
-        FileTemp fileTemp = fileMapper.selectTempFileByUuid(request.getTempFileUuid());
+        FileTemp fileTemp = fileMapper.selectReadyTempFileByUuid(request.getTempFileUuid(), FileTempStatus.READY);
         if(fileTemp == null){
             throw new GeneralCustomException("TEMP FILE UUID INVALID");
         }
@@ -77,6 +78,9 @@ public class FileService {
         return fileMapper.selectTempFileByUuid(targetUuid);
     }
 
+    public FileTemp selectReadyFileTempByUuid(UUID targetUuid){
+        return fileMapper.selectReadyTempFileByUuid(targetUuid, FileTempStatus.READY);
+    }
 
     public void markFileWorkflowRegisterStarted(Long fileId, LocalDateTime currentTime){
         fileMapper.updateFileWorkflowRegisterStatusProcessing(fileId, WorkflowStatus.PROCESSING, currentTime);

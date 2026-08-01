@@ -320,7 +320,7 @@
     </select>
     <select id="selectSimpleFolderByFolderUuid" resultType="SimpleFolderResponse">
         SELECT
-            folder_id, name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id,, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE

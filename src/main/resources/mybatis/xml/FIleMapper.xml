@@ -53,8 +53,20 @@
             target_file_uuid, original_file_name, file_size, create_user_id, create_time, expire_time, status
         FROM FILE_TEMP_TB
         WHERE
-            target_file_uuid = #{uuid}
+            target_file_uuid = #{uuid,jdbcType=OTHER}
     </select>
+
+    <select id="selectReadyTempFileByUuid" resultType="FileTemp">
+        /** selectTempFileByUuid */
+        SELECT
+            target_file_uuid, original_file_name, file_size, create_user_id, create_time, expire_time, status
+        FROM FILE_TEMP_TB
+        WHERE
+            target_file_uuid = #{uuid,jdbcType=OTHER}
+          AND
+            status = #{fileTempStatus}
+    </select>
+
 
 
     <!-- @Deprecated -->

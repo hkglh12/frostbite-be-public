@@ -21,7 +21,6 @@ public class UnitTaskFileEncryptToStorageV1 implements UnitTaskExecutor {
 
     private final EncryptFormatVersion currentDefaultEncryptFormatVersion = EncryptFormatVersion.AES256GCM;
     // ASCII 코드 기준 FRST = 4byte
-    private static final String FROST_BITE_MAGIC_CHARSET = "FRST";
 
     private final DirectFileHandleComponent directFileHandleComponent;
     private final FileService fileService;
@@ -43,7 +42,7 @@ public class UnitTaskFileEncryptToStorageV1 implements UnitTaskExecutor {
         fileService.markFileWorkflowRegisterStarted(request.getTargetId(), startedTime);
 
         UUID tempFileUuid = UUID.fromString(MapUtils.getString(draft.getRequestPayload(), "tempFileUuid"));
-        FileTemp fileTemp = fileService.selectFileTempByUuid(tempFileUuid);
+        FileTemp fileTemp = fileService.selectReadyFileTempByUuid(tempFileUuid);
 
         Map<String, String> destInfo = null;
 
