@@ -149,23 +149,30 @@ comment on column folder_tb.delete_user_id is '삭제자 PK';
 comment on column folder_tb.delete_time is '삭제시각';
 
 
-
+drop table file_tb;
 
 -- 파일의 삭제는 "수정"으로 처리할 예정
 create table file_tb(
-                        file_id bigserial primary key ,
+                        file_id bigserial primary key,
+                        folder_id  bigint,
+                        uuid UUID,
+                        original_file_name varchar(1024),
                         file_name varchar(1024),
+                        description varchar(2048),
                         file_size bigint,
-                        folder_id bigint,
-                        mount_point varchar(512),
-                        file_path varchar(1024),
-                        create_user int,
+                        file_extension varchar(32),
+                        mime_type varchar(256),
+                        storage_mount_point_id int,
+                        storage_file_path varchar(1024),
+                        storage_file_name varchar(1024),
+                        checksum_sha256 varchar(1024),
+                        create_user_id int,
                         create_time timestamp,
-                        modify_user int,
+                        modify_user_id int,
                         modify_time timestamp,
-
-                        uuid uuid default uuid_generate_v4(),
-                        is_delete smallint
+                        delete_user_id int,
+                        delete_time timestamp,
+                        status int
 );
 
 comment on table file_tb is '파일';
@@ -173,25 +180,77 @@ comment on column file_tb.file_id is '파일 식별자';
 comment on column file_tb.file_name is '파일명';
 comment on column file_tb.file_size is '파일크기';
 comment on column file_tb.folder_id is '부모 폴더 식별자';
-comment on column file_tb.mount_point is '서버상 파일 최상위경로';
-comment on column file_tb.file_path is '서버상 파일경로';
-comment on column file_tb.create_user is '셍성자';
+comment on column file_tb.storage_mount_point_id is '서버상 파일 최상위경로';
+comment on column file_tb.storage_file_path is '서버상 파일경로';
+comment on column file_tb.create_user_id is '셍성자';
 comment on column file_tb.create_time is '생성시각';
-comment on column file_tb.modify_user is '수정자';
+comment on column file_tb.modify_user_id is '수정자';
 comment on column file_tb.modify_time is '수정시각';
+comment on column file_tb.delete_time is '수정시각';
+comment on column file_tb.delete_user_id is '수정시각';
+
 comment on column file_tb.uuid is 'UUID';
 comment on column file_tb.is_delete is '삭제여부';
 
--- file_stauts와 file_tb는 1:1 추가작업에 대한 이야기임 (검색엔진 동기화여부, 업로드완료여부 등등)
-create table file_status_tb(
-                               file_id bigserial primary key ,
-                               upload_status int
+create table file_temp_tb
+(
+    target_file_uuid   UUID,
+    original_file_name varchar(1024),
+    file_extension     varchar(128),
+    file_size          bigint,
+    create_user_id     int,
+    create_time        timestamp,
+    expire_time        timestamp,
+    status             int
 );
-alter table file_status_tb add constraint file_tb_ver_file_fk foreign key (file_id) references file_tb(file_id);
 
-comment on table file_status_tb is '파일 작업 상태';
-comment on column file_status_tb.file_id is '파일 식별자';
-comment on column file_status_tb.upload_status is '압로드 상태';
+create table file_ver_tb(
+                            file_ver_id bigserial primary key,
+                            version_sequence integer,
+                            file_id bigint,
+                            folder_id  bigint,
+                            uuid UUID,
+                            original_file_name varchar(1024),
+                            file_name varchar(1024),
+                            description varchar(2048),
+                            file_size bigint,
+                            file_extension varchar(32),
+                            mime_type varchar(256),
+                            storage_mount_point_id int,
+                            storage_file_path varchar(1024),
+                            storage_file_name varchar(1024),
+                            checksum_sha256 varchar(1024),
+                            create_user_id int,
+                            create_time timestamp,
+                            modify_user_id int,
+                            modify_time timestamp,
+                            delete_user_id int,
+                            delete_time timestamp,
+                            status int
+);
+
+-- file_stauts와 file_tb는 1:1 추가작업에 대한 이야기임 (검색엔진 동기화여부, 업로드완료여부 등등)
+create table file_workflow_status_tb(
+                               file_id bigint primary key,
+                               file_regist_start_time timestamp,
+                               file_regist_status int,
+                               file_regist_complete_time timestamp,
+                               file_regist_last_error_message text
+);
+alter table file_workflow_status_tb add constraint file_tb_ver_file_fk foreign key (file_id) references file_tb(file_id);
+
+comment on table file_workflow_status_tb is '파일 작업 상태';
+comment on column file_workflow_status_tb.file_id is '파일 식별자';
+comment on column file_workflow_status_tb.upload_status is '압로드 상태';
+
+create table storage_mount_point_tb(
+                                       storage_mount_point_id bigserial primary key,
+                                       storage_name varchar(1024),
+                                       storage_end_point varchar(1024),
+                                       storage_type varchar(256),
+                                       storage_extension_info jsonb,
+                                       description varchar(1024)
+);
 
 create table folder_acl_tb
 (
@@ -239,18 +298,20 @@ comment on column folder_acl_tb.status is '삭제여부';
 --    is_delete smallint
 --)
 
+-- TODO : file_acl 은 folder_acl 체계 따라가도록 수정 안되었음 아직
 create table file_acl_tb(
-                            acl_id bigserial primary key ,
-                            user_id int,
+                            file_acl_id bigserial primary key,
+                            subject_type smallint,
+                            effect_type smallint,
+                            subject_user_id integer,
                             file_id bigint,
-                            effect_type int, -- ALLOW || DENY (범위 공유 시, 명시적 거부대상 선언이 필요할경우 활용)
-                            subject_type int, -- 대상 종류 (팀 || 사용자)
-                            subject_id int, -- 대상의 PK
-                            permission int,-- - READ, CREATE(==update 포함), DELETE, SAHRE 등등 가능한 기능과 권한에 대해 서술, ENUM으로 관리
-                            is_shared smallint,
+                            create_user_id int,
                             create_time timestamp,
-                            create_user int,
-                            is_delete smallint
+                            modify_user_id int,
+                            modify_time timestamp,
+                            delete_user_id int,
+                            delete_time timestamp,
+                            status int
 )
 
 -- alter table file_acl_tb add constraint file_acl_tb_user_fk foreign key (user_id) references user_tb(user_id);
@@ -258,15 +319,45 @@ create table file_acl_tb(
 -- alter table file_acl_tb add constraint file_acl_tb_file_fk foreign key (file_id) references file_tb(file_id);
 
 comment on table file_acl_tb is '파일 접근제어';
-comment on column file_acl_tb.acl_id is '접근제어 식별자';
-comment on column file_acl_tb.user_id is '피접근제어 대상';
+comment on column file_acl_tb.file_acl_id is '접근제어 식별자';
+comment on column file_acl_tb.subject_user_id is '피접근제어 대상';
 comment on column file_acl_tb.file_id is '접근제어 파일 식별자';
 comment on column file_acl_tb.effect_type is '접근제어 종류';
 comment on column file_acl_tb.subject_type is '피접근제어 종류';
 comment on column file_acl_tb.subject_id is '피 접근제어 식별자';
-comment on column file_acl_tb.permission is '제약 권한';
-comment on column file_acl_tb.is_shared is '공유로 생성된 제약 여부';
-comment on column file_acl_tb.create_time is '접근제어 생성시각'
-comment on column file_acl_tb.create_user is '제약 생성자'
-comment on column file_acl_tb.is_delete is '삭제여부'
+comment on column file_acl_tb.create_time is '접근제어 생성시각';
+comment on column file_acl_tb.create_user_id is '제약 생성자';
+comment on column file_acl_tb.status is '상태정보';
 
+
+-- workflow 개념 도입 준비
+create table workflow_request_tb (
+                                     workflow_request_id bigserial primary key,
+                                     workflow_name varchar(1024),
+                                     workflow_domain_type varchar(128),  -- 파일 || 폴더
+                                     target_id bigint,
+                                    request_payload jsonb, -- 파라미터 연결 (Workflow.md 변경점 (2026.06.21) 참고
+                                     error_message text,
+                                     status varchar(128),
+                                     create_time timestamp,
+                                     create_user_id integer,
+                                     start_time timestamp,
+                                     end_time timestamp
+);
+
+create table unit_task_request_tb (
+                                          unit_task_request_id bigserial primary key,
+                                          workflow_request_id bigint, -- ref : workflow_request_tb
+                                          unit_task_name varchar(1024),
+                                          task_order int, -- 해당 유닛태스크가 워크플로우 내 몇번째 작업이었는지. (유지보수관리용 : 어디쯤 실패한건지 보기 위해 코드를 까보지 않도록 + 유닛 동일 워크플로우 내 재사용 관리회도록)
+                                          workflow_domain_type varchar(128),
+                                          target_id bigint,
+                                          error_message text,
+                                          status varchar(128), -- succeed, failed_retriable, failed_final,
+                                          allow_retry smallint,
+                                          retry_count int,
+                                          create_time timestamp,
+                                          create_user_id integer,
+                                          start_time timestamp,
+                                          end_time timestamp
+);

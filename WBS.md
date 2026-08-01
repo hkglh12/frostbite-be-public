@@ -72,11 +72,14 @@
       - [X] [26-06-28] 시크릿 분리 및 로컬 실행 가이드 정리 
       - 특이사항 : 해당 시점 2026-06-28 이후 프로젝트 일시 중단
     - [ ] [] Workflow를 통한 파일 업로드
-      - [ ] 임시파일 업로드
+      - [X] 임시파일 업로드
       - [ ] 파일 메타 등록
-      - [ ] Workflow Request 생성
-      - [ ] UnitTask Copy
-      - [ ] Workflow / UnitTask Success 전환 및 File status Active 전환
+      - [X] Workflow Request 생성
+      - [ ] UnitTask
+        - [ ] @Deprecated File Copy UnitTask
+        - [X] [2026-07-18] Stream 활용, 임시파일로부터 암호화 + 스토리지 경로로 이동
+          - [X] [2026-07-24] Happy path test 완료
+      - [X] Workflow / UnitTask Success 전환 및 File status Active 전환
     - [ ] [] 파일 업로드 시 폴더 ACL 권한 검증 제어
       - [ ] 임시파일 등록 전 논리 폴더 ACL권한 제어
       - [ ] 파일 등록 시 폴더 ACL 권한 제어
