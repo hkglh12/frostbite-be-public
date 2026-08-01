@@ -38,36 +38,19 @@ public class TeamController {
         this.teamService = teamService;
     }
 
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "정상 생성 완료",
-                    useReturnTypeSchema = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiSucceedResponse.class),
-                            examples = @ExampleObject(
-                                    name = "정상응답",
-                                    summary = "팀 생성 성공 시 응답",
-                                    value = SwaggerExamples.TEAM_CREATE_SUCCESS_EXAMPLE
-                            )
+    @ApiResponse(
+            responseCode = "200",
+            description = "정상 생성 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiSucceedResponse.class),
+                    examples = @ExampleObject(
+                            name = "정상응답",
+                            summary = "팀 생성 성공 시 응답",
+                            value = SwaggerExamples.TEAM_CREATE_SUCCESS_EXAMPLE
                     )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "실패 : 필수 값 validated 실패",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "실패응답 : Request body validated 실패",
-                                    summary = "팀 생성 실패 시 응답",
-                                    value = SwaggerExamples.TEAM_CREATE_BAD_REQUEST_EXAMPLE
-                            )
-                    )
-
             )
-    })
+    )
     @PostMapping("/")
     @Operation(summary = "팀 생성", description = "팀 생성 + 자동 팀 폴더 생성, 생성자는 팀 리더")
     public ResponseEntity<?> createTeam(
@@ -79,36 +62,20 @@ public class TeamController {
         return ResponseEntity.ok(new ApiSucceedResponse<TeamDetailResponse>(team));
     }
 
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "정상 조회 완료",
-                    useReturnTypeSchema = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiSucceedResponse.class),
-                            examples = @ExampleObject(
-                                    name = "정상응답",
-                                    summary = "팀 리스트 응답",
-                                    value = SwaggerExamples.TEAM_LIST_SUCCESS_EXAMPLE
-                            )
+    @ApiResponse(
+            responseCode = "200",
+            description = "정상 조회 완료",
+            useReturnTypeSchema = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiSucceedResponse.class),
+                    examples = @ExampleObject(
+                            name = "정상응답",
+                            summary = "팀 리스트 응답",
+                            value = SwaggerExamples.TEAM_LIST_SUCCESS_EXAMPLE
                     )
-            ),
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "가입한 팀 없음",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "정상응답",
-                                    summary = "가입한 팀 없음",
-                                    value = SwaggerExamples.TEAM_LIST_SUCCESS_EMPTY_EXAMPLE
-                            )
-                    )
-
             )
-    })
+    )
     @GetMapping("/list")
     @Operation(summary = "가입한 팀 리스트 조회", description = "사용자 본인 가입 팀 리스트 조회")
     public ResponseEntity<?> getTeams(
@@ -118,36 +85,20 @@ public class TeamController {
         return ResponseEntity.ok(new ApiSucceedResponse<>(teams));
     }
 
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "정상 조회 완료",
-                    useReturnTypeSchema = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiSucceedResponse.class),
-                            examples = @ExampleObject(
-                                    name = "정상응답",
-                                    summary = "사용자 가입 성공 시 응답",
-                                    value = SwaggerExamples.TEAM_DETAIL_SUCCESS_EXAMPLE
-                            )
+    @ApiResponse(
+            responseCode = "200",
+            description = "정상 조회 완료",
+            useReturnTypeSchema = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiSucceedResponse.class),
+                    examples = @ExampleObject(
+                            name = "정상응답",
+                            summary = "사용자 가입 성공 시 응답",
+                            value = SwaggerExamples.TEAM_DETAIL_SUCCESS_EXAMPLE
                     )
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "실패 : 제시한 파라미터로 찾을 수 없음",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "실패응답 : not found",
-                                    summary = "사용자 가입 실패 시 응답",
-                                    value = SwaggerExamples.TEAM_DETAIL_NOT_FOUND_EXAMPLE
-                            )
-                    )
-
             )
-    })
+    )
     @GetMapping("/")
     @Operation(summary = "팀 상세정보 조회", description = "본인이 가입한 팀 중 특정 팀 상세정보 조회")
     public ResponseEntity<?> getTeam(
@@ -158,36 +109,20 @@ public class TeamController {
         return ResponseEntity.ok(new ApiSucceedResponse<TeamDetailResponse>(team));
     }
 
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "정상 수정 완료",
-                    useReturnTypeSchema = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiSucceedResponse.class),
-                            examples = @ExampleObject(
-                                    name = "정상응답",
-                                    summary = "팀 정보 수정 완료",
-                                    value = SwaggerExamples.TEAM_MODIFY_SUCCESS_EXAMPLE
-                            )
+    @ApiResponse(
+            responseCode = "200",
+            description = "정상 수정 완료",
+            useReturnTypeSchema = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiSucceedResponse.class),
+                    examples = @ExampleObject(
+                            name = "정상응답",
+                            summary = "팀 정보 수정 완료",
+                            value = SwaggerExamples.TEAM_MODIFY_SUCCESS_EXAMPLE
                     )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "실패 : 필수 값 validated 실패",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "실패응답 : Request body validated 실패",
-                                    summary = "팀 수정 실패 시 응답 응답",
-                                    value = SwaggerExamples.TEAM_MODIFY_BAD_REQUEST_EXAMPLE
-                            )
-                    )
-
             )
-    })
+    )
     @PutMapping("/")
     @Operation(summary = "팀 상세정보 수정", description = "본인이 가입한 팀 중 특정 팀 상세정보 수정")
     public ResponseEntity<?> updateTeam(
@@ -199,36 +134,20 @@ public class TeamController {
         return ResponseEntity.ok(new ApiSucceedResponse<TeamDetailResponse>(team));
     }
 
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "정상 삭제 완료",
-                    useReturnTypeSchema = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiSucceedResponse.class),
-                            examples = @ExampleObject(
-                                    name = "정상응답",
-                                    summary = "팀 soft delete 성공",
-                                    value = SwaggerExamples.TEAM_REMOVE_SUCCESS_EXAMPLE
-                            )
+    @ApiResponse(
+            responseCode = "200",
+            description = "정상 삭제 완료",
+            useReturnTypeSchema = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiSucceedResponse.class),
+                    examples = @ExampleObject(
+                            name = "정상응답",
+                            summary = "팀 soft delete 성공",
+                            value = SwaggerExamples.TEAM_REMOVE_SUCCESS_EXAMPLE
                     )
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "실패 : 제시한 조건으로 찾을 수 없음",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "실패응답 : Request body validated 실패",
-                                    summary = "팀 soft 삭제 실패 시 응답",
-                                    value = SwaggerExamples.TEAM_REMOVE_NOT_FOUND_EXAMPLE
-                            )
-                    )
-
             )
-    })
+    )
     @DeleteMapping("/")
     @Operation(summary = "팀 폐쇄", description = "팀 폐쇄 (soft delete)")
     public ResponseEntity<?> removeTeam(
