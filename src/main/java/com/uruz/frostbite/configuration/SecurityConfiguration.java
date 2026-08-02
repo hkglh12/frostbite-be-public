@@ -49,7 +49,7 @@ public class SecurityConfiguration {
 
         security.authorizeHttpRequests((auth) -> auth
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/v1/api/user/").permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/api/user").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/login").permitAll()
                 .anyRequest().authenticated())
                 // 세션베이스에서는 CSRF 활성화 필요 (쿠키 베이스 공격이므로)
@@ -57,7 +57,7 @@ public class SecurityConfiguration {
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                         .csrfTokenRepository(customCsrfTokenRepository())
                         .ignoringRequestMatchers(
-                                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/v1/api/user/"),
+                                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/v1/api/user"),
                                 PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/v1/login"),
                                 PathPatternRequestMatcher.withDefaults().matcher(null, "/swagger-ui.html"),
                                 PathPatternRequestMatcher.withDefaults().matcher(null, "/swagger-ui/**"),
