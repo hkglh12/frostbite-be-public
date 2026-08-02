@@ -10,7 +10,7 @@ create table user_tb(
                         phone_number varchar(14),
                         birth date,
                         create_date date,
-                        uuid varchar(50),
+                        uuid UUID,
                         account_type smallint,
                         status smallint
 );
@@ -34,7 +34,7 @@ create table team_tb(
                         create_user_id int,
                         modify_time timestamp,
                         modify_user_id int,
-                        uuid varchar(50),
+                        uuid UUID,
                         status smallint
 );
 
@@ -104,7 +104,7 @@ comment on column rel_user_role_tb.role_id is '역할 식별자';
 */
 create table folder_tb
 (
-    uuid                   varchar(50),
+    uuid                   UUID,
     folder_id              bigserial
         primary key,
     name                   varchar(512),
