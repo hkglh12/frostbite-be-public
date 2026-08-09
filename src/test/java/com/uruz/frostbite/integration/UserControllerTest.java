@@ -8,6 +8,7 @@ import com.uruz.frostbite.domain.FolderAcl;
 import com.uruz.frostbite.domain.User;
 import com.uruz.frostbite.dto.user.UserJoinRequest;
 import com.uruz.frostbite.dto.user.UserJoinResponse;
+import com.uruz.frostbite.dto.user.UserPasswordModifyRequest;
 import com.uruz.frostbite.dto.wrapper.ApiSucceedResponse;
 import com.uruz.frostbite.enums.AclEffectType;
 import com.uruz.frostbite.enums.FolderType;
@@ -22,6 +23,7 @@ import com.uruz.frostbite.support.UserDomainEntitySupport;
 import io.micrometer.common.util.StringUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,19 +31,23 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,6 +67,8 @@ class UserControllerTest extends IntegrationTestSupport {
     @MockitoBean
     private DirectFileHandleComponent directFileHandleComponent;
 
+    @Autowired
+    private BCryptPasswordEncoder encoder;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -69,7 +77,7 @@ class UserControllerTest extends IntegrationTestSupport {
     private JdbcTemplate jdbcTemplate;
 
     @Test
-    @DisplayName("사용자 생성")
+    @DisplayName("사용자 회원가입에 성공 시, 자동으로 개인 엔트리폴더, 릴레이션까지 생성되어야 한다.")
     void joinCreatesPrivateFolderAndReturnsCreatedUser() throws Exception{
         UserJoinRequest request = UserDomainEntitySupport.joinRequest();
 
@@ -257,15 +265,35 @@ class UserControllerTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.result.uuid").isNotEmpty());
     }
 
+
+    @Test
+    @DisplayName("로그인에 성공하면 세션이 생성된다.")
+    void checkSessionCreatedAfterLoginSucceed() throws Exception{
+        final String userEmail = "";
+        // Given
+        TestUser testUser = fixture.selectExistsUser(userEmail);
+        // When
+        MvcResult result = mockMvc.perform(post("/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testUser)))
+                .andExpect(status().isOk())
+                .andReturn();
+        // THen
+        MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+
+    }
+
     @Test
     @DisplayName("본인 조회 API는 인증 주체의 userId로 사용자를 조회한다")
     void getSelfReturnsAuthenticatedUser() throws Exception {
         // given
-        TestUser testUser = fixture.createUser();
+//        TestUser testUser = fixture.createUser();
+        TestUser testUser = fixture.selectExistsUser("hkglh12@gmail.com");
         CustomUserDetails principal = principal(testUser);
 
         // when & then
-        mockMvc.perform(get("/v1/api/user/").with(user(principal)))
+        mockMvc.perform(get("/v1/api/user/me").with(user(principal)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("SUCCEED"))
                 .andExpect(jsonPath("$.result.name").value(testUser.name()))
@@ -273,6 +301,59 @@ class UserControllerTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.result.uuid").value(testUser.uuid().toString()));
     }
 
+    @Test
+    @DisplayName("비밀번호 변경 시, 정상적으로 변경요청한 비밀번호가 적용되어야 한다.")
+    @Rollback
+    void modifyUserSelfPassword() throws Exception{
+        TestUser testUser = fixture.selectExistsUser("");
+        String newPassword = "";
+        String currentPassword = "";
+        UserPasswordModifyRequest request = new UserPasswordModifyRequest(currentPassword, newPassword);
+
+        mockMvc.perform(put("/v1/api/user/me/password")
+                    .with(user(principal(testUser)))
+                    .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+
+                .andExpect(status().isOk());
+
+        String savedPassword = jdbcTemplate.queryForObject(
+                """
+                SELECT password
+                FROM user_tb
+                WHERE user_id = ?
+                """,
+                String.class,
+                testUser.id()
+        );
+
+        assertThat(encoder.matches(newPassword, savedPassword))
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("사용자가 자기자신 탈퇴요청을 하면 상태가 soft Delete 상태로 전환된다.")
+    void testUserSelfRemove() throws Exception{
+        TestUser testUser = fixture.selectExistsUser("");
+        mockMvc.perform(delete("/v1/api/user/me")
+                .with(user(principal(testUser)))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+
+        ).andExpect(status().isOk());
+
+        int status = jdbcTemplate.queryForObject(
+                """
+                        SELECT status
+                        FROM user_tb
+                        where user_id = ?
+                        """, int.class, testUser.id()
+        );
+
+        assertThat(status).isEqualTo(UserStatus.DELETED.getValue());
+    }
     private static CustomUserDetails principal(TestUser testUser) {
         User user = new User();
         user.setUserId(testUser.id());

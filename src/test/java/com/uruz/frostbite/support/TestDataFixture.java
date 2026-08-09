@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 public final class TestDataFixture {
@@ -26,6 +27,19 @@ public final class TestDataFixture {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public TestUser selectExistsUser(String email){
+        Map<String, Object> userMap = jdbcTemplate.queryForMap(
+                """
+                        SELECT name, email, user_id, uuid, status
+                        FROM user_tb
+                        WHERE email = ?
+                        """,
+                email);
+
+        return new TestUser((Integer)userMap.get("user_id"), (UUID)userMap.get("uuid"), (String)userMap.get("name"), (String)userMap.get("email"));
+
+
+    }
     public TestUser createUser() {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         UUID uuid = UUID.randomUUID();
