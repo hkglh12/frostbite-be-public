@@ -18,13 +18,16 @@ public class SwaggerConfiguration {
                         .description("API 문서")
                         .version("v1.0.0"))
                 .components(new Components()
+                        /*
                         .addSecuritySchemes("X-XSRF-TOKEN",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.APIKEY)
                                         .in(SecurityScheme.In.HEADER)
                                         .name("X-XSRF-TOKEN")
                         )
-                )
-                .addSecurityItem(new SecurityRequirement().addList("X-XSRF-TOKEN"));
+
+                         */
+                );
+                //.addSecurityItem(new SecurityRequirement().addList("X-XSRF-TOKEN"));
     }
 }
