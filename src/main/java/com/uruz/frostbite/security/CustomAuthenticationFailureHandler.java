@@ -9,12 +9,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @Slf4j
@@ -27,14 +29,21 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        log.error(exception.getMessage());
-        ResponseEntity<ApiErrorResponse> entity = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                new ApiErrorResponse(ApiErrorCode.AUTHENTICATION_FAILED, ApiErrorCode.AUTHENTICATION_FAILED.getMessage())
-        );
-        response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(mapper.writeValueAsString(entity));
 
+        log.error(exception.getMessage());
+
+        ApiErrorResponse errorResponse =
+                new ApiErrorResponse(
+                        ApiErrorCode.AUTHENTICATION_FAILED,
+                        ApiErrorCode.AUTHENTICATION_FAILED.getMessage()
+                );
+
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+
+        response.getWriter().write(
+                mapper.writeValueAsString(errorResponse)
+        );
     }
 }

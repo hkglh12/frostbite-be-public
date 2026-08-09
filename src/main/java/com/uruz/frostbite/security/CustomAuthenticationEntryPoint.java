@@ -28,9 +28,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
         log.error(authException.getMessage());
-        ResponseEntity<ApiErrorResponse> entity = ResponseEntity.badRequest().body(
-                new ApiErrorResponse(ApiErrorCode.AUTHENTICATION_REQUIRED, ApiErrorCode.AUTHENTICATION_REQUIRED.getMessage())
-        );
+        ApiErrorResponse entity = new ApiErrorResponse(ApiErrorCode.AUTHENTICATION_REQUIRED, ApiErrorCode.AUTHENTICATION_REQUIRED.getMessage());
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
