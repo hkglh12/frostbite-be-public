@@ -22,6 +22,7 @@
     - [X] [26-04-18] 사용자 비밀번호 암호화
     - [X] [26-05-04] 사용자 Self GET API
     - [X] [26-05-04] 사용자 Self Remove API 
+    - [X] [26-08-09] 사용자 Self 비밀번호 변경 API
   - 로그인 기능
     - [X] [26-04-19] Spring Security Filter Chain 설정
     - [X] [26-04-23] AuthenticationFilter, 로그인 이벤트 리스닝, Security Role 등 로그인 기능 전반
