@@ -6,6 +6,11 @@
 - IDE 설정에 아래 값 추가
   - `--spring.config.import=file:C:/workspace/frostbite/config/application-secret.properties`
 
+- VM Options 면
+  - -Dspring.config.import=file:C:/workspace/frostbite/config/application-secret.properties
+  - -Dspring.config.import=file:./application-secret.properties
+
+* 위 값은 예시.
 
 ## IN PROD
 ```shell
