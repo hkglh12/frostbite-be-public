@@ -95,7 +95,6 @@ public class SecurityConfiguration {
         CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
         repo.setCookieName("XSRF-TOKEN");      // 쿠키명에 맞춰야함
         repo.setHeaderName("X-XSRF-TOKEN");    // Swagger에서 보낼 헤더명에 맞춰야함
-        //repo.setParameterName("_csrf");
 
         return repo;
     }
