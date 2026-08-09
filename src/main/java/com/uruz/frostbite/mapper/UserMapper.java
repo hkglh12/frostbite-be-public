@@ -2,6 +2,7 @@ package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.User;
 import com.uruz.frostbite.dto.user.UserSelfQueryResponse;
+import com.uruz.frostbite.enums.user.UserStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -17,12 +18,14 @@ public interface UserMapper {
 
     public Optional<UserSelfQueryResponse> selectSelfUser(Integer userId);
 
-    public int softDeleteSelfUser(Integer userId);
+    public int softDeleteSelfUser(@Param("userId")Integer userId, @Param("status")UserStatus status);
 
     public Optional<User> selectUserByUuid(UUID uuid);
     public Optional<User> selectUserByUserId(Integer userId);
 
+    public int updateUserPassword(@Param("userId") Integer userId, @Param("newPassword")String newPassword);
     public boolean selectUserExistsByNameAndPhoneNumber(@Param("email") String email, @Param("phoneNumber")String phoneNumber);
 
     public User selectUserByEmail(String email);
+    public User selectUserByUserIdForPassword(Integer userId);
 }

@@ -34,6 +34,15 @@
             user_id = #{userId}
     </update>
 
+    <update id="updateUserPassword">
+        UPDATE
+            user_tb
+        set
+            password = #{newPassword}
+        WHERE
+            user_id = #{userId}
+    </update>
+
     <select id="selectUserExistsByNameAndPhoneNumber" resultType="boolean">
         SELECT EXISTS(
             SELECT user_id
@@ -61,5 +70,11 @@
         SELECT email, password, account_type, status, uuid, user_id
         FROM user_tb
         WHERE email = #{email}
+    </select>
+    <select id="selectUserByUserIdForPassword" resultType="User">
+        /** selectUserByEmail */
+        SELECT email, password, account_type, status, uuid, user_id
+        FROM user_tb
+        WHERE user_id = #{userId}
     </select>
 </mapper>

@@ -3,6 +3,7 @@ package com.uruz.frostbite.controller;
 import com.uruz.frostbite.configuration.SwaggerExamples;
 import com.uruz.frostbite.dto.user.UserJoinRequest;
 import com.uruz.frostbite.dto.user.UserJoinResponse;
+import com.uruz.frostbite.dto.user.UserPasswordModifyRequest;
 import com.uruz.frostbite.dto.user.UserSelfQueryResponse;
 import com.uruz.frostbite.dto.wrapper.ApiErrorResponse;
 import com.uruz.frostbite.dto.wrapper.ApiSucceedResponse;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,6 +33,8 @@ public class UserController {
     public UserController(UserService userService){
         this.userService = userService;
     }
+
+
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -99,7 +103,7 @@ public class UserController {
 
             )
     })
-    @GetMapping(value="/")
+    @GetMapping("/me")
     @Operation(summary="사용자 본인 정보조회", description="사용자 본인 정보조회")
     public ResponseEntity<?> getSelfUser(
             // 추후 JWT 기반으로 전환 예정, 이 시점부터 JWT로부터 사용자 정보 취득(RedisMapping) -> SecurityCTX에서 값을 뽑아서 조회하는 방식으로 변경 예정
@@ -111,20 +115,32 @@ public class UserController {
     }
 
     /** 사용자 탈퇴 */
-    @DeleteMapping(value="/")
+    @DeleteMapping("/me")
     public ResponseEntity<?> removeUser(
             // 추후 JWT 기반으로 전환 예정, 이 시점부터 JWT로부터 사용자 정보 취득(RedisMapping) -> SecurityCTX에서 값을 뽑아서 조회하는 방식으로 변경 예정
             @AuthenticationPrincipal(expression = "userId") Integer userId
     ){
         boolean result = userService.removeSelfUser(userId);
-        return null;
+
+        return ResponseEntity.ok(new ApiSucceedResponse<>(result));
     }
 
-    @PutMapping(value="/")
+    @PutMapping(value = "/me/password")
+    public ResponseEntity<?> modifyUserPassword(
+            @AuthenticationPrincipal(expression = "userId") Integer userId,
+            @Validated @RequestBody  UserPasswordModifyRequest passwordRequest
+    ){
+
+        boolean result = userService.modifySelfPassword(userId, passwordRequest);
+
+        return ResponseEntity.ok(new ApiSucceedResponse<>(result));
+    }
+
+    // 사용자 개별정보 중 변경허용 -> 현 시점에서 비밀번호만
+    //@PutMapping(value="/")
+
     public ResponseEntity<?> modifyUser(){
-        // 추후 JWT 기반으로 전환 예정, 이 시점부터 JWT로부터 사용자 정보 취득(RedisMapping) -> SecurityCTX에서 값을 뽑아서 조회하는 방식으로 변경 예정
 
         return null;
     }
-
 }

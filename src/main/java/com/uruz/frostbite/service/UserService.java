@@ -4,12 +4,15 @@ import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.domain.User;
 import com.uruz.frostbite.dto.user.UserJoinRequest;
 import com.uruz.frostbite.dto.user.UserJoinResponse;
+import com.uruz.frostbite.dto.user.UserPasswordModifyRequest;
 import com.uruz.frostbite.dto.user.UserSelfQueryResponse;
 import com.uruz.frostbite.enums.user.AccountType;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
+import com.uruz.frostbite.enums.user.UserStatus;
 import com.uruz.frostbite.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.CustomAutowireConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,9 +89,24 @@ public class UserService {
         return userSelfQueryResponse;
     }
 
+    /** 사용자 탈퇴 */
+
     public boolean removeSelfUser(Integer userId){
 
-        return userMapper.softDeleteSelfUser(userId) == 1 ? true : false;
+        return userMapper.softDeleteSelfUser(userId, UserStatus.DELETED) == 1 ? true : false;
+    }
+
+    /** 사용자 비밀번호 변경 */
+    public boolean modifySelfPassword(Integer userId, UserPasswordModifyRequest passwordRequest){
+
+        User user = userMapper.selectUserByUserIdForPassword(userId);
+
+        if(!bcryptor.matches(passwordRequest.getCurrentPassword(), user.getPassword())) {
+            throw new GeneralCustomException("USER PASSWORD NOT MATCHES");
+        }
+        // FE에서 별도로 암호화 하지 않고 날아옴을 전제함.
+        String newEncPassword = bcryptor.encode(passwordRequest.getNewPassword());
+        return userMapper.updateUserPassword(userId, newEncPassword) == 1 ? true : false;
     }
 
     /** 타 메서드 헬퍼 */
