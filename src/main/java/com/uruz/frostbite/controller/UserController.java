@@ -137,10 +137,12 @@ public class UserController {
     }
 
     // 사용자 개별정보 중 변경허용 -> 현 시점에서 비밀번호만
-    //@PutMapping(value="/")
-
+    /*
+    @PutMapping(value="/")
     public ResponseEntity<?> modifyUser(){
 
         return null;
     }
+
+     */
 }
