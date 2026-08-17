@@ -2,6 +2,7 @@ package com.uruz.frostbite.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.File;
 import com.uruz.frostbite.domain.FileTemp;
 import com.uruz.frostbite.domain.WorkflowRequest;
@@ -9,6 +10,7 @@ import com.uruz.frostbite.dto.file.FileCreateRequest;
 import com.uruz.frostbite.dto.file.SimpleFileResponse;
 import com.uruz.frostbite.dto.file.TempFileMetaInfoDraft;
 import com.uruz.frostbite.enums.FileStatus;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.enums.workflow.Workflow;
 import com.uruz.frostbite.enums.workflow.WorkflowDomainType;
 import com.uruz.frostbite.utils.TempFileUtils;
@@ -76,7 +78,7 @@ public class FileOrchestrationService {
     }
     /** 임시파일 정보를 parameter로 file_tb 초안 등록 */
     @Transactional
-    public SimpleFileResponse registerFile(FileCreateRequest request, UUID folderUuid, Integer createUserId) {
+    public SimpleFileResponse registerFile(FileCreateRequest request, UUID folderUuid, Integer createUserId) throws RequestProcessingException{
 
         // 파일 테이블 등록 + 파일 워크플로우 상태 row 등록
         File initialFile = fileService.registInitialFile(request, folderUuid, createUserId);
@@ -87,8 +89,8 @@ public class FileOrchestrationService {
         try{
             requestPayloadString = mapper.writeValueAsString(request);
         } catch(IOException IOE) {
-            // IOE는 @Transactional 에 안걸린다.
-            throw new GeneralCustomException("JSON PARSING ERROR");
+            // CheckedException은 rollback 트리거 대상이 아님. 그러나 unCheckedException으로 래핑해서 던지면 Rollback 대상이됨
+            throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_JSON_PARSE);
         }
         // 대기상태인 워크플로우 요청 등록
         WorkflowRequest workflowRequest = workflowService.registerWaitingWorkflowRequest(WorkflowDomainType.WF_TYPE_FILE,
@@ -107,7 +109,7 @@ public class FileOrchestrationService {
                         try {
                             // 왜 직접 executor에 execute 호출?
                             // 1. @Async 호출 사용 시, Policy를 Abort로 잡으면 예외 발생시 Spring Proxy 내에서 Exception이 터짐
-                            // 2. Asybc 진입 중 Proxy 내에서 터진 Exception을 관리하려면 별도 설정을 잡아줘야함. 비즈니스 로직 외부로 튕겨나가서
+                            // 2. Async 진입 중 Proxy 내에서 터진 Exception을 관리하려면 별도 설정을 잡아줘야함. 비즈니스 로직 외부로 튕겨나가서
                             // 잡히므로 흐름 따라가기 힘들것 같기도 하고, 설정 공부가 오버헤드 같기도 함.
                             //  -> 추후 다시 공부하기로 하고, 현시점 execute() 호출로 변경
                             // * 유의점 : 이 execute는 "진입시" exception만 잡힘. 비동기 진입 후 Exception을 잡지는 못함을 명심할것
@@ -136,8 +138,7 @@ public class FileOrchestrationService {
     }
 
     /** 임시파일 JAVA -> Application Temp로 이동, 임시파일 정보 등록*/
-    @Transactional
-    public TempFileMetaInfoDraft registerTempFile(MultipartFile file, UUID folderUuid, Integer createUserId){
+    public TempFileMetaInfoDraft registerTempFile(MultipartFile file, UUID folderUuid, Integer createUserId) {
         // TODO Folder_Tb 내 폴더에 접근 권한 있는지 확인 필요
         // 업로드하려는 폴더에 권한이 있는지 확인정도는 해줘야함.
 
@@ -149,15 +150,15 @@ public class FileOrchestrationService {
               draft.getFileSize(), createUserId, tempFileUtils.getTempFileTTLToSeconds());
         try {
             fileService.insertFileTemp(fileTemp);
-        }catch(Exception e){
+        } catch(Exception e) {
             // DB Insert 실패 시 copy한 임시파일 삭제필요
             try {
                 directFileHandleComponent.deleteTempFile(draft.getTempFileUuid());
             } catch(Exception EE){
                 EE.printStackTrace();
-                throw new GeneralCustomException("FILE REMOVE FAILED IN REGISTER TEMP FILE FLOW");
+                throw new RequestProcessingException(ApiErrorCode.INTERNAL_RESOURCE_HANDLE_FAILED);
             }
-            throw new GeneralCustomException("TEMP FILE REGISTRATION FAILED");
+            throw e;
         }
         return draft;
     }

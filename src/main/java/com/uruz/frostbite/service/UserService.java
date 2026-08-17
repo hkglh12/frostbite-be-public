@@ -1,6 +1,6 @@
 package com.uruz.frostbite.service;
 
-import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.User;
 import com.uruz.frostbite.dto.user.UserJoinRequest;
 import com.uruz.frostbite.dto.user.UserJoinResponse;
@@ -12,15 +12,12 @@ import com.uruz.frostbite.enums.user.UserStatus;
 import com.uruz.frostbite.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.CustomAutowireConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.UUID;
-
-import static com.uruz.frostbite.enums.common.ApiErrorCode.NOT_FOUND;
 
 @Service
 @Slf4j
@@ -39,16 +36,23 @@ public class UserService {
         this.folderService = folderService;
     }
 
+    public boolean assertUserEmailExists(String email){
+        return userMapper.selectUserEmailExists(email);
+    }
+
     /** 사용자 추가 */
     @Transactional
-    public UserJoinResponse createUser(UserJoinRequest request) throws GeneralCustomException {
+    public UserJoinResponse createUser(UserJoinRequest request) throws RequestProcessingException {
         String encPassword = bcryptor.encode(request.getPassword());
         LocalDate createDate = LocalDate.now();
 
-        boolean isExists = userMapper.selectUserExistsByNameAndPhoneNumber(request.getEmail(), request.getPhoneNumber());
-        if(isExists){
-            throw new GeneralCustomException(ApiErrorCode.USER_EMAIL_OR_PHONE_ALREADY_EXISTS);
+        if(userMapper.selectUserEmailExists(request.getEmail())) {
+            throw new RequestProcessingException(ApiErrorCode.USER_EMAIL_ALREADY_EXISTS);
         }
+        if(userMapper.selectUserExistsByPhoneNumber(request.getPhoneNumber())){
+            throw new RequestProcessingException(ApiErrorCode.USER_PHONE_NUMBER_ALREADY_EXISTS);
+        }
+
         User user = User.create(
                 request.getName(),
                 request.getEmail(),
@@ -83,7 +87,7 @@ public class UserService {
     /** 사용자 본인 정보 조회 (자기자신 정보만 조회 가능) */
     public UserSelfQueryResponse getSelfUesr(Integer userId){
         UserSelfQueryResponse userSelfQueryResponse = userMapper.selectSelfUser(userId).orElseThrow(
-                () -> new GeneralCustomException(NOT_FOUND, "USER NOT FOUND")
+                () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
         );
 
         return userSelfQueryResponse;
@@ -102,7 +106,7 @@ public class UserService {
         User user = userMapper.selectUserByUserIdForPassword(userId);
 
         if(!bcryptor.matches(passwordRequest.getCurrentPassword(), user.getPassword())) {
-            throw new GeneralCustomException("USER PASSWORD NOT MATCHES");
+            throw new RequestProcessingException(ApiErrorCode.USER_PASSWORD_NOT_MATCH);
         }
         // FE에서 별도로 암호화 하지 않고 날아옴을 전제함.
         String newEncPassword = bcryptor.encode(passwordRequest.getNewPassword());
@@ -110,12 +114,12 @@ public class UserService {
     }
 
     /** 타 메서드 헬퍼 */
-    public User getUserByUuid(UUID uuid) throws GeneralCustomException{
-        return userMapper.selectUserByUuid(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
+    public User getUserByUuid(UUID uuid) throws RequestProcessingException {
+        return userMapper.selectUserByUuid(uuid).orElseThrow(() -> new RequestProcessingException(ApiErrorCode.NOT_FOUND));
     }
 
-    public User getUserByUserId(Integer userId) throws GeneralCustomException{
-        return userMapper.selectUserByUserId(userId).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
+    public User getUserByUserId(Integer userId) throws RequestProcessingException {
+        return userMapper.selectUserByUserId(userId).orElseThrow(() -> new RequestProcessingException(ApiErrorCode.NOT_FOUND));
     }
 
     /** UserDetailsService에서 사용할 Password 포함 리턴 메서드*/

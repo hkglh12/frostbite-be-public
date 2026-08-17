@@ -1,6 +1,7 @@
 package com.uruz.frostbite.service;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.RelUserTeam;
 import com.uruz.frostbite.domain.Team;
 import com.uruz.frostbite.domain.User;
@@ -49,7 +50,7 @@ public class TeamService {
         teamMapper.insertTeam(team);
 
         if(team.getTeamId() == null){
-            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "TEAM CREATION FAILED");
+            throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
         }
 
         RelUserTeam relation = self.createUserTeamRelation(createUserId, team.getTeamId());
@@ -102,7 +103,7 @@ public class TeamService {
         int affectedRow = teamMapper.updateTeam(command);
 
         if(affectedRow == 0){
-            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "TEAM INFORMATION UPDATE FAILED");
+            throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
         }
 
 
@@ -153,10 +154,10 @@ public class TeamService {
 
 
     /** 팀 엔티티 조회 헬퍼 메서드 */
-    public Team getTeam(UUID uuid) throws GeneralCustomException{
+    public Team getTeam(UUID uuid) throws RequestProcessingException{
 
         return teamMapper.selectTeam(uuid).orElseThrow(
-                () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "TEAM INFORMATION NOTFOUND")
+                () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
         );
     }
 

@@ -1,10 +1,13 @@
 package com.uruz.frostbite.service.unitTaskExecutor;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.InternalProcessingException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.FileTemp;
 import com.uruz.frostbite.domain.UnitTaskRequest;
 import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.dto.workflow.internal.FileWorkflowDraft;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.enums.workflow.UnitTask;
 import com.uruz.frostbite.service.DirectFileHandleComponent;
 import com.uruz.frostbite.service.FileService;
@@ -72,7 +75,8 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
             draft.setDestFilePath(MapUtils.getString(destInfo, "destFilePath"));
             return draft;
         } catch (Exception e) {
-            throw new GeneralCustomException("COPY STORAGE UNITTASK FAILED : " + e.getMessage());
+            e.printStackTrace();
+            throw new InternalProcessingException(ApiErrorCode.INTERNAL_RESOURCE_HANDLE_FAILED.getMessage());
 
         }
     }

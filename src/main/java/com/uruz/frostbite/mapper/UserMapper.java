@@ -24,8 +24,16 @@ public interface UserMapper {
     public Optional<User> selectUserByUserId(Integer userId);
 
     public int updateUserPassword(@Param("userId") Integer userId, @Param("newPassword")String newPassword);
-    public boolean selectUserExistsByNameAndPhoneNumber(@Param("email") String email, @Param("phoneNumber")String phoneNumber);
+    // FE로 가입 시 오류 사유를 나누어서 전달하기 위해 사유 분리
+    @Deprecated
+    public boolean selectUserExistsByEmailAndPhoneNumber(@Param("email") String email, @Param("phoneNumber")String phoneNumber);
+    public boolean selectUserExistsByEmail(@Param("email") String email);
+    public boolean selectUserExistsByPhoneNumber(@Param("phoneNumber")String phoneNumber);
 
     public User selectUserByEmail(String email);
     public User selectUserByUserIdForPassword(Integer userId);
+
+    /** Assertions */
+    public boolean selectUserEmailExists(String email);
+    public boolean selectUserPhoneNumberExists(String phoneNumber);
 }

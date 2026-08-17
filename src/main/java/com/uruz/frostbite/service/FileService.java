@@ -2,6 +2,7 @@ package com.uruz.frostbite.service;
 
 
 import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.File;
 import com.uruz.frostbite.domain.FileTemp;
 import com.uruz.frostbite.domain.FileWorkflowStatus;
@@ -10,6 +11,7 @@ import com.uruz.frostbite.dto.file.FileCreateRequest;
 import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.FileTempStatus;
 import com.uruz.frostbite.enums.WorkflowStatus;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.mapper.FileMapper;
 import com.uruz.frostbite.service.resolver.FolderResolverService;
 import lombok.extern.slf4j.Slf4j;
@@ -47,10 +49,10 @@ public class FileService {
         // Temp UUID로부터 유효한 UUID인지 검증`
         FileTemp fileTemp = fileMapper.selectReadyTempFileByUuid(request.getTempFileUuid(), FileTempStatus.READY);
         if(fileTemp == null){
-            throw new GeneralCustomException("TEMP FILE UUID INVALID");
+            throw new RequestProcessingException(ApiErrorCode.NOT_FOUND);
         }
         if(!createUserId.equals(fileTemp.getCreateUserId())){
-            throw new GeneralCustomException("YOU ARE TRYING TO ACCESS OTHERS' FILE");
+            throw new RequestProcessingException(ApiErrorCode.RESOURCE_SCOPE_DENIED);
         }
         Folder folder = folderResolverService.resolveFolderByUuid(folderUuid);
         // TODO FolderUUID로부터 업로드 권한 확인
@@ -104,5 +106,5 @@ public class FileService {
         fileMapper.markFileAsActive(fileId, FileStatus.ACTIVE);
     }
 
-
+    public void removeFileAsCompensation(Long fileId) {fileMapper.deleteFileImmediately(fileId);}
 }

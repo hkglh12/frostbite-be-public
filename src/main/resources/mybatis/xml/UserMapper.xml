@@ -43,13 +43,32 @@
             user_id = #{userId}
     </update>
 
-    <select id="selectUserExistsByNameAndPhoneNumber" resultType="boolean">
+    <!--Deprecated-->
+    <select id="selectUserExistsByEmailAndPhoneNumber" resultType="boolean">
         SELECT EXISTS(
             SELECT user_id
             FROM USER_TB
             WHERE
                 email = #{email}
             OR
+                phone_number = #{phoneNumber}
+        )
+    </select>
+    <select id="selectUserExistsByEmail" resultType="boolean">
+        SELECT EXISTS(
+            SELECT user_id
+            FROM USER_TB
+            WHERE
+                email = #{email}
+        )
+    </select>
+    <select id="selectUserExistsByPhoneNumber" resultType="boolean">
+        SELECT EXISTS(
+            SELECT user_id
+            FROM USER_TB
+            WHERE
+                email = #{email}
+               OR
                 phone_number = #{phoneNumber}
         )
     </select>
@@ -76,5 +95,21 @@
         SELECT email, password, account_type, status, uuid, user_id
         FROM user_tb
         WHERE user_id = #{userId}
+    </select>
+
+    <!-- Assertions -->
+    <select id="selectUserEmailExists" resultType="boolean">
+        SELECT EXISTS(
+            SELECT uuid
+            FROM user_tb
+            WHERE email = #{email}
+        )
+    </select>
+    <select id="selectUserPhoneNumberExists" resultType="boolean">
+        SELECT EXISTS(
+            SELECT uuid
+            FROM user_tb
+            WHERE phone_number = #{phoneNumber}
+        )
     </select>
 </mapper>

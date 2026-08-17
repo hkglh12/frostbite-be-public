@@ -261,7 +261,6 @@ public class FolderService {
         return FolderDetailsResponse.from(draft, resourcScopeName, createUser.getName(), modifyUser.map(User::getName).orElse(null));
     }
 
-    @Transactional
     /** 폴더 메타정보 수정 */
     public SimpleFolderResponse modifyFolder(Integer userId, UUID targetFolderUuid, FolderModifyRequest request){
         FolderModifyCommand command = FolderModifyCommand.builder()
@@ -269,12 +268,6 @@ public class FolderService {
                 .name(request.getName())
                 .build();
         int affectedRow = folderMapper.updateFolder(command);
-
-        if(affectedRow == 0){
-            throw new GeneralCustomException(ApiErrorCode.NOT_FOUND, "Target folder not found");
-        } else if(affectedRow > 1){
-            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "More than one folder affected");
-        }
 
         SimpleFolderResponse resultFolder = selectSimpleFolderByFolderUuid(targetFolderUuid);
 
@@ -310,10 +303,6 @@ public class FolderService {
 
         int affectedRow = folderMapper.updateFolderParent(command);
 
-        if(affectedRow < 0) {
-            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "FOLDER MOVE FAILED");
-        }
-
         // TODO 현재는 Mybatis 레벨에서 concat(||) 로 폴더경로를 만들고있다.
         // 이걸 JAVA 레벨로 끌어올려야 한다. 비즈니스 로직 (폴더 이동에 따른 경로계산) 이 SQL 레이어에 숨는다는 유지보수 어려움과
         // XML이 복잡해지는것을 방지하기 위함
@@ -330,17 +319,8 @@ public class FolderService {
         return selectSimpleFolderByFolderUuid(targetFolderUuid);
     }
 
-    @Transactional
     public boolean softDeleteFolder(Integer userId, UUID folderUuid){
-        int affectedRows = folderMapper.updateFolderStatusAsDelete(folderUuid, FolderStatus.DELETED);
-
-        if(affectedRows == 0){
-            throw new GeneralCustomException(ApiErrorCode.NOT_FOUND, "Target folder not found");
-        } else if (affectedRows > 1){
-            throw new GeneralCustomException(ApiErrorCode.INTERNAL_ERROR, "More than one row affected");
-        } else {
-            return true;
-        }
+        return folderMapper.updateFolderStatusAsDelete(folderUuid, FolderStatus.DELETED) == 1 ? true : false;
     }
 
     /** 폴더 조회 시 ACL 조회 */

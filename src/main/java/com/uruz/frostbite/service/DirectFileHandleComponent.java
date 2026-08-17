@@ -1,9 +1,12 @@
 package com.uruz.frostbite.service;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.InternalProcessingException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.dto.encrypt.EncryptedFileMagicHeader;
 import com.uruz.frostbite.dto.file.TempFileMetaInfoDraft;
 import com.uruz.frostbite.enums.EncryptFormatVersion;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.utils.CipherUtils;
 import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.PostConstruct;
@@ -82,12 +85,12 @@ public class DirectFileHandleComponent {
 
         if(destDirectory.exists()){
             if(destDirectory.isFile()) {
-                throw new GeneralCustomException("Temporal Folder Path is File");
+                throw new InternalProcessingException("Temporal Folder Path is File");
             }
         } else {
             boolean dirCreateSucceed = destDirectory.mkdirs();
             if(!dirCreateSucceed){
-                throw new GeneralCustomException("Temporal Folder path creation failed");
+                throw new InternalProcessingException("Temporal Folder path creation failed");
             }
         }
         try {
@@ -108,7 +111,7 @@ public class DirectFileHandleComponent {
         } catch(IOException IOE){
             log.error(IOE.getMessage());
             // multipartFile 은 request 종료시 cleanup 대상. 따라서 transferTo 실패했다면 굳이 명시적으로 삭제할 필요 없음
-            throw new GeneralCustomException(IOE.getMessage());
+            throw new InternalProcessingException(IOE.getMessage());
         }
     }
 
@@ -124,12 +127,12 @@ public class DirectFileHandleComponent {
 
         if(destDirectory.exists()){
             if(destDirectory.isFile()) {
-                throw new GeneralCustomException("Temporal Folder Path is File");
+                throw new InternalProcessingException("Temporal Folder Path is File");
             }
         } else {
             boolean dirCreateSucceed = destDirectory.mkdirs();
             if(!dirCreateSucceed){
-                throw new GeneralCustomException("Temporal Folder path creation failed");
+                throw new InternalProcessingException("Temporal Folder path creation failed");
             }
         }
         File destFile = new File(destFilePath + "/" + destFileName+".processing");
@@ -291,8 +294,9 @@ public class DirectFileHandleComponent {
             throw e;
         }
     }
+
     /** MultipartFile Spring 임시폴더 경로에서 Application 임시 폴더로 이동*/
-    public TempFileMetaInfoDraft reallocateTempFile(MultipartFile multipartFile) throws GeneralCustomException {
+    public TempFileMetaInfoDraft reallocateTempFile(MultipartFile multipartFile) throws RequestProcessingException, InternalProcessingException {
         // yml 임시폴더겨올 + UUID를 통한 임시파일
         UUID applicationTempFileUuid = UUID.randomUUID();
         File tempFile = new File(resolveApplicationTempFilePathByUuid(applicationTempFileUuid).toString());
@@ -301,7 +305,7 @@ public class DirectFileHandleComponent {
         long fileSize = multipartFile.getSize();
 
         if(fileSize == 0L){
-            throw new GeneralCustomException("FILE SIZE IS 0");
+            throw new RequestProcessingException(ApiErrorCode.BAD_REQUEST);
         }
 
         if(tempFile.exists()) {
@@ -309,7 +313,7 @@ public class DirectFileHandleComponent {
             applicationTempFileUuid = UUID.randomUUID();
             tempFile  = new File(FROSTBITE_TEMP_LOCATION + applicationTempFileUuid.toString());
             if(tempFile.exists()){
-                throw new GeneralCustomException("UUID PATH DUPLICATED MORE THAN TWICE");
+                throw new RequestProcessingException(ApiErrorCode.INTERNAL_RESOURCE_HANDLE_FAILED);
             }
         }
         try {
@@ -319,7 +323,7 @@ public class DirectFileHandleComponent {
         }catch(IOException IOE){
             log.error(IOE.getMessage());
             // multipartFile 은 request 종료시 cleanup 대상. 따라서 transferTo 실패했다면 굳이 명시적으로 삭제할 필요 없음
-            throw new GeneralCustomException(IOE.getMessage());
+            throw new RequestProcessingException(ApiErrorCode.INTERNAL_RESOURCE_HANDLE_FAILED);
         }
     }
 

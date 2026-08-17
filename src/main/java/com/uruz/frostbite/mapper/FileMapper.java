@@ -45,4 +45,6 @@ public interface FileMapper {
                                                  @Param("currentTime")LocalDateTime currentTime);
 
     void markFileAsActive(@Param("fileId") Long fileId, @Param("status") FileStatus status);
+
+    void deleteFileImmediately(@Param("fileId") Long fileId);
 }

@@ -1,7 +1,6 @@
 package com.uruz.frostbite.service.resolver;
 
-import com.uruz.frostbite.customException.ResourceAccessDeniedException;
-import com.uruz.frostbite.customException.ResourceActionForbiddenException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.FolderAcl;
 import com.uruz.frostbite.dto.team.internal.TeamUserRelationProjection;
 import com.uruz.frostbite.enums.AclEffectType;
@@ -9,6 +8,7 @@ import com.uruz.frostbite.enums.AclStatus;
 import com.uruz.frostbite.enums.FolderType;
 import com.uruz.frostbite.enums.PermissionBitMask;
 import com.uruz.frostbite.dto.folder.internal.FolderTargetAccessControlProjection;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.enums.team.TeamRole;
 import com.uruz.frostbite.mapper.AclMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +51,7 @@ public class AccessControlResolverService {
                 // 추후 개발 예정인 공유 기능은 공유테이블, 공유쪽 acl로 처리할 예정. parameter로 페이지 접근 시 isShare=true 로 들어오면 됨
                 return true;
             } else {
-                throw new ResourceAccessDeniedException("User information is not match with resource scope");
+                throw new RequestProcessingException(ApiErrorCode.RESOURCE_SCOPE_DENIED);
             }
         } else {
             teamId = folderProjection.getResourceScopeTeamId();
@@ -67,7 +67,7 @@ public class AccessControlResolverService {
             // 단, subject_type = team && effect_type = allow + subject_type = user && effect_type = deny 는 있을 수 있으므로,사용자 deny 검사 수행
             //TODO DB에는 effectType을 effect_type으로 관리하는데 java에서는 AclEffectType이다. DB 및 관련 문서 모두 AclEffectType으로 올라가야 한다.
             if(aclMapper.isUserDeniedByAcl(userId, folderId, AclEffectType.DENY, AclStatus.ACTIVE)){
-                throw new ResourceAccessDeniedException("User is explicitly denied from resource");
+                throw new RequestProcessingException(ApiErrorCode.RESOURCE_EXPLICITLY_DENIED);
             }
 
         }
@@ -90,13 +90,13 @@ public class AccessControlResolverService {
         // 따라서 folderType 별로 if 분기를 할 필요 없이 max 값만 가져오면 일단 "허용 된 케이스에 대한 MAX Perm ACL" 을 가져올 수 있다.
         // 이때, "팀에는 거부되었으나 특정 사용자에게는 허용" 의 경우가 있을 수 있으므로, (team ACL 없음, 몇몇 User ACL ALLOW 있음) -> effectTYpe = allow를 명시적으로 걸어야함.
         FolderAcl maxPermissionAFolderAcl = aclMapper.selectActiveFolderMaxPermAclForEval(userId, teamId, folderId, AclEffectType.ALLOW, AclStatus.ACTIVE).orElseThrow(
-                () -> new ResourceAccessDeniedException("User is not allowed explicitly")
+                () -> new RequestProcessingException(ApiErrorCode.RESOURCE_EXPLICITLY_DENIED)
         );
 
         if(maxPermissionAFolderAcl.hasPermission(claimedAction)){
            return true;
         } else {
-            throw new ResourceActionForbiddenException("Claimed action forbidden");
+            throw new RequestProcessingException(ApiErrorCode.ACTION_DENIED);
         }
 
     }

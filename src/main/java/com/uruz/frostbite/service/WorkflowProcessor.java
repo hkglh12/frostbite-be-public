@@ -3,8 +3,9 @@ package com.uruz.frostbite.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uruz.frostbite.customException.InternalProcessingException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.customException.GeneralCustomException;
-import com.uruz.frostbite.customException.QuitelyPropagationException;
 import com.uruz.frostbite.domain.UnitTaskRequest;
 import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.dto.file.FileCreateRequest;
@@ -159,7 +160,7 @@ public class WorkflowProcessor {
                         succeedTaskExecutor.markOnSucceed(succeedUnitTaskRequest, workflowRequest, succeedDraft, succeedTime);
                     });
 
-                } catch (GeneralCustomException ge){
+                } catch (InternalProcessingException ge){
 
                     // 실패 정보 관리는 원자적이어야 한다고 생각
                     // WorkflowProcessor가 UnitTask실패 통보를, UnitTask가 관심사 도메인의 상태값 변경을
@@ -177,8 +178,8 @@ public class WorkflowProcessor {
                         workflowService.markWorkflowRequestFailed(workflowRequestId, LocalDateTime.now(), failedUnitTaskExecutor.getUnitTask() + " : UNIT TASK FAILED");
                     });
 
-                    throw new GeneralCustomException("FAILURE TRIGGERED");
-                } catch (QuitelyPropagationException qe){
+                    throw new InternalProcessingException("FAILURE TRIGGERED");
+                } catch (RequestProcessingException qe){
                     UnitTaskExecutor succeedTaskExecutor = taskExecutor;
                     FileWorkflowDraft succeedDraft = draft;
                     UnitTaskRequest succeedUnitTaskRequest = currentUnitTaskRequest;
@@ -193,7 +194,7 @@ public class WorkflowProcessor {
                 }
             }
             workflowService.markWorkflowRequestSucceed(workflowRequestId, LocalDateTime.now());
-        } catch (GeneralCustomException e){
+        } catch (RequestProcessingException e){
             // 후속처리 (workflow 실패)
             // 후속처리 (SSE 발급)
             e.printStackTrace();;

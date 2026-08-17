@@ -1,15 +1,14 @@
 package com.uruz.frostbite.service.resolver;
 
-import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.User;
+import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
-
-import static com.uruz.frostbite.enums.common.ApiErrorCode.NOT_FOUND;
 
 @Service
 public class UserResolverService {
@@ -18,8 +17,8 @@ public class UserResolverService {
     public UserResolverService(@Autowired UserMapper userMapper){
         this.userMapper  = userMapper;
     }
-    public User getUser(UUID uuid) throws GeneralCustomException {
-        return userMapper.selectUserByUuid(uuid).orElseThrow(() -> new GeneralCustomException(NOT_FOUND));
+    public User getUser(UUID uuid) throws RequestProcessingException {
+        return userMapper.selectUserByUuid(uuid).orElseThrow(() -> new RequestProcessingException(ApiErrorCode.NOT_FOUND));
     }
 
 

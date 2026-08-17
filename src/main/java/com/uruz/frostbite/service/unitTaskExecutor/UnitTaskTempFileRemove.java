@@ -1,7 +1,7 @@
 package com.uruz.frostbite.service.unitTaskExecutor;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
-import com.uruz.frostbite.customException.QuitelyPropagationException;
+import com.uruz.frostbite.customException.InternalProcessingException;
 import com.uruz.frostbite.domain.UnitTaskRequest;
 import com.uruz.frostbite.domain.WorkflowRequest;
 import com.uruz.frostbite.dto.workflow.internal.FileWorkflowDraft;
@@ -43,10 +43,10 @@ public class UnitTaskTempFileRemove implements UnitTaskExecutor{
     public FileWorkflowDraft process(UnitTaskRequest unitTask, WorkflowRequest request, FileWorkflowDraft draft) {
         String tempFilePath = directFileHandleComponent.resolveApplicationTempFilePathByUuid(draft.getApplicationTempFileUuid()).toString();
         if(StringUtils.isEmpty(tempFilePath)){
-            throw new GeneralCustomException("TEMP FILE PATH IS NULL");
+            throw new InternalProcessingException("TEMP FILE PATH IS NULL");
         }
         if(!Files.exists(Path.of(tempFilePath))) {
-            throw new GeneralCustomException("TEMP FILE NOT EXISTS");
+            throw new InternalProcessingException("TEMP FILE NOT EXISTS");
         }
         try{
             directFileHandleComponent.deleteTempFile(draft.getApplicationTempFileUuid());
@@ -54,7 +54,7 @@ public class UnitTaskTempFileRemove implements UnitTaskExecutor{
         }catch(IOException IOE){
             draft.setRemoveSucceed(false);
             IOE.printStackTrace();
-            throw new QuitelyPropagationException("IO EXCEPTION, File Remove Failed");
+            throw new InternalProcessingException("IO EXCEPTION, File Remove Failed");
         }
 
         return draft;
