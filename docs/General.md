@@ -18,7 +18,7 @@
 
 ### ENUM의 활용
 - ENUM은 JAVA영역에서는 ENUM인 상태로 순회한다
-- Repository 계층 진입 시, TypeHandler에게 위임하여 DB에서 표현 가능한 boolean / int 값으로 치환한다.
+- Repository 계층 진입 시, TypeHandler에게 위임하여 DB에서 표현 가능한 boolean / int / String 값으로 치환한다.
 
 ### FE 응답
 - 리턴 흐름에서 서비스레벨 -> 컨트롤러 레벨까지는 각각의 DTO/VO로 리턴한다. (서비스의 리턴값을 한눈에 알아볼 수 있도록)
@@ -29,3 +29,11 @@
 - 주어진 조건으로 select에 실패했을 경우 notFound* 계열 Exception을 던지고 GlobalExceptionHandler에서 HTTP status 코드값을 적절히 값을 나타내는 코드로 변환, 에러 전용 DTO로 리턴한다.
   - statusCode는 globalExceptionHandler에서도 ResponseEntity를 사용할것이므로 httpstatus code는 제외, message, timestamp(api요청시각), code(ENUM, 별도의 오류정보)을 가지도록 한다.
   - 이때, String message는 code의 message값을, code는 enum의 코드값을 활용한다.
+
+
+### Optional의 사용
+  - "어떠한 연산의 결과" 가 값 없음이 발생할 수 있다면, Optional로 처리한다.
+    - 예 : count 의 0 은 결과없음 이 아니라 0건이 나온것임
+    - 사용자 조회를 했는데, 0 개가 리턴됨 -> 실제로 "값 없음" 발생. 이 케이스에 적합함
+  - orElse, orElseThrow의 결정은 그 Optional을 가져다쓰려는 "비즈니스 로직"에서 처리하도록 한다.
+    - 하위 계층에 숨어있으면 코드를 한눈에 알아보기 힘들고, 실제로 '그 값이 문제라서 null 처리를 해야하는' 것은 비즈니스 레벨에서 결정하기 때문.
