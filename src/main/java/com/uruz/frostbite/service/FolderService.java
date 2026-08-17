@@ -1,9 +1,15 @@
 package com.uruz.frostbite.service;
 
 import com.uruz.frostbite.customException.GeneralCustomException;
+import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.domain.Team;
 import com.uruz.frostbite.domain.User;
+import com.uruz.frostbite.dto.common.paging.CursorBasePagination;
+import com.uruz.frostbite.dto.common.paging.OffsetBasePagination;
+import com.uruz.frostbite.dto.common.response.CursorBaseListResponse;
+import com.uruz.frostbite.dto.common.response.OffsetBaseListResponse;
+import com.uruz.frostbite.dto.entry.FolderContents;
 import com.uruz.frostbite.dto.folder.*;
 import com.uruz.frostbite.dto.folder.internal.*;
 import com.uruz.frostbite.enums.FolderStatus;
@@ -26,6 +32,9 @@ import java.util.UUID;
 @Service
 public class FolderService {
     /** folder 도메인에서 폴더 정보를 조작하고 관리 및 조회 할 때 사용하는 서비스 */
+
+    // TODO 조회 시, 부모폴더ID를 가져온 다음의 쿼리에도 resource_scope를 검새햐아 하는가?
+    //    1. 부모폴더ID가 Resource_scope 정보를 가지고 있어서, 이미 조회해 왔다면 그 scope 내의 객체인것인데, SQL 조회마다 scope 검사를 할 필요가 있는지 고민할 필요가 있다.
     private final FolderMapper folderMapper;
     private final AclService aclService;
 
@@ -44,42 +53,14 @@ public class FolderService {
         this.accessControlResolverService = accessControlResolverService;
     }
 
-    // 부모메서드 transactional에 참여
-    @Transactional(propagation = Propagation.REQUIRED)
-    /** 최초 사용자 가입 시 개인 엔트리 폴더 할당 */
-    public void createPrivateEntryFolder(String initialFolderName, Integer userId){
-        // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
-        // 따라서 별도 메서드로 처리
 
-        // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
-        Folder initialPrivateEntryFolder = Folder.createPrivateEntryFolder(initialFolderName, userId);
-        folderMapper.insertEntryFolder(initialPrivateEntryFolder);
-
-        // TODO : 폴더 생성 후 ACL 제어 추가 필요
-        aclService.createPrivateDefaultFolderAcl(initialPrivateEntryFolder.getFolderId(), userId);
-    }
-
-    @Transactional(propagation = Propagation.REQUIRED)
-    /** 최초 사용자 가입 시 팀 엔트리 폴더 할당 */
-    public void createTeamEntryFolder(String initialFolderName, Integer teamId, Integer createUserId){
-        // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
-        // 따라서 별도 메서드로 처리
-
-        // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
-        Folder initialTeamEntryFolder = Folder.createTeamEntryFolder(initialFolderName, teamId, createUserId);
-        folderMapper.insertEntryFolder(initialTeamEntryFolder);
-
-        // TODO : 폴더 생성 후 ACL 제어 추가 필요
-        aclService.createTeamDefaultFolderAcl(initialTeamEntryFolder.getFolderId(), teamId, createUserId);
-    }
-
-    /** 사용자 UUID로 부터 개인 엔트리폴더 아래 루트폴더 생성 */
+    /** 개인폴더 */
+    // 사용자 UUID로 부터 루트폴더 생성
     @Transactional
-    public SimpleFolderResponse createPrivateRootFolder(Integer userId, String folderName){
-
-        PrivateEntryFolderCondition condition = PrivateEntryFolderCondition.fromUserId(userId);
+    public SimpleFolder createPrivateRootFolder(Integer userId, String folderName) throws RequestProcessingException{
         // 사용자 UUID를 통한 개인 엔트리폴더 조회
-        Folder privateEntryFolder = getPrivateEntryFolder(condition);
+        Folder privateEntryFolder = folderMapper.selectPrivateEntryFolderByUserId(userId)
+                .orElseThrow(() -> new RequestProcessingException(ApiErrorCode.INTERNAL_DATA_INCONSISTENCY_FOLDER_RESOURCE));
 
         Folder newFolder = Folder.createPrivateRootFolder(
                 folderName, privateEntryFolder.getFolderId(), privateEntryFolder.getCreateUserId()
@@ -90,12 +71,38 @@ public class FolderService {
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
-    /** 팀 UUID로부터 팀 엔트리폴더 아래 루트폴더 생성*/
-    public SimpleFolderResponse createTeamRootFolder(Integer userId, TeamRootFolderCreateRequest request){
+    /** 팀 폴더 */
+    // 팀 UUID로부터 루트 폴더 생성
+    @Deprecated
+    public SimpleFolder _createTeamRootFolder(Integer userId, TeamRootFolderCreateRequest request){
 
-        TeamEntryFolderCondition condition = TeamEntryFolderCondition.of(userId, request.getTeamUuid());
+        // 팀에 접근권한이 있는 팀을 조회해온다.
+        Team team = teamResolverService.selectAccessibleTeamByTeamUuid(userId, request.getTeamUuid()).orElseThrow(
+                () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
+        );
 
-        Folder teamEntryFolder = getTeamEntryFolder(condition);
+        // TEAM UUID를 통한 team EntryFolder 조회
+        Folder teamEntryFolder = folderMapper._selectTeamEntryFolderByTeamId(team.getTeamId()).orElseThrow(
+                () -> new RequestProcessingException(ApiErrorCode.INTERNAL_DATA_INCONSISTENCY_FOLDER_RESOURCE)
+        );
+
+        Folder newFolder = Folder.createTeamRootFolder(request.getName(), teamEntryFolder.getFolderId(),
+                teamEntryFolder.getResourceScopeTeamId(), userId);
+
+        folderMapper.insertRootFolder(newFolder);
+        aclService.createTeamDefaultFolderAcl(newFolder.getFolderId(), teamEntryFolder.getResourceScopeTeamId(), userId);
+        return selectSimpleFolderByFolderId(newFolder.getFolderId());
+    }
+    // 직전 메서드 개선안
+    // 팀 접근권한 조회 -> EntryFolder 조회 라는 기존의 흐름이 "권한감사 + 자원조회 동시에" 라는 목적을 이루지 못하고있음을 개선한다.
+    // 기존의 팀 관계 확인 -> 팀 엔트리폴더 조회 를 하나의 절차로 합쳐 -> "접근할 수 있는 팀 엔트리폴더가 있는가" 로 전환한다.
+    // 대신 이경우엔 팀을 못찾은건지, 유효한 Entry folder를 못찾은건지 알수 없게되므로 -> 더욱 캡슐화된 NotFound 에러를 사용한다.
+    public SimpleFolder createTeamRootFolder(Integer userId, TeamRootFolderCreateRequest request){
+        // TEAM UUID를 통한 team EntryFolder 조회
+        Folder teamEntryFolder = folderMapper.selectAccessibleTeamEntryFolderByTeamUuid(request.getTeamUuid(), userId).orElseThrow(
+                () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
+        );
+
         Folder newFolder = Folder.createTeamRootFolder(request.getName(), teamEntryFolder.getFolderId(),
                 teamEntryFolder.getResourceScopeTeamId(), userId);
 
@@ -104,17 +111,20 @@ public class FolderService {
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
-    /** 부모 폴더 UUID로부터 서브폴더 생성 */
+    /** 개인폴더 팀폴더 공용 */
+    // 부모폴더 UUID로 부터 서브폴더 생성
     @Transactional
-    public SimpleFolderResponse createSubFolder(Integer userId, FolderCreateRequest request) {
-        Folder parentFolder = selectFolderByUuid(request.getParentFolderUuid());
+    public SimpleFolder createSubFolder(Integer userId, FolderCreateRequest request) {
+        Folder parentFolder = folderMapper.selectFolderByUuid(request.getParentFolderUuid()).orElseThrow(
+                () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
+        );
         // 폴더타입은 이미 Context 상 부모폴더에 있음.
         FolderType folderType = parentFolder.getFolderType();
         Folder newFolder = null;
         if(folderType.equals(FolderType.PRIVATE)){
-            newFolder = Folder.createPrivateSubFolder(request.getName(), parentFolder.getFolderId(), userId);
+            newFolder = Folder.createPrivateSubFolder(request.getFolderName(), parentFolder.getFolderId(), userId);
         } else {
-            newFolder = Folder.createTeamSubFolder(request.getName(), parentFolder.getFolderId(), parentFolder.getResourceScopeTeamId(),userId);
+            newFolder = Folder.createTeamSubFolder(request.getFolderName(), parentFolder.getFolderId(), parentFolder.getResourceScopeTeamId(),userId);
         }
 
         folderMapper.insertSubFolder(newFolder);
@@ -122,75 +132,134 @@ public class FolderService {
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
-    /** offsetBase로 개인 RootFolder List 조회에 사용 */
-    public SimpleFolderListOffsetResponse getPrivateRootFoldersByOffsetBase(Integer userId, Integer offset, Integer limit){
-        PrivateEntryFolderCondition entryCondition = PrivateEntryFolderCondition.fromUserId(userId);
+    // parentFolderUuid로 부터 부모폴더 조회용 헬퍼 메서드
+    public Folder selectPrivateParentFolder(Integer userId, UUID parentFolderUuid) throws RequestProcessingException {
+        Folder parentFolder = null;
 
-        Folder privateEntryFolder = getPrivateEntryFolder(entryCondition);
+        if(parentFolderUuid == null) {
+            // 쿼리스트링에 부모 UUID 없음 = Entry 폴더
+            parentFolder = folderMapper.selectPrivateEntryFolderByUserId(userId).orElseThrow(
+                    () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
+            );
+        } else {
+            // 쿼리스트링에 부모 UUID 있음 -> 특정 폴더 하위 조회
+            PrivateFolderCondition condition = PrivateFolderCondition.fromUserId(userId)
+                    .withFolderUuid(parentFolderUuid);
+            parentFolder = folderMapper.selectAccessiblePrivateFolder(condition).orElseThrow(
+                    () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
+            );
+        }
 
-        SimplePrivateFolderOffsetConditionByFolderId folderCondition = SimplePrivateFolderOffsetConditionByFolderId.of(
-                userId, privateEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
-        );
+        return parentFolder;
+    }
 
-        List<SimpleFolderResponse> list = selectSimpleFolderOffsetById(folderCondition);
-        int totalCount = folderMapper.selectSimpleFolderTotalCountById(folderCondition);
-        int currentMax = (offset+1) * limit + list.size();
-        SimpleFolderListOffsetResponse response = new SimpleFolderListOffsetResponse(list, totalCount, currentMax);
+    // KeySetBase 개인 folder List 조회 (좌측 트리용)
+    public CursorBaseListResponse<SimpleFolderTreeNode> getPrivateFoldersByCursorBase(Integer userId, UUID parentFolderUuid, UUID startFolderUuid, Integer limit){
 
-        return response;
+        Folder parentFolder = selectPrivateParentFolder(userId, parentFolderUuid);
+
+        PrivateFolderCursorBaseConditionByUuid folderCondition = PrivateFolderCursorBaseConditionByUuid.of(
+                userId, parentFolder.getFolderId(), startFolderUuid, FolderStatus.ACTIVE, limit);
+
+        List<SimpleFolderTreeNode> list = folderMapper.selectPrivateFolderCursorBaseByUuid(folderCondition);
+
+        UUID lastUuid = null;
+        if(!list.isEmpty()) lastUuid = list.getLast().getUuid();
+        PrivateFolderCursorBaseConditionByUuid nextUuidCondition = folderCondition.nextFolderUuidCondition(lastUuid);
+        UUID nextUuid = folderMapper.selectPrivateFolderCursorBaseNext(nextUuidCondition).orElse(null);
+        boolean hasNext = nextUuid != null;
+
+        CursorBasePagination cursorBasePagination = new CursorBasePagination(lastUuid, nextUuid, hasNext, limit);
+        return new CursorBaseListResponse<SimpleFolderTreeNode>(list, cursorBasePagination);
     }
 
 
-    /** KEYSET Base로 개인 ROOT Folder List 조회*/
-    public SimpleFolderListKeysetResponse getPrivateRootFoldersByKeysetBase(Integer userId, UUID lastFolderUuid, Integer limit){
-        PrivateEntryFolderCondition entryCondition = PrivateEntryFolderCondition.fromUserId(userId);
+    // 개인폴더 컨텐츠 조회
+    public OffsetBaseListResponse<FolderContents> getPrivateFolderContentsByOffsetBase(Integer userId, UUID parentFolderUuid, int offset, int limit){
 
-        Folder privateEntryFolder = getPrivateEntryFolder(entryCondition);
+        Folder parentFolder = selectPrivateParentFolder(userId, parentFolderUuid);
 
-        SimpleFolderKeyBaseConditionByFolderId folderCondition = SimpleFolderKeyBaseConditionByFolderId.of(
-                privateEntryFolder.getFolderId(), FolderStatus.ACTIVE, lastFolderUuid, limit);
+        int totalCount = folderMapper.selectPrivateFolderContentsTotalCount(userId,parentFolder.getFolderId());
+        List<FolderContents> folderContentsList = folderMapper.selectPrivateFolderContentsList(userId, parentFolder.getFolderId(), offset, limit);
+        OffsetBasePagination offsetBasePagination = new OffsetBasePagination(totalCount, offset, limit);
 
-        List<SimpleFolderResponse> list = selectSimpleFolderKeyBaseById(folderCondition);
-        Boolean hasNext = folderMapper.selectSimpleFolderKeyBaseHasNext(folderCondition);
-        UUID newLastFolderUuid = list.get(list.size()-1).getUuid();
-        SimpleFolderListKeysetResponse response = new SimpleFolderListKeysetResponse(list, hasNext, newLastFolderUuid);
-        return response;
+        return new OffsetBaseListResponse<>(folderContentsList, offsetBasePagination);
     }
 
-    /** offsetBase로 팀 RootFolder List 조회에 사용*/
-    public SimpleFolderListOffsetResponse getTeamRootFoldersByOffsetBase(Integer userId, UUID teamUuid, Integer offset, Integer limit){
-        TeamEntryFolderCondition entryCondition = TeamEntryFolderCondition.of(userId, teamUuid);
+    // parentFolderUuid로 부터 부모폴더 조회용 헬퍼 메서드
+    public Folder selectTeamParentFolder(Integer userId, UUID parentFolderUuid, UUID teamUuid) throws RequestProcessingException {
 
-        Folder teamEntryFolder = getTeamEntryFolder(entryCondition);
+        Folder parentFolder = null;
+        if(parentFolderUuid == null){
+            // parentFolderUuid가 없을경우 Entry Folder가 부모
+            parentFolder = folderMapper.selectAccessibleTeamEntryFolderByTeamUuid(teamUuid, userId).orElseThrow(
+                    () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND));
+        } else {
+            // parentFolderUuid가 있을경우 해당 팀 폴더에 접근이 가능한지 조회 필요
+            // 팀에 접근권한이 있는 팀을 조회해온다.
+            Team team = teamResolverService.selectAccessibleTeamByTeamUuid(userId, teamUuid).orElseThrow(
+                    () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
+            );
+            // Read 이상의 권한을 가지고 있어야 한다. -> PermissionBit와도 엮임
+            // TODO privateFolder도 PermissionBit 검사해야함
+            // ACL 권한감사는 조회 SQL로 압축하지 않는다.
+                /* 단순 관계/소속 여부는 SQL JOIN/Exists로 처리한다. -> 해당 자원이 특정 사용자/팀 Scope 내에 있는가
+                   그러나 "허용/거부" 등의 접근정책과 행위허가 등 도메인 정책을 판정해야 하는 순간 SQL 외부로 꺼내 ResolverService를 활용한다.
+                   도메인 정책 판정, 허용판정 등이 SQL 내부로 숨어서 캡슐화되면 오히려 유지보수가 힘들어진다.
+                */
+            TeamFolderCondition teamFolderCondition = TeamFolderCondition.fromTeamIdWithUserId(team.getTeamId(), userId)
+                    .withFolderUuid(parentFolderUuid);
 
-        SimplePrivateFolderOffsetConditionByFolderId folderCondition = SimplePrivateFolderOffsetConditionByFolderId.of(
-                teamEntryFolder.getResourceScopeTeamId(), teamEntryFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
-        );
+            parentFolder = folderMapper.selectAccessibleTeamFolder(teamFolderCondition).orElseThrow(
+                    () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
+            );
+        }
 
-        List<SimpleFolderResponse> list = selectSimpleFolderOffsetById(folderCondition);
-        int totalCount = folderMapper.selectSimpleFolderTotalCountById(folderCondition);
-        int currentMax = (offset+1) * limit + list.size();
-        SimpleFolderListOffsetResponse response = new SimpleFolderListOffsetResponse(list, totalCount, currentMax);
-
-        return response;
+        return parentFolder;
     }
 
-    /** KeyBase 팀 RootFolder List  조회에 사용*/
-
-    public SimpleFolderListKeysetResponse getTeamRootFoldersByKeysetBase(Integer userId, UUID teamUuid, UUID lastFolderUuid, Integer limit){
-        TeamEntryFolderCondition entryCondition =  TeamEntryFolderCondition.of(userId, teamUuid);
-
-        Folder teamEntryFolder = getTeamEntryFolder(entryCondition);
-
-        SimpleFolderKeyBaseConditionByFolderId folderCondition = SimpleFolderKeyBaseConditionByFolderId.of(
-                teamEntryFolder.getFolderId(), FolderStatus.ACTIVE, lastFolderUuid, limit
+    // 팀 폴더 컨텐츠 조회
+    public OffsetBaseListResponse<FolderContents> getTeamFolderContentsByOffsetBase(Integer userId, UUID parentFolderUuid, UUID teamUuid, Integer offset, Integer limit){
+        Team team = teamResolverService.selectAccessibleTeamByTeamUuid(userId, teamUuid).orElseThrow(
+                () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
         );
 
-        List<SimpleFolderResponse> list = selectSimpleFolderKeyBaseById(folderCondition);
-        Boolean hasNext = folderMapper.selectSimpleFolderKeyBaseHasNext(folderCondition);
-        UUID newLastFolderUuid = list.get(list.size()-1).getUuid();
-        SimpleFolderListKeysetResponse response = new SimpleFolderListKeysetResponse(list, hasNext, newLastFolderUuid);
-        return response;
+        Folder parentFolder = selectTeamParentFolder(userId, parentFolderUuid, teamUuid);
+
+        SimpleTeamFolderOffsetConditionByFolderId folderCondition = SimpleTeamFolderOffsetConditionByFolderId.of(
+                team.getTeamId(), userId, parentFolder.getFolderId(), FolderStatus.ACTIVE, offset, limit
+        );
+
+        int totalCount = folderMapper.selectTeamFolderContentsTotalCount(folderCondition);
+
+        List<FolderContents> folderContentsList = folderMapper.selectTeamFolderContentsList(folderCondition);
+        OffsetBasePagination offsetBasePagination = new OffsetBasePagination(totalCount, offset, limit);
+
+        return new OffsetBaseListResponse<>(folderContentsList, offsetBasePagination);
+    }
+
+    // Team 좌측 트리용 커서베이스 조회
+    public CursorBaseListResponse<SimpleFolderTreeNode> getTeamFolderByCursorBase(Integer userId, UUID teamUuid, UUID parentFolderUuid, UUID nextFolderUuid, Integer limit){
+        Team team = teamResolverService.selectAccessibleTeamByTeamUuid(userId, teamUuid).orElseThrow(
+                () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
+        );
+
+        Folder parentFolder = selectTeamParentFolder(userId, parentFolderUuid, teamUuid);
+
+        TeamFolderCursorBaseConditionByUuid folderCondition = TeamFolderCursorBaseConditionByUuid.of(
+                team.getTeamId(), userId, parentFolder.getFolderId(), nextFolderUuid, FolderStatus.ACTIVE, limit
+        );
+
+        List<SimpleFolderTreeNode> list = folderMapper.selectSimpleTeamFolderCursorBaseByUuid(folderCondition);
+
+        UUID lastUuid = null;
+        if(!list.isEmpty()) list.getLast().getUuid();
+        TeamFolderCursorBaseConditionByUuid nextUuidCondition = folderCondition.nextFolderUuidCondition(lastUuid);
+        UUID nextUuid = folderMapper.selectSimpleTeamFolderCursorBaseNext(nextUuidCondition).orElse(null);
+        boolean hasNext = nextUuid != null;
+
+        CursorBasePagination cursorBasePagination = new CursorBasePagination(lastUuid, nextUuid, hasNext, limit);
+        return new CursorBaseListResponse<SimpleFolderTreeNode>(list, cursorBasePagination);
     }
 
     /** 서브폴더 Keyset base 리스트 by uuid
@@ -198,10 +267,11 @@ public class FolderService {
      *
      */
 
-    public SimpleFolderListKeysetResponse getSubFoldersByKeysetBaseByUuid(Integer userId, UUID parentFolderUuid, UUID lastFolderUuid, Integer limit){
-        SimpleFolderKeyBaseConditionByUuid folderCondition = SimpleFolderKeyBaseConditionByUuid.of(parentFolderUuid, FolderStatus.ACTIVE, lastFolderUuid, limit);
+    @Deprecated
+    public SimpleFolderListKeysetResponse getSubFoldersByKeysetBaseByUuid(Integer userId, UUID parentFolderUuid, UUID nextFolderUuid, Integer limit){
+        PrivateFolderCursorBaseConditionByUuid folderCondition = null;// PrivateFolderCursorBaseConditionByUuid.of(userId, parentFolderUuid, nextFolderUuid, FolderStatus.ACTIVE, limit);
 
-        List<SimpleFolderResponse> list = selectSimpleFolderKeyBaseByUuid(folderCondition);
+        List<SimpleFolder> list = null; //selectSimpleFolderKeyBaseByUuid(folderCondition);
         Boolean hasNext = false;
         UUID newLastFolderUuid = null;
         if(list.size() > 0) {
@@ -212,9 +282,10 @@ public class FolderService {
         return response;
     }
 
+    @Deprecated
     /** 사용자가 클릭한 폴더의 UUID를 기준으로 그 폴더의 내용물 (서브폴더와 파일)을 함께 조회한다 */
     public SimpleFolderEntriesListOffsetResponse getSubFolderEntriesOffsetBaseByUuid(Integer userId, UUID parentFolderUuid, Integer offset, Integer limit){
-        SimpleFolderOffsetConditionByUuid folderCondition = SimpleFolderOffsetConditionByUuid.of(parentFolderUuid, FolderStatus.ACTIVE, offset, limit);
+        SimplePrivateFolderOffsetConditionByUuid folderCondition = SimplePrivateFolderOffsetConditionByUuid.of(parentFolderUuid, FolderStatus.ACTIVE, userId, offset, limit);
 
         // 조회하려는 위치가 폴더 전체 개수보다 많은지 확인한다.
         int currentStartCount = (offset) * limit;
@@ -222,7 +293,7 @@ public class FolderService {
 
         int currentFolderMax = 0;
 
-        List<SimpleFolderResponse> folders = null;
+        List<SimpleFolder> folders = null;
         if(totalFolderCount >= currentStartCount){
             folders = selectSimpleFolderOffsetByUuid(folderCondition);
             currentFolderMax = (offset) * limit + folders.size();
@@ -262,14 +333,14 @@ public class FolderService {
     }
 
     /** 폴더 메타정보 수정 */
-    public SimpleFolderResponse modifyFolder(Integer userId, UUID targetFolderUuid, FolderModifyRequest request){
+    public SimpleFolder modifyFolder(Integer userId, UUID targetFolderUuid, FolderModifyRequest request){
         FolderModifyCommand command = FolderModifyCommand.builder()
                 .folderUuid(targetFolderUuid)
-                .name(request.getName())
+                .folderName(request.getFolderName())
                 .build();
         int affectedRow = folderMapper.updateFolder(command);
 
-        SimpleFolderResponse resultFolder = selectSimpleFolderByFolderUuid(targetFolderUuid);
+        SimpleFolder resultFolder = selectSimpleFolderByFolderUuid(targetFolderUuid);
 
         return resultFolder;
     }
@@ -283,7 +354,7 @@ public class FolderService {
     // 이때, 굳이 EntryFolder 정보 찾아오고, 그 EntryFolder가 직접부모인지 검증할게 아니라, depth 정보 하나면
     // 0계층, 1계층에 대해서 동작을 막아버리면 되는 이점이 있음. 단, update시 @Transactional이 걸려야겠지
     @Transactional
-    public SimpleFolderResponse moveFolder(Integer userId, UUID targetFolderUuid, FolderMoveRequest request){
+    public SimpleFolder moveFolder(Integer userId, UUID targetFolderUuid, FolderMoveRequest request){
         Folder targetFolder = selectFolderByUuid(targetFolderUuid);
         Folder destinationFolder = selectFolderByUuid(request.getDestinationFolderUuid());
 
@@ -309,7 +380,7 @@ public class FolderService {
         String oldFolderIdpath = targetFolder.getFolderIdPath();
         String oldFolderNamePath = targetFolder.getFolderNamePath();
         String newFolderIdPath = destinationFolder.getFolderIdPath() + targetFolder.getFolderId() + "/";
-        String newFolderNamePath = destinationFolder.getFolderNamePath() + targetFolder.getName() + "/";
+        String newFolderNamePath = destinationFolder.getFolderNamePath() + targetFolder.getFolderName() + "/";
         MovedSubFolderPathCommand pathCommand = new MovedSubFolderPathCommand(
                 oldFolderIdpath, oldFolderNamePath, newFolderIdPath, newFolderNamePath
         );
@@ -342,16 +413,46 @@ public class FolderService {
         return accessControlResolverService.validateUserActionPermissionForFolder(userId, folderId, bitMask);
 
     }
+
+    /**
+     * External Call
+     * */
+    // 부모메서드 transactional에 참여
+    @Transactional(propagation = Propagation.REQUIRED)
+    /** 최초 사용자 가입 시 개인 엔트리 폴더 할당 */
+    public void createPrivateEntryFolder(String initialFolderName, Integer userId){
+        // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
+        // 따라서 별도 메서드로 처리
+
+        // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
+        Folder initialPrivateEntryFolder = Folder.createPrivateEntryFolder(initialFolderName, userId);
+        folderMapper.insertEntryFolder(initialPrivateEntryFolder);
+
+        // TODO : 폴더 생성 후 ACL 제어 추가 필요
+        aclService.createPrivateDefaultFolderAcl(initialPrivateEntryFolder.getFolderId(), userId);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    /** 최초 사용자 가입 시 팀 엔트리 폴더 할당 */
+    public void createTeamEntryFolder(String initialFolderName, Integer teamId, Integer createUserId){
+        // 최초가입시 자동 개인폴더 root 할당. 이경우 일반 폴더생성과 관심사 흐름이 다름 (폴더생성 =/= 자동루트폴더생성)
+        // 따라서 별도 메서드로 처리
+
+        // transactional 걸려있고 컨트롤러 공개가 안되는 메서드, userId는 정상으로 처리되었을것이라 신뢰하고 앱 레벨 정합성검사 생략
+        Folder initialTeamEntryFolder = Folder.createTeamEntryFolder(initialFolderName, teamId, createUserId);
+        folderMapper.insertEntryFolder(initialTeamEntryFolder);
+
+        // TODO : 폴더 생성 후 ACL 제어 추가 필요
+        aclService.createTeamDefaultFolderAcl(initialTeamEntryFolder.getFolderId(), teamId, createUserId);
+    }
+
     /**
      * Offset base로 폴더 조회 헬퍼메서드. -> 이 경우 메인 컨텐츠 뷰 offset base 조회에 사용. Entries 와 함께 사용해야 할듯
      * ROOT List, Sub Folder 리스트 구분없이 사용 가능.
      *
      * */
-    public List<SimpleFolderResponse> selectSimpleFolderOffsetById(SimplePrivateFolderOffsetConditionByFolderId condition){
-        return folderMapper.selectSimpleFolderOffsetById(condition);
-    }
-
-    public List<SimpleFolderResponse> selectSimpleFolderOffsetByUuid(SimpleFolderOffsetConditionByUuid condition){
+    @Deprecated(forRemoval = true)
+    public List<SimpleFolder> selectSimpleFolderOffsetByUuid(SimplePrivateFolderOffsetConditionByUuid condition){
         return folderMapper.selectSimpleFolderOffsetByUuid(condition);
     }
 
@@ -360,12 +461,9 @@ public class FolderService {
      * ROOT List, Subfolder 리스트 구분 없이 사용 가능.
      * */
 
-    public List<SimpleFolderResponse> selectSimpleFolderKeyBaseById(SimpleFolderKeyBaseConditionByFolderId condition){
+    @Deprecated(forRemoval = true)
+    public List<SimpleFolder> selectSimpleFolderKeyBaseById(SimpleFolderKeyBaseConditionByFolderId condition){
         return folderMapper.selectSimpleFolderKeyBaseById(condition);
-    }
-
-    public List<SimpleFolderResponse> selectSimpleFolderKeyBaseByUuid(SimpleFolderKeyBaseConditionByUuid condition){
-        return folderMapper.selectSimpleFolderKeyBaseByUuid(condition);
     }
 
     public Folder selectFolderByUuid(UUID folderUuid){
@@ -375,26 +473,23 @@ public class FolderService {
     }
 
     /** 폴더 UUID로 폴더 조회*/
-    public SimpleFolderResponse selectSimpleFolderByFolderUuid(UUID folderUuid){
+    public SimpleFolder selectSimpleFolderByFolderUuid(UUID folderUuid){
         return folderMapper.selectSimpleFolderByFolderUuid(folderUuid).orElseThrow(
                 () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "FOLDER NOT FOUND")
         );
     }
 
-    public SimpleFolderResponse selectSimpleFolderByFolderId(Long folderId){
+    public SimpleFolder selectSimpleFolderByFolderId(Long folderId){
         return folderMapper.selectSimpleFolderByFolderId(folderId).orElseThrow(
                 () -> new GeneralCustomException(ApiErrorCode.NOT_FOUND, "FOLDER NOT FOUND")
         );
     }
 
 
-    /** 개인 ENTRY FOLDER 조회 */
-    public Folder getPrivateEntryFolder(PrivateEntryFolderCondition condition){
-        return folderMapper.selectPrivateEntryFolder(condition).orElseThrow(() ->
-                new GeneralCustomException(ApiErrorCode.NOT_FOUND, "FOLDER NOT FOUND"));
-    }
+
 
     /** 팀 ENTRY FOLDER 조회*/
+    @Deprecated
     public Folder getTeamEntryFolder(TeamEntryFolderCondition condition){
         return folderMapper.selectTeamEntryFolder(condition).orElseThrow(() ->
                 new GeneralCustomException(ApiErrorCode.NOT_FOUND, "FOLDER NOT FOUND"));

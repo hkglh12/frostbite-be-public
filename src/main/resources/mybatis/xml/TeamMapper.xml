@@ -105,4 +105,16 @@
         AND
             team_id = #{teamId}
     </select>
+    <select id="selectAccessibleTeamByTeamUuid" resultType="com.uruz.frostbite.domain.Team">
+        SELECT t.team_id, t.name, t.uuid
+        FROM
+            team_tb t
+        WHERE
+            team_id  = #{teamUuid}
+            AND EXISTS (SELECT 1
+                        FROM rel_user_team_tb rut
+                        WHERE rut.team_id = t.team_id
+                          AND rut.user_id = #{userId}
+                        )
+    </select>
 </mapper>

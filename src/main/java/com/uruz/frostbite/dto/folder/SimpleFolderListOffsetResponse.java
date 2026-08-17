@@ -17,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SimpleFolderListOffsetResponse {
 
-    private List<SimpleFolderResponse> folders;
+    private List<SimpleFolder> folders;
     private Integer total;
     private Integer currentMax;
 

@@ -18,21 +18,21 @@ public class SimpleFolderKeyBaseConditionByFolderId {
 
     private Long parentFolderId;
     private FolderStatus status;
-    private UUID lastFolderUuid;
+    private UUID nextFolderUuid;
     private Integer limit;
 
     private SimpleFolderKeyBaseConditionByFolderId(Long parentFolderId,
-                                                   FolderStatus status, UUID lastFolderUuid, Integer limit){
+                                                   FolderStatus status, UUID nextFolderUuid, Integer limit){
         //this.folderType = folderType;
         //this.ownerId = ownerId;
         this.parentFolderId = parentFolderId;
         this.status = status == null ? FolderStatus.ACTIVE : status;
-        this.lastFolderUuid = lastFolderUuid;
+        this.nextFolderUuid = nextFolderUuid;
         this.limit = limit;
     }
     public static SimpleFolderKeyBaseConditionByFolderId of(Long parentId,
-                                                            FolderStatus status, UUID lastFolderUuid, Integer limit){
+                                                            FolderStatus status, UUID nextFolderUuid, Integer limit){
 
-        return new SimpleFolderKeyBaseConditionByFolderId(parentId, status, lastFolderUuid, limit);
+        return new SimpleFolderKeyBaseConditionByFolderId(parentId, status, nextFolderUuid, limit);
     }
 }

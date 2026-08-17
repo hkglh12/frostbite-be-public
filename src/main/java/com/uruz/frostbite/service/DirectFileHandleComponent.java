@@ -313,7 +313,7 @@ public class DirectFileHandleComponent {
             applicationTempFileUuid = UUID.randomUUID();
             tempFile  = new File(FROSTBITE_TEMP_LOCATION + applicationTempFileUuid.toString());
             if(tempFile.exists()){
-                throw new RequestProcessingException(ApiErrorCode.INTERNAL_RESOURCE_HANDLE_FAILED);
+                throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
             }
         }
         try {
@@ -323,7 +323,7 @@ public class DirectFileHandleComponent {
         }catch(IOException IOE){
             log.error(IOE.getMessage());
             // multipartFile 은 request 종료시 cleanup 대상. 따라서 transferTo 실패했다면 굳이 명시적으로 삭제할 필요 없음
-            throw new RequestProcessingException(ApiErrorCode.INTERNAL_RESOURCE_HANDLE_FAILED);
+            throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
         }
     }
 

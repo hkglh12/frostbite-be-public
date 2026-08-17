@@ -84,11 +84,11 @@ public class SwaggerExamples {
     public static final String SIMPLE_FOLDER_ENTRIES_LIST_OFFSET_RESPONSE_SUCCESS = """
     {
       "result": {
-        "folders" : [
+        "entries" : [
           {
             "uuid" : "0f7e2d62-2f45-4c47-9b3f-9e62fb041f31",
             "name" : "project-docs",
-            "folderType" : "PRIVATE",
+            "entryType" : "1",
             "renderSequence" : 1,
             "parentFolderUuid" : "7e6c8c12-119f-4a12-8eb7-c87506f1eaa7",
             "status" : "ACTIVE"
@@ -102,11 +102,9 @@ public class SwaggerExamples {
             "status" : "ACTIVE"
           }
         ],
-        "files" : [],
-        "folderTotal" : 2,
-        "fileTotal" : 0,
-        "currentFolderMax" : 2,
-        "currentFileMax" : 0
+        "entryTotal" : 2,
+        "folderTotal" : 1,
+        "fileTotal" : 1
       },
       "message": "SUCCEED",
       "code" : "SUCCEED",

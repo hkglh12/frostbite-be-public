@@ -7,7 +7,7 @@
 
     <!-- selectKey Before실행 -> POJO 값 바인드 -> 그 POJO로 <tag> 실행-->
     <!-- selectKey 사용시 useGeneratedKeys 불필요, 사용하려면 values에 PK가 안들어가고, useGeneratedKeys + KeyProperty -->
-    <insert id="insertEntryFolder" parameterType="Folder" keyProperty="folderId">
+    <insert id="insertEntryFolder" parameterType="com.uruz.frostbite.domain.Folder" keyProperty="folderId">
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
@@ -18,13 +18,13 @@
         create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
         )
         VALUES (
-        #{uuid}, #{folderId}, #{name}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
+        #{uuid}, #{folderId}, #{folderName}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
         #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy}, '/' || #{folderId} || '/',
-        '/' || #{name} || '/', #{renderSequence}, #{status}, #{createUserId}, #{createTime},
+        '/' || #{folderName} || '/', #{renderSequence}, #{status}, #{createUserId}, #{createTime},
         #{modifyUserId}, #{modifyTime}, #{deleteUserId}, #{deleteTime}
         )
     </insert>
-    <insert id="insertRootFolder" parameterType="Folder" keyProperty="folderId">
+    <insert id="insertRootFolder" parameterType="com.uruz.frostbite.domain.Folder" keyProperty="folderId">
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
@@ -35,15 +35,15 @@
         create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
         )
         VALUES (
-        #{uuid}, #{folderId}, #{name}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
+        #{uuid}, #{folderId}, #{folderName}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
         #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy},
         (SELECT folder_id_path || #{folderId} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
-        (SELECT folder_name_path || #{name} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
+        (SELECT folder_name_path || #{folderName} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
         #{renderSequence}, #{status}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
         #{deleteUserId}, #{deleteTime}
         )
     </insert>
-    <insert id="insertSubFolder" parameterType="Folder" keyProperty="folderId">
+    <insert id="insertSubFolder" parameterType="com.uruz.frostbite.domain.Folder" keyProperty="folderId">
         <selectKey keyProperty="folderId" resultType="long" order="BEFORE">
             SELECT nextval('folder_tb_folder_id_seq')
         </selectKey>
@@ -54,70 +54,460 @@
         create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
         )
         VALUES (
-        #{uuid}, #{folderId}, #{name}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
+        #{uuid}, #{folderId}, #{folderName}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
         #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy},
         (SELECT folder_id_path || #{folderId} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
-        (SELECT folder_name_path || #{name} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
+        (SELECT folder_name_path || #{folderName} || '/' FROM folder_tb WHERE folder_id = #{parentFolderId}),
         #{renderSequence}, #{status}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
         #{deleteUserId}, #{deleteTime}
         )
     </insert>
-    <update id="updateFolder" parameterType="FolderModifyCommand">
-        update
-            folder_tb
-        SEt
-            name = #{name}
-        WHERE
-            uuid = #{folderUuid}
-    </update>
 
-    <update id="updateFolderParent" parameterType="SubFolderMoveCommand">
-        UPDATE
-            folder_tb
-        SET
-            parent_folder_id = #{destinationFolderId},
-            modify_user_id = #{modifyUserId}
-        WHERE
-            folder_id = #{targetFolderId}
-    </update>
-
-    <update id="updateSubFolderPath" parameterType="MovedSubFolderPathCommand">
-        UPDATE
-            folder_tb
-        SET
-            folder_id_path = replace(folder_id_path, #{oldFolderIdPath}, #{newFolderIdPath}),
-            folder_name_path = replace(folder_name_path, #{oldFolderNamePath}, #{newFolderNamePath})
-        WHERE
-            folder_id_path like #{oldFolderIdPath} || '%'
-    </update>
-
-    <select id ="selectPrivateEntryFolder" parameterType="PrivateEntryFolderCondition" resultType="Folder">
-       /** selectPrivateEntryFolder*/
-        <!-- TODO : ENTRYFOLDER 전용이니까  parentUuid when choose는 지워도 될텐데-->
+    <!-- 시스템 관점 개인 엔트리 폴더 조회 -->
+    <select id="selectPrivateEntryFolderByUserId" resultType="com.uruz.frostbite.domain.Folder">
+        /** selectPrivateEntryFolderByUserId */
         SELECT
-            folder_id, name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
         FROM
             folder_tb
         WHERE
+            folder_type = 1
+          AND
+            resource_scope_user_id = #{userId}
+          AND
+            parent_folder_id is null
+          AND
+            status = 1
+    </select>
+
+    <!-- 시스템 관점 팀 폴더 조회 -->
+    <!-- @Deprecated-->
+    <select id="_selectTeamEntryFolderByTeamId" resultType="com.uruz.frostbite.domain.Folder">
+        /** selectTeamEntryFolderByTeamId */
+        SELECT
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
+        FROM
+            folder_tb
+        WHERE
+            folder_type = 2
+          AND
+            resource_scope_team_id = #{teamId}
+          AND
+            parent_folder_id is null
+          AND
+            status = 1
+    </select>
+
+    <!-- 개선안 -->
+    <select id="selectAccessibleTeamEntryFolderByTeamUuid" resultType="com.uruz.frostbite.domain.Folder">
+        /** selectTeamEntryFolderByTeamId */
+        SELECT
+            f.folder_id, f.folder_name, f.uuid, f.parent_folder_id
+        FROM folder_tb f
+                 JOIN team_tb t
+                      ON t.team_id = f.resource_scope_team_id
+        WHERE
+            t.uuid = #{teamUuid}
+          AND
+            folder_type = 2
+          AND
+            f.status = 1
+          AND EXISTS (
+            SELECT 1
+            FROM rel_user_team_tb rut
+            WHERE rut.user_id = #{userId}
+              AND rut.team_id = t.team_id
+        )
+    </select>
+
+    <!-- 시스템 관점 폴더 PK 조회-->
+    <select id="selectFolderByFolderId" resultType="com.uruz.frostbite.domain.Folder" parameterType="long">
+        /** selectPrivateEntryFolderByUserId */
+        SELECT
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
+        FROM
+            folder_tb
+        WHERE
+            folder_id = #{folderId}
+    </select>
+
+    <!-- 시스템 관점 폴더 PK 조회-->
+    <select id="selectFolderByFolderUuId" resultType="com.uruz.frostbite.domain.Folder" parameterType="java.util.UUID">
+        /** selectPrivateEntryFolderByUserId */
+        SELECT
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
+        FROM
+            folder_tb
+        WHERE
+            uuid = #{folderUuid}
+    </select>
+
+    <!-- 개인폴더 조회 -->
+    <select id="selectAccessiblePrivateFolder" resultType="com.uruz.frostbite.domain.Folder" parameterType="com.uruz.frostbite.dto.folder.internal.PrivateFolderCondition">
+        /** selectPrivateEntryFolderByUserId */
+        SELECT
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
+        FROM
+            folder_tb
+        <where>
+        WHERE
+            <choose>
+                <when test="folderUuid != null">
+                    uuid = #{folderUuid}
+                </when>
+                <when test="folderId != null">
+                    folder_id = #{folderId}
+                </when>
+            </choose>
+        AND
+            resource_scope_user_id = #{userId}
+        AND
             folder_type = #{folderType}
         AND
-        resource_scope_user_id = #{userId}
-        AND
-            <choose>
-            <when test="parentFolderId == null">
-                parent_folder_id is null
-            </when>
-            <otherwise>
-                parent_folder_id = #{parentFolderId}
-            </otherwise>
-            </choose>
-
-        AND
             status = #{status}
+        </where>
     </select>
-    <select id="selectSimpleFolderOffsetById" parameterType="SimplePrivateFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
+
+    <!-- 팀 조회 -->
+    <select id="selectAccessibleTeamFolder" resultType="com.uruz.frostbite.domain.Folder" parameterType="com.uruz.frostbite.dto.folder.internal.PrivateFolderCondition">
+        /** selectPrivateEntryFolderByUserId */
+        SELECT
+        folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid, folder_name_path
+        FROM
+        folder_tb
+        <where>
+            WHERE
+            <choose>
+                <when test="folderUuid != null">
+                    uuid = #{folderUuid}
+                </when>
+                <when test="folderId != null">
+                    folder_id = #{folderId}
+                </when>
+            </choose>
+            AND
+            resource_scope_team_id = #{teamId}
+            AND
+            folder_type = #{folderType}
+            AND
+            status = #{status}
+        </where>
+    </select>
+
+    <!-- 좌측 트리 용 Cursor 베이스 폴더 조회 -->
+    <select id="selectPrivateFolderCursorBaseByUuid" parameterType="com.uruz.frostbite.dto.folder.internal.PrivateFolderCursorBaseConditionByUuid"
+            resultType="com.uruz.frostbite.dto.folder.SimpleFolderTreeNode">
+        SELECT
+            folder.uuid, folder.folder_name, folder.folder_type, folder.render_sequence,
+            parent.uuid AS parent_folder_uuid, folder.status,
+            (SELECT EXISTS(SELECT 1 from folder_tb where parent_folder_id = folder.uuid)) as hasChild
+        FROM
+            folder_tb folder
+        LEFT JOIN
+            folder_tb parent
+        ON
+            folder.parent_folder_id = parent.folder_id
+        <if test="nextFolderUuid != null">
+        CROSS JOIN (
+            SELECT
+                folder_id, COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
+            FROM
+                folder_tb
+            WHERE
+                uuid = #{nextFolderUuid}
+        ) criteria
+        </if>
+        <where>
+            parent.uuid = #{parentFolderUuid}
+        AND
+            resource_scope_user_id = #{userId}
+        AND
+            folder_type = #{folderType}
+        AND
+            folder.status = #{status}
+            <if test="nextFolderUuid != null">
+                AND (
+                    COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
+                OR (
+                    COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
+                AND
+                    folder.folder_id >= criteria.folder_id
+                )
+            )
+            </if>
+        </where>
+        ORDER BY
+        COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 좌측 트리 용 다음 UUID 조회 -->
+    <select id="selectPrivateFolderCursorBaseNext" parameterType="com.uruz.frostbite.dto.folder.internal.PrivateFolderCursorBaseConditionByUuid"
+            resultType = "java.util.UUID">
+        SELECT
+            folder.uuid
+        FROM
+            folder_tb folder
+        LEFT JOIN
+        folder_tb parent
+        ON
+        folder.parent_folder_id = parent.folder_id
+        <if test="lastFolderUuid != null">
+            CROSS JOIN (
+            SELECT
+            folder_id, COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
+            FROM
+            folder_tb
+            WHERE
+            uuid = #{lastFolderUuid}
+            ) criteria
+        </if>
+        <where>
+            parent.uuid = #{parentFolderUuid}
+            AND
+            resource_scope_user_id = #{userId}
+            AND
+            folder_type = #{folderType}
+            AND
+            folder.status = #{status}
+            <if test="lastFolderUuid != null">
+                AND (
+                COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
+                OR (
+                COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
+                AND
+                folder.folder_id > criteria.folder_id
+                )
+                )
+            </if>
+        </where>
+        ORDER BY
+        COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 폴더 내 컨텐츠 개수 조회-->
+    <select id="selectPrivateFolderContentsTotalCount" resultType="int">
+        SELECT COUNT(folder_contents.*)
+        FROM
+            (SELECT
+                 uuid as folder_content_uuid, 1 as folder_content_type
+             FROM
+                 folder_tb
+             WHERE
+                 parent_folder_id = #{parentFolderId}
+               AND
+                 resource_scope_user_id = #{userId}
+             UNION ALL
+             SELECT
+                 file.uuid as folder_content_uuid, 2 as folder_content_type
+             FROM
+                 file_tb file
+             JOIN
+                 folder_tb folder
+             ON
+                 folder.folder_id = file.folder_id
+             WHERE
+                 file.folder_id = #{parentFolderId}
+             AND
+                 folder.resource_scope_user_id = #{userId}
+
+            ) folder_contents
+
+    </select>
+    <!-- 폴더 내 컨텐츠 조회-->
+    <select id="selectPrivateFolderContentsList" resultType="com.uruz.frostbite.dto.entry.FolderContents">
+        SELECT uuid, parent_folder_uuid, entry_name, folder_content_type, create_time
+        FROM
+            (SELECT
+                 uuid as uuid, parent_folder_id as parent_folder_uuid, folder_name as entry_name, 1 as folder_content_type, create_time
+             FROM
+                 folder_tb
+             WHERE
+                 parent_folder_id = #{parentFolderId}
+               AND
+                 resource_scope_user_id = #{userId}
+             UNION ALL
+             SELECT
+                 file.uuid as uuid, file.folder_id as parent_folder_id, file_name as entry_name, 2 as folder_content_type, file.create_time
+             FROM
+                 file_tb file
+             JOIN
+                 folder_tb folder
+                 ON
+                     folder.folder_id = file.folder_id
+             WHERE
+                 file.folder_id = #{parentFolderId}
+               AND
+                 folder.resource_scope_user_id = #{userId}
+            ) folder_contents
+        OFFSET #{offset} LIMIT #{limit}
+    </select>
+
+    <!-- 폴더 내 컨텐츠 개수 조회-->
+    <select id="selectTeamFolderContentsTotalCount" resultType="int">
+        SELECT COUNT(folder_contents.*)
+        FROM
+            (SELECT
+                 uuid as folder_content_uuid, 1 as folder_content_type
+             FROM
+                 folder_tb
+             WHERE
+                 parent_folder_id = #{parentFolderId}
+               AND
+                 resource_scope_team_id = #{resourceScopeTeamId}
+             UNION ALL
+             SELECT
+                 file.uuid as folder_content_uuid, 2 as folder_content_type
+             FROM
+                 file_tb file
+                     JOIN
+                 folder_tb folder
+                 ON
+                     folder.folder_id = file.folder_id
+             WHERE
+                 file.folder_id = #{parentFolderId}
+               AND
+                 folder.resource_scope_team_id = #{resourceScopeTeamId}
+
+            ) folder_contents
+
+    </select>
+    <!-- 폴더 내 컨텐츠 조회-->
+    <select id="selectTeamFolderContentsList" resultType="com.uruz.frostbite.dto.entry.FolderContents">
+        SELECT uuid, parent_folder_uuid, entry_name, folder_content_type, create_time
+        FROM
+            (SELECT
+                 uuid as uuid, parent_folder_id as parent_folder_uuid, folder_name as entry_name, 1 as folder_content_type, create_time
+             FROM
+                 folder_tb
+             WHERE
+                 parent_folder_id = #{parentFolderId}
+               AND
+                 resource_scope_team_id = #{resourceScopeTeamId}
+             UNION ALL
+             SELECT
+                 file.uuid as uuid, file.folder_id as parent_folder_id, file_name as entry_name, 2 as folder_content_type, file.create_time
+             FROM
+                 file_tb file
+                     JOIN
+                 folder_tb folder
+                 ON
+                     folder.folder_id = file.folder_id
+             WHERE
+                 file.folder_id = #{parentFolderId}
+               AND
+                 resource_scope_team_id = #{resourceScopeTeamId}
+            ) folder_contents
+        OFFSET #{offset} LIMIT #{limit}
+    </select>
+
+    <!-- 좌측 트리 용 Cursor 베이스 팀 폴더 조회 -->
+    <select id="selectSimpleTeamFolderCursorBaseByUuid" parameterType="com.uruz.frostbite.dto.folder.internal.TeamFolderCursorBaseConditionByUuid"
+            resultType="com.uruz.frostbite.dto.folder.SimpleFolderTreeNode">
+        SELECT
+        folder.uuid, folder.folder_name, folder.folder_type, folder.render_sequence,
+        parent.uuid AS parent_folder_uuid, folder.status,
+        (SELECT EXISTS(SELECT 1 from folder_tb where parent_folder_id = folder.uuid)) as hasChild
+        FROM
+        folder_tb folder
+        LEFT JOIN
+        folder_tb parent
+        ON
+        folder.parent_folder_id = parent.folder_id
+        <if test="nextFolderUuid != null">
+            CROSS JOIN (
+            SELECT
+            folder_id, COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
+            FROM
+            folder_tb
+            WHERE
+            uuid = #{nextFolderUuid}
+            ) criteria
+        </if>
+        <where>
+            parent.uuid = #{parentFolderUuid}
+            AND
+            resource_scope_user_id = #{userId}
+            AND
+            folder_type = #{folderType}
+            AND
+            folder.status = #{status}
+            <if test="nextFolderUuid != null">
+                AND (
+                COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
+                OR (
+                COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
+                AND
+                folder.folder_id >= criteria.folder_id
+                )
+                )
+            </if>
+        </where>
+        ORDER BY
+        COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 좌측 트리 용 다음 UUID 조회 -->
+    <select id="selectSimpleTeamFolderCursorBaseNext" parameterType="com.uruz.frostbite.dto.folder.internal.TeamFolderCursorBaseConditionByUuid"
+            resultType = "java.util.UUID">
+        SELECT
+        folder.uuid
+        FROM
+        folder_tb folder
+        LEFT JOIN
+        folder_tb parent
+        ON
+        folder.parent_folder_id = parent.folder_id
+        <if test="lastFolderUuid != null">
+            CROSS JOIN (
+            SELECT
+            folder_id, COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
+            FROM
+            folder_tb
+            WHERE
+            uuid = #{lastFolderUuid}
+            ) criteria
+        </if>
+        <where>
+            parent.uuid = #{parentFolderUuid}
+            AND
+            resource_scope_user_id = #{userId}
+            AND
+            folder_type = #{folderType}
+            AND
+            folder.status = #{status}
+            <if test="lastFolderUuid != null">
+                AND (
+                COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
+                OR (
+                COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
+                AND
+                folder.folder_id > criteria.folder_id
+                )
+                )
+            </if>
+        </where>
+        ORDER BY
+        COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
+        LIMIT #{limit}
+    </select>
+
+
+
+
+
+
+
+
+
+
+
+
+    <select id="selectSimpleFolderOffsetById" parameterType="SimplePrivateFolderOffsetConditionByFolderId" resultType="com.uruz.frostbite.dto.folder.SimpleFolder">
             /** selectSimpleFolderOffsetById */
-            SELECT folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
+            SELECT folder.uuid, folder.folder_name, folder.folder_type, folder.render_sequence,
                   parent.uuid as parent_folder_uuid, folder.status
             FROM folder_tb folder
             LEFT JOIN folder_tb parent on folder.parent_folder_id = parent.folder_id
@@ -126,9 +516,9 @@
             ORDER BY folder.render_sequence ASC NULLS LAST, folder.folder_id ASC
             OFFSET #{offset} LIMIT #{limit}
     </select>
-    <select id="selectSimpleFolderOffsetByUuid" parameterType="SimpleFolderOffsetConditionByUuid" resultType="SimpleFolderResponse">
+    <select id="selectSimpleFolderOffsetByUuid" parameterType="SimpleFolderOffsetConditionByUuid" resultType="com.uruz.frostbite.dto.folder.SimpleFolder">
         /** selectSimpleFolderOffsetByUuid */
-        SELECT folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
+        SELECT folder.uuid, folder.folder_name, folder.folder_type, folder.render_sequence,
                parent.uuid as parent_folder_uuid, folder.status
         FROM folder_tb folder
                  LEFT JOIN folder_tb parent on folder.parent_folder_id = parent.folder_id
@@ -149,9 +539,9 @@
         WHERE parent_folder_id = (select folder_id from folder_tb where uuid = #{parentFolderUuid})
           AND status = #{status}
     </select>
-    <select id="selectSimpleFolderKeyBaseById" parameterType="SimplePrivateFolderOffsetConditionByFolderId" resultType="SimpleFolderResponse">
+    <select id="selectSimpleFolderKeyBaseById" parameterType="SimplePrivateFolderOffsetConditionByFolderId" resultType="com.uruz.frostbite.dto.folder.SimpleFolder">
             SELECT
-                folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
+                folder.uuid, folder.folder_name, folder.folder_type, folder.render_sequence,
                 parent.uuid AS parent_folder_uuid, folder.status
             FROM
                 folder_tb folder
@@ -186,44 +576,9 @@
                 COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
             LIMIT #{limit}
     </select>
-    <select id="selectSimpleFolderKeyBaseByUuid" parameterType="SimpleFolderKeyBaseConditionByUuid" resultType="SimpleFolderResponse">
-        SELECT
-        folder.uuid, folder.name, folder.folder_type, folder.render_sequence,
-        parent.uuid AS parent_folder_uuid, folder.status
-        FROM
-        folder_tb folder
-        LEFT JOIN
-        folder_tb parent
-        ON
-        folder.parent_folder_id = parent.folder_id
-        <if test="lastFolderUuid != null">
-            CROSS JOIN (
-            SELECT
-            folder_id, COALESCE(render_sequence, 2147483647) AS cursor_render_sequence
-            FROM
-            folder_tb
-            WHERE
-            uuid = #{lastFolderUuid}
-            ) criteria
-        </if>
-        <where>
-            parent.uuid = #{parentFolderUuid}
-            AND folder.status = #{status}
-            <if test="lastFolderUuid != null">
-                AND (
-                COALESCE(folder.render_sequence, 2147483647) > criteria.cursor_render_sequence
-                OR (
-                COALESCE(folder.render_sequence, 2147483647) = criteria.cursor_render_sequence
-                AND folder.folder_id > criteria.folder_id
-                )
-                )
-            </if>
-        </where>
-        ORDER BY
-        COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
-        LIMIT #{limit}
-    </select>
 
+
+    <!-- Deprecated -->
     <select id="selectSimpleFolderKeyBaseHasNext" resultType = "boolean" parameterType="SimpleFolderKeyBaseConditionByFolderId">
         SELECT EXISTS (
             SELECT 1
@@ -255,6 +610,7 @@
         LIMIT 1
         )
     </select>
+    <!-- Deprecated -->
     <select id="selectSimpleFolderKeyBaseHasNextByUuid" resultType = "boolean" parameterType="SimpleFolderKeyBaseConditionByFolderId">
         SELECT EXISTS (
         SELECT 1
@@ -287,9 +643,11 @@
         )
     </select>
 
+
+
     <select id ="selectTeamEntryFolder" parameterType="TeamEntryFolderCondition" resultType="Folder">
         SELECT
-        folder_id, name, create_user_id, create_time, folder_type, resource_scope_team_id, parent_folder_id, uuid, folder_name_path
+        folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_team_id, parent_folder_id, uuid, folder_name_path
         FROM
         folder_tb
         WHERE
@@ -310,25 +668,26 @@
         AND
         status = #{status}
     </select>
-    <select id="selectSimpleFolderByFolderId" resultType="SimpleFolderResponse">
+    <select id="selectSimpleFolderByFolderId" resultType="com.uruz.frostbite.dto.folder.SimpleFolder">
         SELECT
-            folder_id, name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, folder_name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE
             folder_id = #{folderId}
     </select>
-    <select id="selectSimpleFolderByFolderUuid" resultType="SimpleFolderResponse">
+    <select id="selectSimpleFolderByFolderUuid" resultType="com.uruz.frostbite.dto.folder.SimpleFolder">
         SELECT
-            folder_id, name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, folder_name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE
             uuid = #{folderUuid}
     </select>
-    <select id="selectFolderByUuid" resultType="Folder">
+
+    <select id="selectProcessableFolder" resultType="Folder">
         SELECT
-            folder_id, name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
+            folder_id, folder_name, folder_type, resource_scope_team_id, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid, folder_name_path, folder_id_path
         FROM
             folder_tb
         WHERE
@@ -337,7 +696,7 @@
     <select id="selectFolderDetails" resultType="FolderDetailsDraft">
         /** selectFolderDetails */
         SELECT
-            folder.uuid, folder.name, folder.folder_type, folder.resource_scope_team_id, folder.resource_scope_user_id, folder.resource_owner_id, folder.access_policy, folder.create_user_id,
+            folder.uuid, folder.folder_name, folder.folder_type, folder.resource_scope_team_id, folder.resource_scope_user_id, folder.resource_owner_id, folder.access_policy, folder.create_user_id,
             folder.create_time, folder.modify_user_id, folder.modify_time, folder.render_sequence,
             parent.uuid as parent_folder_uuid, folder.status
         FROM
@@ -357,6 +716,34 @@
             uuid = #{folderUuid}
     </update>
 
+    <update id="updateFolder" parameterType="FolderModifyCommand">
+        update
+            folder_tb
+        SEt
+            folder_name = #{folderName}
+        WHERE
+            uuid = #{folderUuid}
+    </update>
+
+    <update id="updateFolderParent" parameterType="SubFolderMoveCommand">
+        UPDATE
+            folder_tb
+        SET
+            parent_folder_id = #{destinationFolderId},
+            modify_user_id = #{modifyUserId}
+        WHERE
+            folder_id = #{targetFolderId}
+    </update>
+
+    <update id="updateSubFolderPath" parameterType="MovedSubFolderPathCommand">
+        UPDATE
+            folder_tb
+        SET
+            folder_id_path = replace(folder_id_path, #{oldFolderIdPath}, #{newFolderIdPath}),
+            folder_name_path = replace(folder_name_path, #{oldFolderNamePath}, #{newFolderNamePath})
+        WHERE
+            folder_id_path like #{oldFolderIdPath} || '%'
+    </update>
 
     <!-- RESOLVERS -->
     <select id="selectFolderWithAccessControlResources" resultType="FolderTargetAccessControlProjection">

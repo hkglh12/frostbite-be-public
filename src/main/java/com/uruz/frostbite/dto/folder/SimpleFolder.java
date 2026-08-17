@@ -1,7 +1,6 @@
 package com.uruz.frostbite.dto.folder;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,12 +16,12 @@ import java.util.UUID;
 )
 @NoArgsConstructor
 @AllArgsConstructor
-public class SimpleFolderResponse {
+public class SimpleFolder {
 
     @Schema(description = "식별자 UUID")
     private UUID uuid;
     @Schema(description = "폴더 이름")
-    private String name;
+    private String folderName;
     @Schema(description = "폴더 구분[TEAM || PRIVATE]")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private FolderType folderType;

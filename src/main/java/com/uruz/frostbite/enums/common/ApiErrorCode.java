@@ -20,6 +20,8 @@ public enum ApiErrorCode implements ResponseCode{
     NOT_FOUND("EIR001", "Unable to find request target", HttpStatus.NOT_FOUND),
     INTERNAL_ERROR_FOR_JSON_PARSE("EIR002", "Submitted JSON is unable to parse", HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR_FOR_RESOURCE_HANDLE("EIR003", "Server failed to HANDLE resources", HttpStatus.INTERNAL_SERVER_ERROR),
+    INTERNAL_DATA_INCONSISTENCY_FOLDER_RESOURCE("ESD001", "Folder resource should be exists, but failed to found", HttpStatus.INTERNAL_SERVER_ERROR),
+
     /** 권한 */
     // 요청 속행 불능
     ACCESS_DENIED("EIA001", "Not enough role or authority", HttpStatus.FORBIDDEN),
@@ -32,7 +34,8 @@ public enum ApiErrorCode implements ResponseCode{
 
     /** 서버측 자원관리*/
     INTERNAL_DATA_INCONSISTENCY_TEMP_PATH("ESD001", "Temp File path is null", HttpStatus.INTERNAL_SERVER_ERROR),
-    INTERNAL_RESOURCE_HANDLE_FAILED("ESD002", "Failed to handle file", HttpStatus.INTERNAL_SERVER_ERROR),
+
+
     /** 예측 외 오류 */
     UNRECOGNIZED("000000", "Unrecognized error occuered", HttpStatus.INTERNAL_SERVER_ERROR),
 

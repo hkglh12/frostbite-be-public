@@ -14,11 +14,10 @@ import java.util.UUID;
         description = "간략 폴더 리스트 베이스 응답"
 )
 @AllArgsConstructor
+@Deprecated(forRemoval = true)
 public class SimpleFolderListKeysetResponse{
-    private List<SimpleFolderResponse> folders;
+    private List<SimpleFolder> folders;
     private Boolean hasNext;
-
     private UUID lastFolderUuid;
-
 }
 

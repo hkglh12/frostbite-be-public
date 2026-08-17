@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Pagination {
+public class OffsetBasePagination {
 
     @Schema(description = "전체 개수")
     public int totalCount;
@@ -17,4 +17,9 @@ public class Pagination {
     @Schema(description = "LIMIT")
     public int limit;
 
+    public OffsetBasePagination(int totalCount, int offset, int limit){
+        this.totalCount = totalCount;
+        this.offset = offset;
+        this.limit = limit;
+    }
 }

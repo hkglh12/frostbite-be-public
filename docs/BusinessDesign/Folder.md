@@ -101,8 +101,8 @@
 - 전제
   - 좌측 폴더트리뷰 / 메인컨텐츠뷰로 나눈다.
   - 좌측 폴더트리뷰와 메인컨텐츠뷰를 API상, 비즈니스 흐름 상 분할한다.
-  - Keyset pagination (cursor pagination) 을 적용하며, 좌측 폴더트리에서는 "더보기" UX를 제공한다.
-  - Offset pagination 을 적용하여, 메인컨텐츠뷰에서는 "페이지Number 페이지네이션" 방식을 차용한다.
+  - Keyset offsetBasePagination (cursor offsetBasePagination) 을 적용하며, 좌측 폴더트리에서는 "더보기" UX를 제공한다.
+  - Offset offsetBasePagination 을 적용하여, 메인컨텐츠뷰에서는 "페이지Number 페이지네이션" 방식을 차용한다.
   - Entry Folder는 사용자에게 노출하지 않는다.
     - 즉, 외부 API는 Entry를 몰라도 되며, 모든 Root 조회는 내부적으로 Entry Folder 기준으로 수행된다
   

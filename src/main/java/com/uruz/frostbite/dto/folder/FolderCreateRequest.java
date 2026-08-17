@@ -1,6 +1,5 @@
 package com.uruz.frostbite.dto.folder;
 
-import com.uruz.frostbite.enums.FolderType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -20,7 +19,7 @@ public class FolderCreateRequest {
     @NotEmpty
     @Size(max = 256)
     @Schema(description = "폴더 이름")
-    private String name;
+    private String folderName;
 
     @NotNull
     @Schema(description = "부모폴더 UUID")

@@ -26,10 +26,18 @@
   - 각 API 별로 접근할 수 있는 최상위 필드명을 공통처리해서 혼동을 줄이기 위함
   - 단, 이미 HTTP status code는 ResponseEntity가 가지고 있으므로, 공통응답래퍼는 T result 와 String message, timestamp(api요청시각), code(ENUM, 별도의 추가정보)을 가지도록 한다.
   - 이때, String message는 code의 message값을, code는 enum의 코드값을 활용한다.
-- 주어진 조건으로 select에 실패했을 경우 notFound* 계열 Exception을 던지고 GlobalExceptionHandler에서 HTTP status 코드값을 적절히 값을 나타내는 코드로 변환, 에러 전용 DTO로 리턴한다.
-  - statusCode는 globalExceptionHandler에서도 ResponseEntity를 사용할것이므로 httpstatus code는 제외, message, timestamp(api요청시각), code(ENUM, 별도의 오류정보)을 가지도록 한다.
-  - 이때, String message는 code의 message값을, code는 enum의 코드값을 활용한다.
+- 각 에러 상황 발생 시, apiErrorCode에 선언하고 각 httpStatus를 지정하도록 한다.
+- 각 Exception 클래스 종류는 아래와 같은 의미를 가진다.
+  - GeneralException : 예측하지 못한, 잡아내지 못한 상황에 대한 Http 응답 시 Exception
+  - RequestProcessingException : 주어진 파라미터를 통해 비즈니스 로직을 순회하다 발생한 Exception 중 외부(FE)에 반환해야 할 경우에 사용하는 Exception
+  - InternalProcessingException : 주어진 파라미터를 통해 비즈니스 로직을 순회하다 발생한 Exception 중 내부에서 소화하고 응답에 사용하지 않을 Exception
 
+- OffsetBase 리스팅 시 응답
+  - 실제 응답 정보
+  - Pagination 정보
+    - total 카운트 : 주어진 검색조건에 부합하는 count 개수
+    - offset : FE param Echo
+    - limit : FE param echo
 
 ### Optional의 사용
   - "어떠한 연산의 결과" 가 값 없음이 발생할 수 있다면, Optional로 처리한다.
