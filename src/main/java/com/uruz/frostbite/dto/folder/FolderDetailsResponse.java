@@ -22,7 +22,7 @@ public class FolderDetailsResponse {
     @Schema(description = "식별자 UUID")
     private UUID uuid;
     @Schema(description = "폴더 이름")
-    private String name;
+    private String folderName;
     @Schema(description = "폴더 구분[TEAM || PRIVATE]")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private FolderType folderType;
@@ -48,7 +48,7 @@ public class FolderDetailsResponse {
 
 
     public static FolderDetailsResponse from(FolderDetailsDraft draft, String resourceScopeName, String createUserName, String modifyUserName){
-        return new FolderDetailsResponse(draft.getUuid(), draft.getName(), draft.getFolderType(),
+        return new FolderDetailsResponse(draft.getUuid(), draft.getFolderName(), draft.getFolderType(),
                 resourceScopeName, createUserName, draft.getCreateTime(), modifyUserName, draft.getModifyTime(),
                 draft.getRenderSequence(), draft.getParentFolderUuid(), draft.getStatus());
     }

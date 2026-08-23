@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SimpleFolderEntriesListOffsetResponse {
 
-    private List<SimpleFolderResponse> folders;
+    private List<SimpleFolder> folders;
     private List<SimpleFileResponse> files;
     private Integer folderTotal;
     private Integer fileTotal;

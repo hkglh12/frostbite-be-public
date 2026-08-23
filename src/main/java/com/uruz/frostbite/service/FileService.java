@@ -1,7 +1,6 @@
 package com.uruz.frostbite.service;
 
 
-import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.File;
 import com.uruz.frostbite.domain.FileTemp;
@@ -54,7 +53,8 @@ public class FileService {
         if(!createUserId.equals(fileTemp.getCreateUserId())){
             throw new RequestProcessingException(ApiErrorCode.RESOURCE_SCOPE_DENIED);
         }
-        Folder folder = folderResolverService.resolveFolderByUuid(folderUuid);
+
+        Folder folder = folderResolverService.resolveAccessibleFolderByFolderUuid(folderUuid, createUserId).orElseThrow( () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND));
         // TODO FolderUUID로부터 업로드 권한 확인
 
         // file_tb에 저장

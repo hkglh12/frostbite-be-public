@@ -107,7 +107,7 @@ create table folder_tb
     uuid                   UUID,
     folder_id              bigserial
         primary key,
-    name                   varchar(512),
+    folder_name                   varchar(512),
     folder_type            integer,
     parent_folder_id       bigint,
     resource_scope_team_id integer,
@@ -130,7 +130,7 @@ create table folder_tb
 comment on table folder_tb is '폴더';
 comment on column folder_tb.uuid is 'uuid';
 comment on column folder_tb.folder_id is '폴더 식별자';
-comment on column folder_tb.name is '폴더명';
+comment on column folder_tb.folder_name is '폴더명';
 comment on column folder_tb.folder_type is '폴더 종류(PRIVATE||TEAM)';
 comment on column folder_tb.parent_folder_id is '부모 폴더 식별자';
 comment on column folder_tb.resource_scope_team_id is '소유 팀 식별자';

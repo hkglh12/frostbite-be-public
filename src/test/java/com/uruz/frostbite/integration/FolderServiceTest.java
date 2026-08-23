@@ -1,7 +1,7 @@
 package com.uruz.frostbite.integration;
 
 import com.uruz.frostbite.dto.folder.FolderCreateRequest;
-import com.uruz.frostbite.dto.folder.SimpleFolderResponse;
+import com.uruz.frostbite.dto.folder.SimpleFolder;
 import com.uruz.frostbite.dto.folder.TeamRootFolderCreateRequest;
 import com.uruz.frostbite.enums.AclEffectType;
 import com.uruz.frostbite.enums.AclSubjectType;
@@ -33,7 +33,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
     @Nested
     @DisplayName("엔트리 폴더 생성")
-    class CreateEntryFolder {
+    class CreateFolderContentFolder {
 
         @Test
         @DisplayName("개인 엔트리 폴더와 사용자 기본 ACL을 함께 생성한다")
@@ -79,7 +79,7 @@ class FolderServiceTest extends IntegrationTestSupport {
             TestFolder entryFolder = fixture.createPrivateEntryFolder(user.id());
 
             // when
-            SimpleFolderResponse response = folderService.createPrivateRootFolder(user.id(), "개인 루트 폴더");
+            SimpleFolder response = folderService.createPrivateRootFolder(user.id(), "개인 루트 폴더");
 
             // then
             FolderRow rootFolder = only(query.findFoldersByParent(entryFolder.id(), FolderType.PRIVATE));
@@ -101,7 +101,7 @@ class FolderServiceTest extends IntegrationTestSupport {
             request.setTeamUuid(team.uuid());
 
             // when
-            SimpleFolderResponse response = folderService.createTeamRootFolder(creator.id(), request);
+            SimpleFolder response = folderService.createTeamRootFolder(creator.id(), request);
 
             // then
             FolderRow rootFolder = only(query.findFoldersByParent(entryFolder.id(), FolderType.TEAM));
@@ -126,7 +126,7 @@ class FolderServiceTest extends IntegrationTestSupport {
             FolderCreateRequest request = subFolderRequest(parent, "개인 서브 폴더");
 
             // when
-            SimpleFolderResponse response = folderService.createSubFolder(user.id(), request);
+            SimpleFolder response = folderService.createSubFolder(user.id(), request);
 
             // then
             FolderRow child = only(query.findFoldersByParent(parent.id(), FolderType.PRIVATE));
@@ -146,7 +146,7 @@ class FolderServiceTest extends IntegrationTestSupport {
             FolderCreateRequest request = subFolderRequest(parent, "팀 서브 폴더");
 
             // when
-            SimpleFolderResponse response = folderService.createSubFolder(creator.id(), request);
+            SimpleFolder response = folderService.createSubFolder(creator.id(), request);
 
             // then
             FolderRow child = only(query.findFoldersByParent(parent.id(), FolderType.TEAM));
@@ -158,7 +158,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
     private static FolderCreateRequest subFolderRequest(TestFolder parent, String name) {
         FolderCreateRequest request = new FolderCreateRequest();
-        request.setName(name);
+        request.setFolderName(name);
         request.setParentFolderUuid(parent.uuid());
         return request;
     }

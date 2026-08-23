@@ -24,7 +24,7 @@ public class Folder {
     private Long folderId;
 
     /** 폴더명 */
-    private String name;
+    private String folderName;
 
     /** 폴더종류 (1: private, 2: team) */
     private FolderType folderType;

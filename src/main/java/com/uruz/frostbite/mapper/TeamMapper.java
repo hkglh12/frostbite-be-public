@@ -44,4 +44,6 @@ public interface TeamMapper {
                                                              @Param("teamId") Integer teamId,
                                                              @Param("status")GeneralRelationStatus status);
 
+    Optional<Team> selectAccessibleTeamByTeamUuid(@Param("userId") Integer userId, @Param("teamUuid") UUID teamUuid);
+
 }

@@ -23,7 +23,7 @@ public class FolderAclTargetProjection {
     @Schema(description = "식별자 UUID")
     private UUID uuid;
     @Schema(description = "폴더 이름")
-    private String name;
+    private String folderName;
     @Schema(description = "폴더 구분")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private FolderType folderType;

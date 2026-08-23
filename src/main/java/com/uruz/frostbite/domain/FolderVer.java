@@ -16,7 +16,7 @@ public class FolderVer {
     private Integer folderId;
 
     /** 폴더명 */
-    private String name;
+    private String folderName;
 
     /** 수정자 (user_id) */
     private Integer modifyUser;

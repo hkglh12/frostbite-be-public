@@ -156,7 +156,7 @@ public class FileOrchestrationService {
                 directFileHandleComponent.deleteTempFile(draft.getTempFileUuid());
             } catch(Exception EE){
                 EE.printStackTrace();
-                throw new RequestProcessingException(ApiErrorCode.INTERNAL_RESOURCE_HANDLE_FAILED);
+                throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
             }
             throw e;
         }

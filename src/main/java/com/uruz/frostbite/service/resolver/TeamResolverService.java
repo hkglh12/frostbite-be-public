@@ -11,18 +11,17 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.management.relation.RoleStatus;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class TeamResolverService {
 
     private final TeamMapper teamMapper;
-    private final TeamResolverService self;
 
     @Autowired
-    public TeamResolverService(TeamMapper teamMapper, @Lazy TeamResolverService self){
+    public TeamResolverService(TeamMapper teamMapper){
         this.teamMapper = teamMapper;
-        this.self = self;
     }
 
     public Team getTeamByUuid(UUID teamUuid){
@@ -35,5 +34,9 @@ public class TeamResolverService {
 
     public TeamUserRelationProjection selectValidTeamUserRelation(Integer userId, Integer teamId){
         return teamMapper.selectTeamUserRelation(userId, teamId, GeneralRelationStatus.ACTIVE);
+    }
+
+    public Optional<Team> selectAccessibleTeamByTeamUuid(Integer userId, UUID teamUuid){
+        return teamMapper.selectAccessibleTeamByTeamUuid(userId, teamUuid);
     }
 }

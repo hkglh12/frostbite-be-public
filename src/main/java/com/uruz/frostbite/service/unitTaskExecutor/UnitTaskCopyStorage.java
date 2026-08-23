@@ -76,7 +76,7 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
             return draft;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new InternalProcessingException(ApiErrorCode.INTERNAL_RESOURCE_HANDLE_FAILED.getMessage());
+            throw new InternalProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE.getMessage());
 
         }
     }
