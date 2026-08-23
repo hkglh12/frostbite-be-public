@@ -37,6 +37,7 @@ public class FolderController {
 
     /**
      * 1. 개인/부서의 Entry Folder는 가입/생성과 동시에 생성되어야 한다. 이에따라 URL로 제공되지 않음
+     * 2. ROOT 폴더 생성 시, 부모 폴더 UUID를 받는게 아니라 사용자 정보를 받게됨. 별도 API로 제공
      * 2. 폴더컨텐츠 조회 시, 개인폴더와 팀폴더의 파라미터가 다름. 아예 분리해서 접근하는 방향으로 수행
      * */
 
@@ -56,8 +57,6 @@ public class FolderController {
     )
 
     //사용자 UUID를 기반으로 개인폴더 ROOT 생성
-    /* 부모폴더 UUID 기반이 아닌, 사용자UUID -> EntryFolder조회 -> ROOT폴더 생성
-    * 파라미터로 부모폴더 ID를 받을 수 없으므로 별도 API로 서빙*/
     @PostMapping("/private/root")
     public ResponseEntity<?> createPrivateRootFolder(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
@@ -67,61 +66,6 @@ public class FolderController {
         SimpleFolder folder = folderService.createPrivateRootFolder(userId, folderName);
         return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
     }
-
-    /** 팀 폴더 전용*/
-    // 팀 UUID를 기반으로 팀 ROOT를 만든다.
-    @ApiResponse(
-            responseCode = "200",
-            description = "폴더 생성 성공",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ApiSucceedResponse.class),
-                    examples = @ExampleObject(
-                            name = "성공 응답",
-                            summary = "폴더 요약 정보",
-                            value = SwaggerExamples.SIMPLE_FOLDER_RESPONSE_SUCCESS
-                    )
-            )
-    )
-    @PostMapping("/teams/{teamUuid}/roots")
-    public ResponseEntity<?> createTeamRootFolder(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @AuthenticationPrincipal(expression = "userId") Integer userId,
-            // TODO Body에서 teamUUid 꺼낼것
-            // RestfulAPI URL 상, "자원" 은 URL에 표현되어야 함
-            // 위 URL은 "여러개 team 중" / "특정 UUID 팀에" / root 를 @POST 가 되어야함.
-            @RequestBody TeamRootFolderCreateRequest request
-    ){
-        SimpleFolder folder = folderService.createTeamRootFolder(userId, request);
-
-        return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
-    }
-
-    /** 팀 / 개인 공통*/
-    @ApiResponse(
-            responseCode = "200",
-            description = "폴더 생성 성공",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ApiSucceedResponse.class),
-                    examples = @ExampleObject(
-                            name = "성공 응답",
-                            summary = "폴더 요약 정보",
-                            value = SwaggerExamples.SIMPLE_FOLDER_RESPONSE_SUCCESS
-                    )
-            )
-    )
-    /** 부모 폴더 UUID를 기준으로 서브폴더 생성 */
-    @PostMapping("/")
-    public ResponseEntity<?> createFolder(
-            @AuthenticationPrincipal(expression = "userId") Integer userId,
-            @Validated  @RequestBody FolderCreateRequest request
-    ){
-        SimpleFolder folder = folderService.createSubFolder(userId, request);
-
-        return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
-    }
-
 
     // 개인폴더 폴더리스트 KeyBase 조회 (좌측 트리 랜더용)
     @ApiResponse(
@@ -138,7 +82,7 @@ public class FolderController {
             )
     )
     @GetMapping("/private/folder/trees")
-    public ResponseEntity<?> getPrivateRootFoldersByCursorBase(
+    public ResponseEntity<?> getPrivateFoldersByCursorBase(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @RequestParam(required = false, name="parentFolderUuid") UUID parentFolderUuid,
             @RequestParam(required = false, name= "nextFolderUuid") UUID nextFolderUuid,
@@ -175,22 +119,35 @@ public class FolderController {
         return ResponseEntity.ok(new ApiSucceedResponse<>(folderContents));
     }
 
-
-
-
+    /** 팀 폴더 전용*/
     @ApiResponse(
             responseCode = "200",
-            description = "폴더 목록 조회 성공",
+            description = "폴더 생성 성공",
             content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ApiSucceedResponse.class),
                     examples = @ExampleObject(
                             name = "성공 응답",
-                            summary = "폴더 offset 목록",
-                            value = SwaggerExamples.SIMPLE_FOLDER_LIST_OFFSET_RESPONSE_SUCCESS
+                            summary = "폴더 요약 정보",
+                            value = SwaggerExamples.SIMPLE_FOLDER_RESPONSE_SUCCESS
                     )
             )
     )
+    // 팀 UUID를 기반으로 팀 ROOT를 만든다.
+    @PostMapping("/teams/{teamUuid}/roots")
+    public ResponseEntity<?> createTeamRootFolder(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal(expression = "userId") Integer userId,
+            // TODO Body에서 teamUUid 꺼낼것
+            // RestfulAPI URL 상, "자원" 은 URL에 표현되어야 함
+            // 위 URL은 "여러개 team 중" / "특정 UUID 팀에" / root 를 @POST 가 되어야함.
+            @RequestBody TeamRootFolderCreateRequest request
+    ){
+        SimpleFolder folder = folderService.createTeamRootFolder(userId, request);
+
+        return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
+    }
+
     // 팀 폴더 컨텐츠 조회 (Root, nonRoot 병합됨)
     @GetMapping("/teams/{teamUuid}/folder/contents")
     public ResponseEntity<?> getTeamRootFoldersByOffsetBase(
@@ -230,10 +187,48 @@ public class FolderController {
         return ResponseEntity.ok(new ApiSucceedResponse<>(response));
     }
 
+    /** 팀 / 개인 공통*/
+    @ApiResponse(
+            responseCode = "200",
+            description = "폴더 생성 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiSucceedResponse.class),
+                    examples = @ExampleObject(
+                            name = "성공 응답",
+                            summary = "폴더 요약 정보",
+                            value = SwaggerExamples.SIMPLE_FOLDER_RESPONSE_SUCCESS
+                    )
+            )
+    )
+    // 부모폴더 UUID를 기준으로 서브폴더 생성
+    @PostMapping("/")
+    public ResponseEntity<?> createSubFolder(
+            @AuthenticationPrincipal(expression = "userId") Integer userId,
+            @Validated  @RequestBody FolderCreateRequest request
+    ){
+        SimpleFolder folder = folderService.createSubFolder(userId, request);
+
+        return ResponseEntity.ok(new ApiSucceedResponse<>(folder));
+    }
 
     @ApiResponse(
             responseCode = "200",
             description = "폴더 목록 조회 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ApiSucceedResponse.class),
+                    examples = @ExampleObject(
+                            name = "성공 응답",
+                            summary = "폴더 offset 목록",
+                            value = SwaggerExamples.SIMPLE_FOLDER_LIST_OFFSET_RESPONSE_SUCCESS
+                    )
+            )
+    )
+
+    @ApiResponse(
+            responseCode = "200",
+            description = "폴더 조회 성공",
             content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ApiSucceedResponse.class),
@@ -244,58 +239,7 @@ public class FolderController {
                     )
             )
     )
-    @GetMapping("/{folderUuid}/subfolders/tree")
-    /** 사용자가 클릭한 폴더의 UUID를 기준으로 서브폴더를 조회한다.
-     * 좌측 트리에서는 파일을 출력해주지 않을것이므로 폴더만 조회하면 된다.
-     * */
-    @Deprecated
-    public ResponseEntity<?> getSubFoldersByKeysetBase(
-            @AuthenticationPrincipal(expression =  "userId" ) Integer userId,
-            @PathVariable(name="folderUuid") UUID parentFolderUuid,
-            @RequestParam(required = false, name="lastFolderUuid") UUID lastFolderUuid,
-            @RequestParam(required = false, name="limit", defaultValue = "50") Integer limit
-    ){
-        SimpleFolderListKeysetResponse response = folderService.getSubFoldersByKeysetBaseByUuid(userId, parentFolderUuid, lastFolderUuid, limit);
-        return ResponseEntity.ok(new ApiSucceedResponse<>(response));
-    }
-    @ApiResponse(
-            responseCode = "200",
-            description = "폴더 및 파일 목록 조회 성공",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ApiSucceedResponse.class),
-                    examples = @ExampleObject(
-                            name = "성공 응답",
-                            summary = "폴더 및 파일 offset 목록",
-                            value = SwaggerExamples.SIMPLE_FOLDER_ENTRIES_LIST_OFFSET_RESPONSE_SUCCESS
-                    )
-            )
-    )
-    @GetMapping("/{folderUuid}/entries")
-    /** 사용자가 클릭한 폴더의 UUID를 기준으로 그 폴더의 내용물 (서브폴더와 파일)을 함께 조회한다 */
-    public ResponseEntity<?> getSubFolderEntriesByOffsetBase(
-            @AuthenticationPrincipal(expression =  "userId" ) Integer userId,
-            @PathVariable(name="folderUuid") UUID parentFolderUuid,
-            @RequestParam(required = false, name="offset", defaultValue = "0") Integer offset,
-            @RequestParam(required = false, name="limit", defaultValue = "50") Integer limit
-    ){
-        SimpleFolderEntriesListOffsetResponse entries = folderService.getSubFolderEntriesOffsetBaseByUuid(userId, parentFolderUuid, offset, limit);
-        return ResponseEntity.ok(new ApiSucceedResponse<>(entries));
-    }
 
-    @ApiResponse(
-            responseCode = "200",
-            description = "폴더 상세 조회 성공",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ApiSucceedResponse.class),
-                    examples = @ExampleObject(
-                            name = "성공 응답",
-                            summary = "폴더 상세 정보",
-                            value = SwaggerExamples.FOLDER_DETAIL_RESPONSE_SUCCESS
-                    )
-            )
-    )
     @GetMapping("/{folderUuid}/detail")
     /** 사용자가 클릭한 폴더의 UUID의 상세내역을 조회한다.*/
     public ResponseEntity<?> getSubFolderDetail(

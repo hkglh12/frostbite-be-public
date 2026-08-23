@@ -11,9 +11,10 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TeamFolderCursorBaseConditionByUuid {
+public class TeamFolderCursorBaseConditionByFolderUuid {
     private FolderType folderType = FolderType.TEAM;
     private FolderStatus status = FolderStatus.ACTIVE;
+    private UUID teamUuid;
     private Integer teamId;
     private Integer userId;
     private Long parentFolderId;
@@ -23,7 +24,9 @@ public class TeamFolderCursorBaseConditionByUuid {
     private UUID lastFolderUuid;
 
 
-    private TeamFolderCursorBaseConditionByUuid(Integer teamId, Integer userId, Long parentFolderId, UUID nextFolderUuid , FolderStatus status, Integer limit){
+
+    private TeamFolderCursorBaseConditionByFolderUuid(UUID teamUuid, Integer teamId, Integer userId, Long parentFolderId, UUID nextFolderUuid , FolderStatus status, Integer limit){
+        this.teamUuid = teamUuid;
         this.teamId = teamId;
         this.userId = userId;
         this.parentFolderId = parentFolderId;
@@ -32,7 +35,8 @@ public class TeamFolderCursorBaseConditionByUuid {
         this.limit = limit;
     }
 
-    private TeamFolderCursorBaseConditionByUuid(Integer teamId, Integer userId, Long parentFolderId, UUID nextFolderUuid, FolderStatus status, Integer limit, UUID lastFolderUuid){
+    private TeamFolderCursorBaseConditionByFolderUuid(UUID teamUuid, Integer teamId, Integer userId, Long parentFolderId, UUID nextFolderUuid , FolderStatus status, Integer limit, UUID lastFolderUuid){
+        this.teamUuid = teamUuid;
         this.teamId = teamId;
         this.userId = userId;
         this.parentFolderId = parentFolderId;
@@ -42,17 +46,24 @@ public class TeamFolderCursorBaseConditionByUuid {
         this.lastFolderUuid = lastFolderUuid;
     }
 
-    public static TeamFolderCursorBaseConditionByUuid of(Integer teamId, Integer userId, Long parentFolderUuid, UUID nextFolderUuid, FolderStatus status, Integer limit){
+    public static TeamFolderCursorBaseConditionByFolderUuid ofTeamId(Integer teamId, Integer userId, Long parentFolderUuid, UUID nextFolderUuid, FolderStatus status, Integer limit){
 
-        return new TeamFolderCursorBaseConditionByUuid(teamId, userId, parentFolderUuid,  nextFolderUuid, status, limit);
+        return new TeamFolderCursorBaseConditionByFolderUuid(null, teamId, userId, parentFolderUuid,  nextFolderUuid, status, limit);
     }
+
+    public static TeamFolderCursorBaseConditionByFolderUuid ofTeamUuid(UUID teamUuid, Integer userId, Long parentFolderUuid, UUID nextFolderUuid, FolderStatus status, Integer limit){
+
+        return new TeamFolderCursorBaseConditionByFolderUuid(teamUuid, null, userId, parentFolderUuid,  nextFolderUuid, status, limit);
+    }
+
 
     /**
      * 이전 Cursor base 조회의 마지막 FolderUUID를 통해 이후 조회 대상이 남아있는지 확인하기 위한 조회조건 생성
      * @param lastFolderUuid 마지막folderUuid
      * */
-    public TeamFolderCursorBaseConditionByUuid nextFolderUuidCondition(UUID lastFolderUuid){
-        return new TeamFolderCursorBaseConditionByUuid(
+    public TeamFolderCursorBaseConditionByFolderUuid nextFolderUuidCondition(UUID lastFolderUuid){
+        return new TeamFolderCursorBaseConditionByFolderUuid(
+                this.teamUuid,
                 this.teamId,
                 this.userId,
                 this.parentFolderId,

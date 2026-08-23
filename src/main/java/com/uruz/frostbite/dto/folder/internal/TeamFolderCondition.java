@@ -10,6 +10,7 @@ import java.util.UUID;
 public class TeamFolderCondition {
     private final FolderType folderType = FolderType.TEAM;
     private final FolderStatus status;
+    private final UUID teamUuid;
     private final Integer teamId;
     private final Integer userId;
     private final Long folderId;
@@ -18,22 +19,41 @@ public class TeamFolderCondition {
 
     private TeamFolderCondition(
             FolderStatus status,
+            UUID teamUuid,
             Integer teamId,
             Integer userId,
             Long folderId,
             UUID folderUuid
+
     ) {
         this.status = status;
+        this.teamUuid = teamUuid;
         this.teamId = teamId;
         this.userId = userId;
         this.folderId = folderId;
         this.folderUuid = folderUuid;
 
+
+
+
+    }
+
+    public static TeamFolderCondition fromTeamUuidWithUserId(UUID teamUuid, Integer userId) {
+        return new TeamFolderCondition(
+                FolderStatus.ACTIVE,
+                teamUuid,
+                null,
+                userId,
+                null,
+                null
+
+        );
     }
 
     public static TeamFolderCondition fromTeamIdWithUserId(Integer teamId, Integer userId) {
         return new TeamFolderCondition(
                 FolderStatus.ACTIVE,
+                null,
                 teamId,
                 userId,
                 null,
@@ -45,6 +65,7 @@ public class TeamFolderCondition {
     public TeamFolderCondition withFolderid(Long folderId) {
         return new TeamFolderCondition(
                 this.status,
+                this.teamUuid,
                 this.teamId,
                 this.userId,
                 folderId,
@@ -55,6 +76,7 @@ public class TeamFolderCondition {
     public TeamFolderCondition withFolderUuid(UUID folderUuid) {
         return new TeamFolderCondition(
                 this.status,
+                this.teamUuid,
                 this.teamId,
                 this.userId,
                 null,

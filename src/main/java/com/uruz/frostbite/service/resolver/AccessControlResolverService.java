@@ -30,6 +30,20 @@ public class AccessControlResolverService {
 
     }
 
+    /** 폴더 조회 시 ACL 조회 */
+    // 폴더 진입시 (폴더 조회시) -> 폴더 조회 이상의 권한이 있는지 확인해야함
+    // 이건 keyset folder list 도, folder entries도 마찬가지임
+
+    // 1. 폴더 조회 진입 -> 폴더 정보 조회
+    // 2. 사용자가 진입하려는 폴더의 scope에 정말 사용자가 속해있는지 확인 필요
+    // 3-1. 개인폴더일 경우, USER에게 deny가 떨어질 수 없음. ACL도 ALLOW ALL, PermissinoBitmask 도 all 권한임. 검증 종료 -> 조회 허용
+    // 3-2. 팀 폴더일 경우 (4부터 시작)
+    // 4. 사용자가 해당 팀의 ^Manager Role인지 검증, 맞다면 ACL 무시하고 동작하기로 했으므로 통과 -> 조회 허용
+    // 5. 사용자가 해당 폴더에 Deny ACL이 있는지 검증. 있다면 검증 종료, -> 조회 거절
+    // 6. 사용자가 해당 폴더에 ALLOW ACL이 있다면, permissionBitMask MAX()로 가져올것. (더 큰 권한을 판정에 사용하기로 했음)
+    // 7. 현재 수행하려는 동작이 ACL의 permissionBit에 포함된 상태인지 검증 -> 포함되었다면 조회 허용
+    // 8. 포함되어있지 않거나, ACL이 조회되지 않는다면 -> 조회 거절
+
     // TODO testcase 풍부하게 작성
     /*
     * TEAM ALLOW + USER DENY

@@ -25,8 +25,8 @@ public class FolderResolverService {
         return folderMapper.selectFolderWithAccessControlResources(folderId);
 
     }
-    public Optional<Folder> resolveFolderByUuid(UUID folderUuid){
-        return folderMapper.selectFolderByUuid(folderUuid);
+    public Optional<Folder> resolveAccessibleFolderByFolderUuid(UUID folderUuid, Integer userId){
+        return folderMapper.selectAccessibleFolderByFolderUuid(folderUuid, userId);
     }
 
 
