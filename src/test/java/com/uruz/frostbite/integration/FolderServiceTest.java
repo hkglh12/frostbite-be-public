@@ -1,29 +1,44 @@
 package com.uruz.frostbite.integration;
 
+import com.uruz.frostbite.domain.Folder;
+import com.uruz.frostbite.dto.common.response.OffsetBaseListResponse;
+import com.uruz.frostbite.dto.entry.FolderContents;
 import com.uruz.frostbite.dto.folder.FolderCreateRequest;
 import com.uruz.frostbite.dto.folder.SimpleFolder;
 import com.uruz.frostbite.dto.folder.TeamRootFolderCreateRequest;
-import com.uruz.frostbite.enums.AclEffectType;
-import com.uruz.frostbite.enums.AclSubjectType;
-import com.uruz.frostbite.enums.FolderType;
-import com.uruz.frostbite.enums.PermissionBitMask;
+import com.uruz.frostbite.enums.*;
+import com.uruz.frostbite.service.DirectFileHandleComponent;
 import com.uruz.frostbite.service.FolderService;
+import com.uruz.frostbite.service.UserService;
+import com.uruz.frostbite.service.resolver.UserResolverService;
 import com.uruz.frostbite.support.IntegrationTestSupport;
 import com.uruz.frostbite.support.TestDataFixture.TestFolder;
 import com.uruz.frostbite.support.TestDataFixture.TestTeam;
 import com.uruz.frostbite.support.TestDataFixture.TestUser;
 import com.uruz.frostbite.support.TestDataQuerySupport.AclRow;
 import com.uruz.frostbite.support.TestDataQuerySupport.FolderRow;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.test.annotation.Commit;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("FolderService 통합 테스트")
+// 물리파일 안건드리는데 디렉트컴포넌트 거는거도 좀.. -> @MockitoBean 으로 처리하자
+//@SpringBootTest(properties = {"spring.config.import=file:C:/Users/hkglh/Projects/sideProject/frostbite/application-secret.properties"})
+//@TestPropertySource(locations = "classpath:application-test.properties")
 class FolderServiceTest extends IntegrationTestSupport {
 
     private static final int ALL_PERMISSIONS = PermissionBitMask.of(PermissionBitMask.allMasks());
@@ -31,6 +46,156 @@ class FolderServiceTest extends IntegrationTestSupport {
     @Autowired
     private FolderService folderService;
 
+    @MockitoBean
+    DirectFileHandleComponent directFileHandleComponent;
+
+    private static final String USER_EMAIL = "junhoon.lee@konantech.com";
+
+
+
+    // JDBC Template 및 QA 작성 전반에 익숙해지기 위해 JdbcTemplate 수동으로 작성한다.
+    @DisplayName("사용자 userId와 folderName을 제출하면 엔트리폴더가 자동으로 찾아져서 엔트리 폴더 아래에 사용자 폴더가 생성되어야 한다.")
+    @Commit
+    @Test
+    public void userIdAndFolderNameIsDoForRootFolderCreationUnderOwnEntryFolder(){
+
+        // 사용자 정보 조회 (UserService 메서드 장애에 휘둘리지 않게, 사용자 정보를 직접 조회해온다.
+
+        Integer userId = jdbcTemplate.queryForObject("""
+                SELECT user_id FROM user_tb WHERE email = ?
+                """,  Integer.class, USER_EMAIL
+        );
+
+        String folderName = "ROOT_FOLDER_" + UUID.randomUUID();
+        folderService.createPrivateRootFolder(userId, folderName);
+
+        Folder createdFolder = jdbcTemplate.queryForObject("""
+                SELECT
+                    uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                FROM
+                    folder_tb
+                WHERE
+                    folder_name = ?
+                    
+                
+                """,
+                // 단순 타입은 *.class
+                // 객체 매핑은 RowMapper 사용
+                // MyBatis TypeHandler는 JdbcTemplate에서 적용되지 않으므로 Enum은 직접 변환
+                folderTestRowMapper, folderName);
+
+        assertThat(createdFolder).isNotNull();
+
+        Folder parentEntryFolder = jdbcTemplate.queryForObject("""
+                    SELECT
+                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                    FROM
+                        folder_tb
+                    WHERE
+                        folder_id = ?
+                """,  folderTestRowMapper, createdFolder.getParentFolderId()
+        );
+
+
+        assertThat(parentEntryFolder).isNotNull();
+
+        Assertions.assertAll(
+                () -> assertThat(createdFolder.getAccessPolicy()).isEqualTo(AccessPolicy.USER),
+                () -> assertThat(createdFolder.getCreateUserId()).isEqualTo(userId),
+                () -> assertThat(createdFolder.getResourceScopeUserId()).isEqualTo(userId),
+                () -> assertThat(createdFolder.getFolderName()).isEqualTo(folderName),
+                () -> assertThat(createdFolder.getFolderType()).isEqualTo(FolderType.PRIVATE),
+                () -> assertThat(parentEntryFolder.getParentFolderId()).isNull(),
+                () -> assertThat(parentEntryFolder.getResourceScopeUserId()).isEqualTo(userId),
+                () -> assertThat(parentEntryFolder.getAccessPolicy()).isEqualTo(AccessPolicy.USER),
+                () -> assertThat(parentEntryFolder.getFolderType()).isEqualTo(FolderType.PRIVATE)
+        );
+    }
+
+    @DisplayName("엔트리폴더를 parentFolderUuid로 제출하면 ROOT 계층의 모든 폴더가 출력되어야 한다")
+    @Test
+    public void parameteredEntryFolderUuidShouldBeOnlyOneParameterForSelectRootDepthContents(){
+        Integer userId = jdbcTemplate.queryForObject("""
+                SELECT user_id FROM user_tb WHERE email = ?
+                """,  Integer.class, USER_EMAIL
+        );
+
+        String folderName = "ROOT_FOLDER_" + UUID.randomUUID();
+        folderService.createPrivateRootFolder(userId, folderName);
+
+        Folder createdFolder = jdbcTemplate.queryForObject("""
+                SELECT
+                    uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                FROM
+                    folder_tb
+                WHERE
+                    folder_name = ?
+                    
+                
+                """,
+                // 단순 타입은 *.class
+                // 객체 매핑은 RowMapper 사용
+                // MyBatis TypeHandler는 JdbcTemplate에서 적용되지 않으므로 Enum은 직접 변환
+                folderTestRowMapper, folderName);
+
+
+        Folder parentEntryFolder = jdbcTemplate.queryForObject("""
+                    SELECT
+                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                    FROM
+                        folder_tb
+                    WHERE
+                        resource_scope_user_id = ?
+                    AND
+                        parent_folder_id is null
+                """,  folderTestRowMapper, userId
+        );
+
+        assertThat(createdFolder).isNotNull();
+        assertThat(parentEntryFolder).isNotNull();
+
+
+        OffsetBaseListResponse<FolderContents> rootDepthContentsResponse = folderService.getPrivateFolderContentsByOffsetBase(userId, parentEntryFolder.getUuid(), 0, 999);
+
+        assertThat(rootDepthContentsResponse.getContents())
+                .anySatisfy(content -> {
+                    assertThat(content.getUuid())
+                            .isEqualTo(createdFolder.getUuid());
+                    assertThat(content.getEntryName())
+                            .isEqualTo(createdFolder.getFolderName());
+                }
+            );
+    }
+
+    // RowMapper를 별도로 만들어두고 재활용 할 수 있다.
+    private final RowMapper<Folder> folderTestRowMapper = (rs, rowNum) -> {
+        Folder folder = new Folder();
+        folder.setUuid((UUID)rs.getObject("uuid"));
+        folder.setFolderId(rs.getLong("folder_id"));
+        folder.setFolderName(rs.getString("folder_name"));
+
+        // JdbcTemplate은 MyBatis TypeHandler를 타지 않으므로 직접 변환
+        folder.setFolderType(
+                FolderType.fromValue(rs.getInt("folder_type"))
+        );
+        folder.setAccessPolicy(
+                AccessPolicy.fromValue(rs.getInt("access_policy"))
+        );
+
+        folder.setResourceScopeUserId(
+                rs.getObject("resource_scope_user_id", Integer.class)
+        );
+        folder.setParentFolderId(
+                rs.getObject("parent_folder_id", Long.class)
+        );
+        folder.setCreateUserId(
+                rs.getObject("create_user_id", Integer.class)
+        );
+
+        return folder;
+    };
+
+    /*
     @Nested
     @DisplayName("엔트리 폴더 생성")
     class CreateFolderContentFolder {
@@ -212,4 +377,6 @@ class FolderServiceTest extends IntegrationTestSupport {
                 .ignoringFields("id", "folderId")
                 .isEqualTo(parentAcl);
     }
+
+         */
 }

@@ -1,5 +1,6 @@
 package com.uruz.frostbite.service;
 
+import com.uruz.frostbite.Tested;
 import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.Folder;
@@ -56,6 +57,7 @@ public class FolderService {
 
     /** 개인폴더 */
     // 사용자 UUID로 부터 루트폴더 생성
+    @Tested("20260824")
     @Transactional
     public SimpleFolder createPrivateRootFolder(Integer userId, String folderName) throws RequestProcessingException{
         // 사용자 UUID를 통한 개인 엔트리폴더 조회
@@ -94,6 +96,7 @@ public class FolderService {
 
 
     // 개인폴더 컨텐츠 조회
+    @Tested("20250824")
     public OffsetBaseListResponse<FolderContents> getPrivateFolderContentsByOffsetBase(Integer userId, UUID parentFolderUuid, int offset, int limit){
 
         Folder parentFolder = selectPrivateParentFolder(parentFolderUuid, userId);
