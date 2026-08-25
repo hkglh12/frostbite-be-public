@@ -2,11 +2,17 @@ package com.uruz.frostbite.enums;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("PermissionBitMask 단위 테스트")
+@ActiveProfiles("LOCAL-DEV-WIN")
+@SpringBootTest(properties = {
+        "spring.config.import=file:./application-secret.properties"
+})
 class PermissionBitMaskTest {
 
     @Test

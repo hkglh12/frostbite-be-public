@@ -249,13 +249,15 @@
         SELECT
             folder.uuid, folder.folder_name, folder.folder_type, folder.render_sequence,
             parent.uuid AS parent_folder_uuid, folder.status,
-            (SELECT EXISTS(SELECT 1 from folder_tb where parent_folder_id = folder.uuid)) as hasChild
+            (SELECT EXISTS(SELECT 1 from folder_tb where parent_folder_id = folder.folder_id)) as hasChild
         FROM
             folder_tb folder
-        LEFT JOIN
+        INNER JOIN
             folder_tb parent
         ON
             folder.parent_folder_id = parent.folder_id
+        AND
+            parent.folder_id = #{parentFolderId}
         <if test="nextFolderUuid != null">
         CROSS JOIN (
             SELECT
@@ -267,11 +269,10 @@
         ) criteria
         </if>
         <where>
-            parent.uuid = #{parentFolderUuid}
         AND
-            resource_scope_user_id = #{userId}
+            folder.resource_scope_user_id = #{userId}
         AND
-            folder_type = #{folderType}
+            folder.folder_type = #{folderType}
         AND
             folder.status = #{status}
             <if test="nextFolderUuid != null">
@@ -301,6 +302,8 @@
         folder_tb parent
         ON
         folder.parent_folder_id = parent.folder_id
+        AND
+        parent.folder_id = #{parentFolderId}
         <if test="lastFolderUuid != null">
             CROSS JOIN (
             SELECT
@@ -312,11 +315,10 @@
             ) criteria
         </if>
         <where>
-            parent.uuid = #{parentFolderUuid}
             AND
-            resource_scope_user_id = #{userId}
+            folder.resource_scope_user_id = #{userId}
             AND
-            folder_type = #{folderType}
+            folder.folder_type = #{folderType}
             AND
             folder.status = #{status}
             <if test="lastFolderUuid != null">
@@ -332,7 +334,7 @@
         </where>
         ORDER BY
         COALESCE(folder.render_sequence, 2147483647) ASC, folder.folder_id ASC
-        LIMIT #{limit}
+        LIMIT 1
     </select>
 
     <!-- 폴더 내 컨텐츠 개수 조회-->

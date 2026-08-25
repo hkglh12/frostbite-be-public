@@ -38,7 +38,6 @@ create table team_tb(
                         status smallint
 );
 
-alter table team_tb add constraint team_tb_user_fk foreign key (create_user) references user_tb (user_id);
 
 comment on table team_tb is '팀';
 comment on column team_tb.team_id is '팀 식별자';
@@ -149,6 +148,8 @@ comment on column folder_tb.delete_user_id is '삭제자 PK';
 comment on column folder_tb.delete_time is '삭제시각';
 
 
+alter table folder_tb add constraint uk_folder_uuid unique(uuid);
+
 drop table file_tb;
 
 -- 파일의 삭제는 "수정"으로 처리할 예정
@@ -190,7 +191,6 @@ comment on column file_tb.delete_time is '수정시각';
 comment on column file_tb.delete_user_id is '수정시각';
 
 comment on column file_tb.uuid is 'UUID';
-comment on column file_tb.is_delete is '삭제여부';
 
 create table file_temp_tb
 (
@@ -241,7 +241,6 @@ alter table file_workflow_status_tb add constraint file_tb_ver_file_fk foreign k
 
 comment on table file_workflow_status_tb is '파일 작업 상태';
 comment on column file_workflow_status_tb.file_id is '파일 식별자';
-comment on column file_workflow_status_tb.upload_status is '압로드 상태';
 
 create table storage_mount_point_tb(
                                        storage_mount_point_id bigserial primary key,
@@ -324,7 +323,6 @@ comment on column file_acl_tb.subject_user_id is '피접근제어 대상';
 comment on column file_acl_tb.file_id is '접근제어 파일 식별자';
 comment on column file_acl_tb.effect_type is '접근제어 종류';
 comment on column file_acl_tb.subject_type is '피접근제어 종류';
-comment on column file_acl_tb.subject_id is '피 접근제어 식별자';
 comment on column file_acl_tb.create_time is '접근제어 생성시각';
 comment on column file_acl_tb.create_user_id is '제약 생성자';
 comment on column file_acl_tb.status is '상태정보';

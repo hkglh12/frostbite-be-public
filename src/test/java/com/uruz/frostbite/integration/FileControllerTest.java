@@ -25,6 +25,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -42,8 +43,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("LOCAL-DEV-WIN")
 @SpringBootTest(properties = {
-        "spring.config.import=file:C:/Users/hkglh/Projects/sideProject/frostbite/application-secret.properties"
+        "spring.config.import=file:./application-secret.properties"
 })
 @AutoConfigureMockMvc
 @DisplayName("파일 등록 Workflow 통합 테스트")

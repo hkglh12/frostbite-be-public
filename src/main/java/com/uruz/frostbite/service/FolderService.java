@@ -15,7 +15,6 @@ import com.uruz.frostbite.dto.folder.*;
 import com.uruz.frostbite.dto.folder.internal.*;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
-import com.uruz.frostbite.enums.PermissionBitMask;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.mapper.FolderMapper;
 import com.uruz.frostbite.service.resolver.AccessControlResolverService;
@@ -60,7 +59,8 @@ public class FolderService {
     @Tested("20260824")
     @Transactional
     public SimpleFolder createPrivateRootFolder(Integer userId, String folderName) throws RequestProcessingException{
-        // 사용자 UUID를 통한 개인 엔트리폴더 조회
+        // TODO 개인 폴더 내 폴더 생성 권한 판정 책임을 PermissionResolverService로 통일할지 검토 필요.
+        // 현 시점, 암묵적 보장
         Folder privateEntryFolder = folderMapper.selectPrivateEntryFolderByUserId(userId)
                 .orElseThrow(() -> new RequestProcessingException(ApiErrorCode.INTERNAL_DATA_INCONSISTENCY_FOLDER_RESOURCE));
 
@@ -73,10 +73,11 @@ public class FolderService {
         return selectSimpleFolderByFolderId(newFolder.getFolderId());
     }
 
+    @Tested("20260825")
     // KeySetBase 개인 folder List 조회 (좌측 트리용)
     public CursorBaseListResponse<SimpleFolderTreeNode> getPrivateFoldersByCursorBase(Integer userId, UUID parentFolderUuid, UUID startFolderUuid, Integer limit){
 
-        Folder parentFolder = selectPrivateParentFolder(parentFolderUuid, userId);
+        Folder parentFolder = selectPrivateParentFolder(userId, parentFolderUuid);
         // 접근 가능 확인 포함 메서드로 전환
 
         PrivateFolderCursorBaseConditionByUuid folderCondition = PrivateFolderCursorBaseConditionByUuid.of(
@@ -85,21 +86,27 @@ public class FolderService {
         List<SimpleFolderTreeNode> list = folderMapper.selectPrivateFolderCursorBaseByUuid(folderCondition);
 
         UUID lastUuid = null;
-        if(!list.isEmpty()) lastUuid = list.getLast().getUuid();
-        PrivateFolderCursorBaseConditionByUuid nextUuidCondition = folderCondition.nextFolderUuidCondition(lastUuid);
-        UUID nextUuid = folderMapper.selectPrivateFolderCursorBaseNext(nextUuidCondition).orElse(null);
-        boolean hasNext = nextUuid != null;
+        UUID nextUuid = null;
+        boolean hasNext = false;
+
+        if(!list.isEmpty()) {
+            lastUuid = list.getLast().getUuid();
+            PrivateFolderCursorBaseConditionByUuid nextUuidCondition = folderCondition.nextFolderUuidCondition(lastUuid);
+            nextUuid = folderMapper.selectPrivateFolderCursorBaseNext(nextUuidCondition).orElse(null);
+            hasNext = nextUuid != null;
+        }
+
 
         CursorBasePagination cursorBasePagination = new CursorBasePagination(lastUuid, nextUuid, hasNext, limit);
-        return new CursorBaseListResponse<SimpleFolderTreeNode>(list, cursorBasePagination);
+        return new CursorBaseListResponse<>(list, cursorBasePagination);
     }
 
 
     // 개인폴더 컨텐츠 조회
-    @Tested("20250824")
+    @Tested("20260824")
     public OffsetBaseListResponse<FolderContents> getPrivateFolderContentsByOffsetBase(Integer userId, UUID parentFolderUuid, int offset, int limit){
 
-        Folder parentFolder = selectPrivateParentFolder(parentFolderUuid, userId);
+        Folder parentFolder = selectPrivateParentFolder(userId, parentFolderUuid);
 
         int totalCount = folderMapper.selectPrivateFolderContentsTotalCount(userId,parentFolder.getFolderId());
         List<FolderContents> folderContentsList = folderMapper.selectPrivateFolderContentsList(userId, parentFolder.getFolderId(), offset, limit);
@@ -108,8 +115,9 @@ public class FolderService {
         return new OffsetBaseListResponse<>(folderContentsList, offsetBasePagination);
     }
 
+    @Tested("20260824")
     // parentFolderUuid로 부터 부모폴더 조회용 헬퍼 메서드
-    public Folder selectPrivateParentFolder(UUID parentFolderUuid,Integer userId) throws RequestProcessingException {
+    public Folder selectPrivateParentFolder(Integer userId, UUID parentFolderUuid) throws RequestProcessingException {
         Folder parentFolder = null;
 
         if(parentFolderUuid == null) {

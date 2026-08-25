@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @DisplayName("UserService 테스트 지원용 강제 셋업")
 @SpringBootTest(properties = {
-        "spring.config.import=file:C:/Users/hkglh/Projects/sideProject/frostbite/application-secret.properties"
+        "spring.config.import=file:./application-secret.properties"
 })
 public class UserServiceSupports extends IntegrationTestSupport {
 

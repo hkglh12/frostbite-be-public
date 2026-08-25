@@ -14,12 +14,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@ActiveProfiles("LOCAL-DEV-WIN")
+@SpringBootTest(properties = {
+        "spring.config.import=file:./application-secret.properties"
+})
 @DisplayName("AclService 단위 테스트")
 class AclServiceTest {
 

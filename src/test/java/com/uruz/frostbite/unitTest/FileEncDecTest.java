@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import javax.crypto.CipherOutputStream;
 import java.io.*;
@@ -21,8 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("파일 암호화/복호화 테스트")
+@ActiveProfiles("LOCAL-DEV-WIN")
 @SpringBootTest(properties = {
-        "spring.config.import=file:C:/Users/hkglh/Projects/sideProject/frostbite/application-secret.properties"
+        "spring.config.import=file:./application-secret.properties"
 })
 public class FileEncDecTest {
 

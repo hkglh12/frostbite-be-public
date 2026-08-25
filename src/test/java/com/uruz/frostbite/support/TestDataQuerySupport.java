@@ -21,9 +21,9 @@ public final class TestDataQuerySupport {
     public List<FolderRow> findFoldersByParent(Long parentFolderId, FolderType folderType) {
         return jdbcTemplate.query(
                 """
-                SELECT folder_id, uuid, name, folder_type, parent_folder_id,
+                SELECT folder_id, uuid, folder_type, parent_folder_id,
                        resource_scope_team_id, resource_scope_user_id, resource_owner_id,
-                       folder_id_path
+                       
                 FROM folder_tb
                 WHERE parent_folder_id = ? AND folder_type = ?
                 ORDER BY folder_id

@@ -1,10 +1,12 @@
 package com.uruz.frostbite.integration;
 
 import com.uruz.frostbite.domain.Folder;
+import com.uruz.frostbite.dto.common.response.CursorBaseListResponse;
 import com.uruz.frostbite.dto.common.response.OffsetBaseListResponse;
 import com.uruz.frostbite.dto.entry.FolderContents;
 import com.uruz.frostbite.dto.folder.FolderCreateRequest;
 import com.uruz.frostbite.dto.folder.SimpleFolder;
+import com.uruz.frostbite.dto.folder.SimpleFolderTreeNode;
 import com.uruz.frostbite.dto.folder.TeamRootFolderCreateRequest;
 import com.uruz.frostbite.enums.*;
 import com.uruz.frostbite.service.DirectFileHandleComponent;
@@ -27,6 +29,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.test.annotation.Commit;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -36,8 +39,12 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("FolderService 통합 테스트")
+@ActiveProfiles("LOCAL-DEV-WIN")
+@SpringBootTest(properties = {
+        "spring.config.import=file:./application-secret.properties"
+})
 // 물리파일 안건드리는데 디렉트컴포넌트 거는거도 좀.. -> @MockitoBean 으로 처리하자
-//@SpringBootTest(properties = {"spring.config.import=file:C:/Users/hkglh/Projects/sideProject/frostbite/application-secret.properties"})
+//@SpringBootTest(properties = {"spring.config.import=file:./application-secret.properties"})
 //@TestPropertySource(locations = "classpath:application-test.properties")
 class FolderServiceTest extends IntegrationTestSupport {
 
@@ -194,6 +201,151 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         return folder;
     };
+
+    @Test
+    @DisplayName("nextFolderUUID 가 주어지지 않으면 커서베이스는 0번지 폴더부터 LIMIT 개수만큼 적절한 '다음폴더UUID'를 가지고 응답되어야 한다")
+    public void nullNextFolderUUIDParameterShouldAnsweredWithProperNextFolderUuidAsLimitedCounts(){
+        Integer userId = jdbcTemplate.queryForObject("""
+                SELECT user_id FROM user_tb WHERE email = ?
+                """,  Integer.class, USER_EMAIL
+        );
+
+        Folder parentEntryFolder = jdbcTemplate.queryForObject("""
+                    SELECT
+                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                    FROM
+                        folder_tb
+                    WHERE
+                        resource_scope_user_id = ?
+                    AND
+                        parent_folder_id is null
+                """,  folderTestRowMapper, userId
+        );
+
+        Folder firstFolder = jdbcTemplate.queryForObject("""
+                    SELECT
+                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                    FROM
+                        folder_tb
+                    WHERE
+                        resource_scope_user_id = ?
+                    AND
+                        parent_folder_id  = ?
+                    ORDER BY COALESCE(render_sequence, 2147483647) ASC, folder_id ASC
+                    OFFSET 0 LIMIT 1
+                """,  folderTestRowMapper, userId, parentEntryFolder.getFolderId()
+        );
+
+
+        Folder nextFolder = jdbcTemplate.query("""
+                    SELECT
+                        uuid, folder_id, folder_name, folder_type, access_policy,
+                        resource_scope_user_id, parent_folder_id, create_user_id
+                    FROM folder_tb
+                    WHERE resource_scope_user_id = ?
+                      AND parent_folder_id = ?
+                    ORDER BY COALESCE(render_sequence, 2147483647) ASC, folder_id ASC
+                    OFFSET 1 LIMIT 1
+                    """,
+                folderTestRowMapper,
+                userId,
+                parentEntryFolder.getFolderId()
+        ).stream().findFirst().orElse(null);
+
+
+        CursorBaseListResponse<SimpleFolderTreeNode> response = folderService.getPrivateFoldersByCursorBase(userId, parentEntryFolder.getUuid(), null, 1);
+
+        Assertions.assertAll(
+                () -> assertThat(response.getContents()).as("한개만 내려와야 합니다.").hasSize(1),
+
+                () -> assertThat(response.getContents().getFirst().getUuid()).as("응답 첫 폴더 UUID와 query로 조회한 첫 폴더UUID가 다릅니다.")
+                        .isEqualTo(firstFolder.getUuid()),
+
+                () -> assertThat(response.getPagination())
+                        .satisfies(pagination -> {
+                            if (pagination.getHasNext()) {
+                                assertThat(nextFolder).isNotNull();
+                                assertThat(pagination.getNextUuid())
+                                        .isEqualTo(nextFolder.getUuid());
+                            } else {
+                                assertThat(pagination.getNextUuid()).isNull();
+                                assertThat(nextFolder).isNull();
+                            }
+                        })
+        );
+    }
+
+    @Test
+    @DisplayName("nextFolderUUID 가 주어지면 커서베이스는 해당 폴더부터 LIMIT 개수만큼 적절한 '다음폴더UUID'를 가지고 응답되어야 한다")
+    public void validNextFolderUUIDParameterShouldAnsweredWithProperNextFolderUuidAsLimitedCounts(){
+        Integer userId = jdbcTemplate.queryForObject("""
+                SELECT user_id FROM user_tb WHERE email = ?
+                """,  Integer.class, USER_EMAIL
+        );
+
+        Folder parentEntryFolder = jdbcTemplate.queryForObject("""
+                    SELECT
+                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                    FROM
+                        folder_tb
+                    WHERE
+                        resource_scope_user_id = ?
+                    AND
+                        parent_folder_id is null
+                """,  folderTestRowMapper, userId
+        );
+
+        Folder startFolder = jdbcTemplate.queryForObject("""
+                    SELECT
+                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                    FROM
+                        folder_tb
+                    WHERE
+                        resource_scope_user_id = ?
+                    AND
+                        parent_folder_id  = ?
+                    ORDER BY COALESCE(render_sequence, 2147483647) ASC, folder_id ASC
+                    OFFSET 1 LIMIT 1
+                """,  folderTestRowMapper, userId, parentEntryFolder.getFolderId()
+        );
+
+
+        Folder nextFolder = jdbcTemplate.query("""
+                    SELECT
+                        uuid, folder_id, folder_name, folder_type, access_policy,
+                        resource_scope_user_id, parent_folder_id, create_user_id
+                    FROM folder_tb
+                    WHERE resource_scope_user_id = ?
+                      AND parent_folder_id = ?
+                    ORDER BY COALESCE(render_sequence, 2147483647) ASC, folder_id ASC
+                    OFFSET 2 LIMIT 1
+                    """,
+                folderTestRowMapper,
+                userId,
+                parentEntryFolder.getFolderId()
+        ).stream().findFirst().orElse(null);
+
+        CursorBaseListResponse<SimpleFolderTreeNode> response = folderService.getPrivateFoldersByCursorBase(userId, parentEntryFolder.getUuid(), startFolder.getUuid(), 1);
+
+        Assertions.assertAll(
+                () -> assertThat(response.getContents()).as("한개만 내려와야 합니다.").hasSize(1),
+
+                () -> assertThat(response.getContents().getFirst().getUuid()).as("응답 첫 폴더 UUID와 query로 조회한 첫 폴더UUID가 다릅니다.")
+                        .isEqualTo(startFolder.getUuid()),
+
+                () -> assertThat(response.getPagination())
+                        .satisfies(pagination -> {
+                            if (pagination.getHasNext()) {
+                                assertThat(nextFolder).isNotNull();
+                                assertThat(pagination.getNextUuid())
+                                        .isEqualTo(nextFolder.getUuid());
+                            } else {
+                                assertThat(pagination.getNextUuid()).isNull();
+                                assertThat(nextFolder).isNull();
+                            }
+                        })
+        );
+    }
 
     /*
     @Nested
