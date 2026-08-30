@@ -297,9 +297,10 @@ public class DirectFileHandleComponent {
 
     /** MultipartFile Spring 임시폴더 경로에서 Application 임시 폴더로 이동*/
     public TempFileMetaInfoDraft reallocateTempFile(MultipartFile multipartFile) throws RequestProcessingException, InternalProcessingException {
-        // yml 임시폴더겨올 + UUID를 통한 임시파일
+
+        // 파일 자체에 신규 UUID 할당
         UUID applicationTempFileUuid = UUID.randomUUID();
-        File tempFile = new File(resolveApplicationTempFilePathByUuid(applicationTempFileUuid).toString());
+        File tempFile = resolveApplicationTempFilePathByUuid(applicationTempFileUuid).toFile();
 
         String originalFileName = multipartFile.getOriginalFilename();
         long fileSize = multipartFile.getSize();
@@ -311,7 +312,7 @@ public class DirectFileHandleComponent {
         if(tempFile.exists()) {
             // UUID 충돌 회피
             applicationTempFileUuid = UUID.randomUUID();
-            tempFile  = new File(FROSTBITE_TEMP_LOCATION + applicationTempFileUuid.toString());
+            tempFile = resolveApplicationTempFilePathByUuid(applicationTempFileUuid).toFile();
             if(tempFile.exists()){
                 throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
             }
