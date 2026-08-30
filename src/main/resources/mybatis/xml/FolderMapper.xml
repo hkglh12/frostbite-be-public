@@ -394,6 +394,7 @@
                AND
                  folder.resource_scope_user_id = #{userId}
             ) folder_contents
+        ORDER BY folder_content_type ASC, entry_name ASC
         OFFSET #{offset} LIMIT #{limit}
     </select>
 
@@ -452,6 +453,7 @@
                AND
                  resource_scope_team_id = (SELECT team_id from team_tb where uuid = #{teamUuid})
             ) folder_contents
+        ORDER BY folder_content_type ASC, entry_name ASC
         OFFSET #{offset} LIMIT #{limit}
     </select>
 
