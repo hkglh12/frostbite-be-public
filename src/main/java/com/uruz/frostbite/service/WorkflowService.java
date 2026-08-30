@@ -65,8 +65,8 @@ public class WorkflowService {
     }
 
     /** 워크플로우 ready 상태 mark -> QUEUE에서 벗어나 worker thread 진입 */
-    public void markWorkflowRequestReady(long workflowRequestId, LocalDateTime currentTime){
-        workflowRequestMapper.updateWorkflowRequestAsReady(workflowRequestId, WorkflowRequestStatus.READY, currentTime);
+    public int markWorkflowRequestReady(long workflowRequestId, LocalDateTime currentTime){
+        return workflowRequestMapper.updateWorkflowRequestAsReady(workflowRequestId, WorkflowRequestStatus.READY, currentTime, WorkflowRequestStatus.WAITING);
     }
 
     /** 워크플로우 진행중 마킹 */
@@ -79,6 +79,9 @@ public class WorkflowService {
         workflowRequestMapper.updateWorkflowRequestAsSucceed(workflowRequestId, WorkflowRequestStatus.SUCCEEDED, currentTime);
     }
 
+    // @Transactional + afterCommit 조합에서 발생할 수 있는 문제를 찾아보면
+    // REQUIRES_NEW를 사용한 이유를 다시 복습할 수 있다.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void markWorkflowRequestFailed(long workflowRequestId, LocalDateTime currentTime, String failedMessage){
         workflowRequestMapper.updateWorkflowRequestAsFailedFinal(workflowRequestId, WorkflowRequestStatus.FAILED_FINAL, currentTime, failedMessage);
     }
