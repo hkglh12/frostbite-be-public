@@ -1,6 +1,10 @@
 package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.*;
+import com.uruz.frostbite.dto.file.FileMetaModifyCommand;
+import com.uruz.frostbite.dto.file.FileMetaResponse;
+import com.uruz.frostbite.dto.file.FileMoveCommand;
+import com.uruz.frostbite.dto.file.internal.InternalFileMoveCommand;
 import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.FileTempStatus;
 import com.uruz.frostbite.enums.WorkflowStatus;
@@ -27,10 +31,16 @@ public interface FileMapper {
                                         @Param("storageFileName") String storageFileName,
                                         @Param("status")FileStatus status);
 
+    int updateFileMeta(FileMetaModifyCommand command);
+    int moveFile(InternalFileMoveCommand command);
+    FileMetaResponse selectFileMeta(@Param("uuid") UUID uuid);
+    void updateForSoftDeletion(@Param("uuid") UUID uuid, @Param("status")FileStatus status);
     @Deprecated(forRemoval = true)
     void updateFileWorkflowStatusStarted(@Param("fileId")Long fileId,
                                          @Param("status") WorkflowStatus status,
                                          @Param("currentTime")LocalDateTime currentTime);
+
+
 
     void updateFileWorkflowRegisterStatusProcessing(@Param("fileId")Long fileId,
                                                     @Param("status") WorkflowStatus status,
@@ -44,7 +54,8 @@ public interface FileMapper {
                                                  @Param("status") WorkflowStatus status,
                                                  @Param("currentTime")LocalDateTime currentTime);
 
+
+
     void markFileAsActive(@Param("fileId") Long fileId, @Param("status") FileStatus status);
 
-    void deleteFileImmediately(@Param("fileId") Long fileId);
 }

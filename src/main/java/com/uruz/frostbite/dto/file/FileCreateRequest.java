@@ -19,12 +19,12 @@ public class FileCreateRequest {
     @Schema(description = "임시 파일 업로드 API로 수령한 UUID")
     private UUID tempFileUuid;
 
-    @NotNull
-    @Schema(description = "부모 폴더 UUID")
-    private UUID folderUuid;
+    //@NotNull
+    //@Schema(description = "부모 폴더 UUID")
+    //private UUID folderUuid;
 
-    @Schema(description = "별도 파일명")
-    String fileName;
+    //@Schema(description = "별도 파일명")
+    //String fileName;
 
     @Schema(description = "사용자 지정 추가 설명")
     String description;

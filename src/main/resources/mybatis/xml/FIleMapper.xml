@@ -36,6 +36,59 @@
             file_id = #{fileId}
     </update>
 
+    <update id="updateFileMeta" parameterType="com.uruz.frostbite.dto.file.FileMetaModifyCommand">
+        /** updateFileMeta */
+        UPDATE file_tb
+        <set>
+            <if test="fileName != null and fileName != ''">
+                file_name = #{fileName},
+            </if>
+            modify_user_id = #{userId},
+            modify_time = #{modifyTime}
+        </set>
+        WHERE
+        UUID = #{uuid}
+    </update>
+
+    <update id="moveFile">
+        /**moveFile*/
+        UPDATE file_tb
+        SET
+            folder_id = #{targetFolderId},
+            modify_time = #{modifyTime},
+            modify_user_id = #{userId}
+        WHERE
+            folder_id = #{originalFolderId}
+        AND
+            uuid = #{uuid}
+    </update>
+
+    <select id="selectFileMeta" resultType="com.uruz.frostbite.dto.file.FileMetaResponse">
+        /**selectFileMeta*/
+        SELECT
+            file.uuid, file.file_name, file.status, file.file_size, file.file_extension, file.mime_type,
+            folder.uuid as parentFolderUuid,
+            (SELECT name from user_tb where user_id = file.create_user_id) as create_user_name,
+            file.create_time,
+            (SELECT name from user_tb where user_id = file.modify_user_id) as modify_user_name,
+            file.modify_time
+        FROM
+            file_tb file
+        JOIN
+            folder_tb folder
+        ON file.folder_id = folder.folder_id
+        WHERE file.uuid = #{uuid}
+    </select>
+
+    <update id="updateForSoftDeletion">
+        /** updateForSoftDeletion*/
+        UPDATE file_tb
+        SET
+            status =  #{status}
+        WHERE
+            uuid = #{uuid}
+    </update>
+
     <!-- 임시파일 관리 -->
     <insert id = "insertFileTemp" parameterType="FileTemp">
     /** insertFileTemp */
