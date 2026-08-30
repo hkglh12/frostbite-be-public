@@ -5,6 +5,7 @@ import com.uruz.frostbite.dto.entry.FolderContents;
 import com.uruz.frostbite.dto.folder.SimpleFolder;
 import com.uruz.frostbite.dto.folder.SimpleFolderTreeNode;
 import com.uruz.frostbite.dto.folder.internal.*;
+import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.dto.folder.internal.FolderTargetAccessControlProjection;
 import org.apache.ibatis.annotations.Mapper;
@@ -40,10 +41,14 @@ public interface FolderMapper {
     Optional<UUID> selectPrivateFolderCursorBaseNext(PrivateFolderCursorBaseConditionByUuid condition);
 
     // 개인폴더 폴더 컨텐츠 전체 개수 조회
-    int selectPrivateFolderContentsTotalCount(@Param("userId") Integer userId, @Param("parentFolderId") Long parentFolderId);
+    int selectPrivateFolderContentsTotalCount(@Param("userId") Integer userId, @Param("parentFolderId") Long parentFolderId,
+                                              @Param("folderStatus") FolderStatus folderStatus,
+                                              @Param("fileStatus")FileStatus fileStatus);
     // 개인폴더 컨텐츠 조회
     List<FolderContents> selectPrivateFolderContentsList(@Param("userId") Integer userId, @Param("parentFolderId") Long parentFolderId
-            , @Param("offset") Integer offset, @Param("limit") Integer limit);
+            , @Param("offset") Integer offset, @Param("limit") Integer limit,
+                                                         @Param("folderStatus") FolderStatus folderStatus,
+                                                         @Param("fileStatus")FileStatus fileStatus);
 
 
     /** 팀 폴더*/
@@ -62,10 +67,14 @@ public interface FolderMapper {
 
 
     // 팀 폴더 컨텐츠 전체 개수 조회
-    int selectTeamFolderContentsTotalCount(@Param("teamUuid") UUID teamUuid, @Param("parentFolderId") Long parentFolderId, @Param("userId") Integer userId);
+    int selectTeamFolderContentsTotalCount(@Param("teamUuid") UUID teamUuid, @Param("parentFolderId") Long parentFolderId, @Param("userId") Integer userId,
+                                           @Param("folderStatus") FolderStatus folderStatus,
+                                           @Param("fileStatus")FileStatus fileStatus);
     // 팀 폴더 컨텐츠 조회
     List<FolderContents> selectTeamFolderContentsList(@Param("teamUuid") UUID teamUuid, @Param("parentFolderId") Long parentFolderId, @Param("userId") Integer userId,
-                                                      @Param("offset") Integer offset, @Param("limit") Integer limit);
+                                                      @Param("offset") Integer offset, @Param("limit") Integer limit,
+                                                      @Param("folderStatus") FolderStatus folderStatus,
+                                                      @Param("fileStatus")FileStatus fileStatus);
 
 
 
