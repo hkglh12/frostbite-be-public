@@ -20,7 +20,9 @@ public interface WorkflowRequestMapper {
 
     WorkflowRequest selectWorkflowRequest(@Param("workflowRequestId") long workflowRequestId);
 
-    void updateWorkflowRequestAsReady(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime);
+    int updateWorkflowRequestAsReady(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status,
+                                     @Param("currentTime") LocalDateTime currentTime,
+                                     @Param("beforeStatusForConcurrencyGuard") WorkflowRequestStatus beforeStatusForConcurrencyGuard);
     void updateWorkflowRequestAsProcessing(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime);
     void updateWorkflowRequestAsSucceed(@Param("workflowRequestId") long workflowRequestId, @Param("status") WorkflowRequestStatus status, @Param("currentTime") LocalDateTime currentTime);
 

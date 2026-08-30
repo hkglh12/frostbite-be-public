@@ -29,12 +29,14 @@
 
 
     <update id="updateWorkflowRequestAsReady">
-        /** updateWorkflowRequestAsProcessing*/
+        /** updateWorkflowRequestAsReady */
         UPDATE workflow_request_tb
         SET
             status = #{status}
         WHERE
             workflow_request_id = #{workflowRequestId}
+        AND
+            status = #{beforeStatusForConcurrencyGuard}
     </update>
 
     <update id="updateWorkflowRequestAsProcessing">
