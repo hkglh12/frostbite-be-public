@@ -1,7 +1,6 @@
 package com.uruz.frostbite.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.uruz.frostbite.customException.GeneralCustomException;
 import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.File;
 import com.uruz.frostbite.domain.FileTemp;
@@ -81,33 +80,35 @@ public class FileOrchestrationService {
     public SimpleFileResponse registerFile(FileCreateRequest request, UUID folderUuid, Integer createUserId) throws RequestProcessingException{
 
         // 파일 테이블 등록 + 파일 워크플로우 상태 row 등록
-        File initialFile = fileService.registInitialFile(request, folderUuid, createUserId);
+        File registeringAttemptFile = fileService.registerFileMeta(request, folderUuid, createUserId);
 
-        Workflow inDevWorkflow = Workflow.WF_FILE_REGISTER_ONLY;
+        Workflow inDevWorkflow = Workflow.WF_FILE_PROVISION_NORMAL;
 
         String requestPayloadString = null;
         try{
             requestPayloadString = mapper.writeValueAsString(request);
         } catch(IOException IOE) {
             // CheckedException은 rollback 트리거 대상이 아님. 그러나 unCheckedException으로 래핑해서 던지면 Rollback 대상이됨
+            // 파일 정식등록에 실패해도, 재시도할수있음. 이에따라 보상패턴으로 임시파일삭제까지는 유지하지 않음. 스케쥴돌려서 임시파일 제거하는 뱡향으로 유지
             throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_JSON_PARSE);
         }
         // 대기상태인 워크플로우 요청 등록
         WorkflowRequest workflowRequest = workflowService.registerWaitingWorkflowRequest(WorkflowDomainType.WF_TYPE_FILE,
-                initialFile.getFileId(), inDevWorkflow, requestPayloadString, createUserId);
+                registeringAttemptFile.getFileId(), inDevWorkflow, requestPayloadString, createUserId);
 
-        // commit 이후 실행할 콜백을 등록
+        /**
+         * SEE : docs/analyze/transactionManager.md
+         * */
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
-                    // 이 메서드가 실행되는 시점, 이미 메서드 흐름 밖으로 나와 commit에 대한 콜백이 호출
-                    // 따라서 해당 위치에서 throw 해도 메인 코드 흐름으로는 못들어간다.
-                    // 즉, 메서드 리턴 -> commit() -> 함수 호출 스택 따라서 리턴
-                    //                           -> 커밋 콜백 실행
+                    // throw 하면 caller한테 던질수는 있지만, caller는 "등록"만 책임한계로 지정했으므로,
+                    // 실행에 관한건 비동기로 넘긴시점이라 굳이 http response throw를 구현하지는 않기로함
                     @Override
                     public void afterCommit() {
-                        // submit은 exception 을 Future 안에 감추는 성향이 있다고..
+
                         try {
                             // 왜 직접 executor에 execute 호출?
+                            // submit은 exception 을 Future 안에 감추는 성향이 있다고..
                             // 1. @Async 호출 사용 시, Policy를 Abort로 잡으면 예외 발생시 Spring Proxy 내에서 Exception이 터짐
                             // 2. Async 진입 중 Proxy 내에서 터진 Exception을 관리하려면 별도 설정을 잡아줘야함. 비즈니스 로직 외부로 튕겨나가서
                             // 잡히므로 흐름 따라가기 힘들것 같기도 하고, 설정 공부가 오버헤드 같기도 함.
@@ -118,9 +119,7 @@ public class FileOrchestrationService {
                             });
 
                         }catch(RejectedExecutionException e){
-                            // 내부에서 벌어진 실패를 잡아내는게 아니라, .execute() 호출 실패 (Queue full 등..)를 잡는다.
-                            // 커밋 되고 신규 트렌잭션이 열리니까. 다만 의도적으로 "원래 흐름과는 별개로 관리되서 mother transaction이 실패해도
-                            // 이 코드는 실행되고 별도 커밋되어야 함. 을 명시하기 위해 Requires_new 가 낫다고.
+                            // SEE: ... 에 의해, requires_new가 명시적이어야함!
                             workflowService.markWorkflowRequestFailed(workflowRequest.getWorkflowRequestId(), LocalDateTime.now(), e.getMessage());
                         }
                     }
@@ -128,8 +127,8 @@ public class FileOrchestrationService {
         );
 
         SimpleFileResponse response = SimpleFileResponse.builder()
-                .uuid(initialFile.getUuid())
-                .fileName(initialFile.getFileName())
+                .uuid(registeringAttemptFile.getUuid())
+                .fileName(registeringAttemptFile.getFileName())
                 .parentFolderUuid(folderUuid)
                 .fileStatus(FileStatus.UNREGISTERED)
                 .build();
@@ -151,6 +150,7 @@ public class FileOrchestrationService {
         try {
             fileService.insertFileTemp(fileTemp);
         } catch(Exception e) {
+            e.printStackTrace();
             // DB Insert 실패 시 copy한 임시파일 삭제필요
             try {
                 directFileHandleComponent.deleteTempFile(draft.getTempFileUuid());
