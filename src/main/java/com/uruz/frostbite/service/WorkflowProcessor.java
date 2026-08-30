@@ -77,11 +77,6 @@ public class WorkflowProcessor {
                 ));
     }
 
-    @Deprecated(forRemoval = true)
-    public void provisionFile(FileCreateRequest request, Long fileId, Integer createUserId) throws IOException{
-
-    }
-
     /** 등록된 워크플로우를 실행 */
     public void processWorkflow(Long workflowRequestId){
         // 워크플로우가 실행 가능한 상태인지 확인
@@ -92,14 +87,23 @@ public class WorkflowProcessor {
             return;
         }
 
-        if(workflowRequest.getStatus() != WorkflowRequestStatus.WAITING){
-            workflowService.markWorkflowRequestFailed(workflowRequestId, LocalDateTime.now(), "STATUS IS NOT WAITING");
+        // 도메인 규약 상, "요청흐름"은 한번에 하나만 발생할 수밖에 없는구조
+        // 그러나, 추후 발생할 워크플로우 재요청, 시스템레벨의 중단복구가 발생하면 다중요청이 발생할 수 있음
+        // 주로 경계하고자 했던 "동시성" 이슈가 발생할수있음.
+
+        WorkflowRequestStatus workflowStatus = workflowRequest.getStatus();
+
+        if(workflowStatus != WorkflowRequestStatus.WAITING){
+            // 이미 진행중인 워크플로우에 대해서는 진행할 작업이 없음. SSE를 통해 안내해야함.
             // TODO Phase2 SSE 도입 시, 작업 실패 안내를 해야함
             return;
         }
         // executor 진입 후, 작업 대기상태로 전환
-        workflowService.markWorkflowRequestReady(workflowRequestId, LocalDateTime.now());
-
+        int affectedRow = workflowService.markWorkflowRequestReady(workflowRequestId, LocalDateTime.now());
+        if(affectedRow == 0){
+            // 동시성 가드에 의해 처리할 내용 없음.
+            return;
+        }
         // 요청 내역 파싱
         Map<String, Object> requestPayload = null;
         try{
@@ -114,23 +118,23 @@ public class WorkflowProcessor {
         workflowService.markWorkflowRequestProcessing(workflowRequestId, LocalDateTime.now());
         FileWorkflowDraft draft = FileWorkflowDraft.createWorkflowDraft(workflowRequest, requestPayload);
         UnitTaskRequest currentUnitTaskRequest = null;
+        UnitTaskExecutor taskExecutor = null;
         try {
             while (true) {
+
                 // 이전작업 조회
                 UnitTaskRequest previousUnitTask = unitTaskService.getLatestUnitTaskRequest(workflowRequestId);
                 // 다음작업 조회
                 UnitTask task = unitTaskService.resolveNextUnitTask(workflowRequest.getWorkflowName().getUnitTasks(), previousUnitTask);
-
                 if(task == null){
                     break;
                 }
-
                 // workflow 처리기 workflowProcessor는 워크플로우 흐름과 UnitTask의 상태관리/호출 까지 담당
                 // 각 UintTask는 자기 자신의 관심사 도메인의 상태값 변경까지 담당.
                 currentUnitTaskRequest = UnitTaskRequest.createCurrentUnitTask(task, workflowRequestId, workflowRequest.getWorkflowName().getUnitTaskOrder(task),
                                                                                 workflowRequest.getWorkflowDomainType(), workflowRequest.getTargetId(), workflowRequest.getCreateUserId(), LocalDateTime.now());
 
-                UnitTaskExecutor taskExecutor = null;
+
 
                 taskExecutor = executorMap.get(currentUnitTaskRequest.getUnitTaskName());
 
@@ -146,8 +150,12 @@ public class WorkflowProcessor {
                 try{
                     LocalDateTime startedTime = LocalDateTime.now();
                     // unitTask 작업시작 정보는 직접 UnitTask에서
-                    unitTaskService.insertCurrentUnitTask(currentUnitTaskRequest);
-                    unitTaskService.markUnitTaskAsProcessing(currentUnitTaskRequest.getUnitTaskRequestId(), startedTime);
+                    UnitTaskRequest effectivlyFinalUnitTask = currentUnitTaskRequest;
+                    transactionTemplateForRequiesNew.executeWithoutResult(transactionStatus -> {
+                        unitTaskService.insertCurrentUnitTask(effectivlyFinalUnitTask);
+                        unitTaskService.markUnitTaskAsProcessing(effectivlyFinalUnitTask.getUnitTaskRequestId(), startedTime);
+                    });
+
                     draft = taskExecutor.process(currentUnitTaskRequest, workflowRequest, draft);
 
                     UnitTaskExecutor succeedTaskExecutor = taskExecutor;
@@ -171,14 +179,14 @@ public class WorkflowProcessor {
                     FileWorkflowDraft failedDraft = draft;
                     UnitTaskExecutor failedUnitTaskExecutor = taskExecutor;
                     UnitTaskRequest failedUnitTaskRequest = currentUnitTaskRequest;
+                    LocalDateTime failedTime = LocalDateTime.now();
                     transactionTemplateForRequiesNew.executeWithoutResult(transactionStatus -> {
-                        LocalDateTime failedTime = LocalDateTime.now();
+
                         unitTaskService.markUnitTaskToFailedFinal(failedUnitTaskRequest.getUnitTaskRequestId(), failedTime);
-                        failedUnitTaskExecutor.compensateOnFailure(failedUnitTaskRequest, workflowRequest, failedDraft, failedTime, ge.getMessage());
                         workflowService.markWorkflowRequestFailed(workflowRequestId, LocalDateTime.now(), failedUnitTaskExecutor.getUnitTask() + " : UNIT TASK FAILED");
                     });
-
-                    throw new InternalProcessingException("FAILURE TRIGGERED");
+                    failedUnitTaskExecutor.compensateOnFailure(failedUnitTaskRequest, workflowRequest, failedDraft, failedTime, ge.getMessage());
+                    return;
                 } catch (RequestProcessingException qe){
                     UnitTaskExecutor succeedTaskExecutor = taskExecutor;
                     FileWorkflowDraft succeedDraft = draft;
@@ -191,19 +199,28 @@ public class WorkflowProcessor {
                         unitTaskService.markUnitTaskToFailedFinal(succeedUnitTaskRequest.getUnitTaskRequestId(), succeedTime);
                         succeedTaskExecutor.markOnSucceed(succeedUnitTaskRequest, workflowRequest, succeedDraft, succeedTime);
                     });
+                    return;
                 }
             }
             workflowService.markWorkflowRequestSucceed(workflowRequestId, LocalDateTime.now());
-        } catch (RequestProcessingException e){
-            // 후속처리 (workflow 실패)
-            // 후속처리 (SSE 발급)
-            e.printStackTrace();;
-            throw e;
-        } catch(Exception e){
+        } catch (Exception e) {
             LocalDateTime failedTime = LocalDateTime.now();
-            unitTaskService.markUnitTaskToFailedFinal(currentUnitTaskRequest.getUnitTaskRequestId(), failedTime);
-            workflowService.markWorkflowRequestFailed(workflowRequestId, LocalDateTime.now(), e.getMessage());
-            e.printStackTrace();
+
+            UnitTaskRequest failedUnitTaskRequest = currentUnitTaskRequest;
+            transactionTemplateForRequiesNew.executeWithoutResult(transactionStatus -> {
+                if (failedUnitTaskRequest != null) {
+                    unitTaskService.markUnitTaskToFailedFinal(
+                            failedUnitTaskRequest.getUnitTaskRequestId(),
+                            failedTime
+                    );
+                }
+                workflowService.markWorkflowRequestFailed(
+                        workflowRequestId,
+                        failedTime,
+                        e.getMessage()
+                );
+            });
+            if(taskExecutor != null) taskExecutor.compensateOnFailure(currentUnitTaskRequest, workflowRequest, draft, failedTime, e.getMessage());
             throw e;
         }
     }
