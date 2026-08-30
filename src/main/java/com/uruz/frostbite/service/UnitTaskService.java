@@ -58,6 +58,8 @@ public class UnitTaskService {
             int previousIndex =
                     unitTasks.indexOf(previous.getUnitTaskName());
 
+            if(previousIndex <0) throw new IllegalStateException(" \"UnitTask is not registered in workflow: \" "+ previous.getUnitTaskName());
+
             int nextIndex = previousIndex + 1;
 
             if (nextIndex >= unitTasks.size()) {
