@@ -13,6 +13,7 @@ import com.uruz.frostbite.dto.common.response.OffsetBaseListResponse;
 import com.uruz.frostbite.dto.entry.FolderContents;
 import com.uruz.frostbite.dto.folder.*;
 import com.uruz.frostbite.dto.folder.internal.*;
+import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import com.uruz.frostbite.enums.common.ApiErrorCode;
@@ -108,8 +109,8 @@ public class FolderService {
 
         Folder parentFolder = selectPrivateParentFolder(userId, parentFolderUuid);
 
-        int totalCount = folderMapper.selectPrivateFolderContentsTotalCount(userId,parentFolder.getFolderId());
-        List<FolderContents> folderContentsList = folderMapper.selectPrivateFolderContentsList(userId, parentFolder.getFolderId(), offset, limit);
+        int totalCount = folderMapper.selectPrivateFolderContentsTotalCount(userId,parentFolder.getFolderId(), FolderStatus.ACTIVE, FileStatus.ACTIVE);
+        List<FolderContents> folderContentsList = folderMapper.selectPrivateFolderContentsList(userId, parentFolder.getFolderId(), offset, limit, FolderStatus.ACTIVE, FileStatus.ACTIVE);
         OffsetBasePagination offsetBasePagination = new OffsetBasePagination(totalCount, offset, limit);
 
         return new OffsetBaseListResponse<>(folderContentsList, offsetBasePagination);
@@ -182,9 +183,9 @@ public class FolderService {
     public OffsetBaseListResponse<FolderContents> getTeamFolderContentsByOffsetBase(Integer userId, UUID parentFolderUuid, UUID teamUuid, Integer offset, Integer limit){
         Folder parentFolder = selectTeamParentFolder(parentFolderUuid, teamUuid, userId);
 
-        int totalCount = folderMapper.selectTeamFolderContentsTotalCount(teamUuid, parentFolder.getFolderId(), userId);
+        int totalCount = folderMapper.selectTeamFolderContentsTotalCount(teamUuid, parentFolder.getFolderId(), userId, FolderStatus.ACTIVE, FileStatus.ACTIVE);
 
-        List<FolderContents> folderContentsList = folderMapper.selectTeamFolderContentsList(teamUuid, parentFolder.getFolderId(), userId, offset, limit);
+        List<FolderContents> folderContentsList = folderMapper.selectTeamFolderContentsList(teamUuid, parentFolder.getFolderId(), userId, offset, limit, FolderStatus.ACTIVE, FileStatus.ACTIVE);
         OffsetBasePagination offsetBasePagination = new OffsetBasePagination(totalCount, offset, limit);
 
         return new OffsetBaseListResponse<>(folderContentsList, offsetBasePagination);
