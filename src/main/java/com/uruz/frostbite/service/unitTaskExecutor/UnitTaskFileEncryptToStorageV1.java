@@ -13,11 +13,13 @@ import com.uruz.frostbite.enums.workflow.UnitTask;
 import com.uruz.frostbite.service.DirectFileHandleComponent;
 import com.uruz.frostbite.service.FileService;
 import org.apache.commons.collections4.MapUtils;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
+@Component
 public class UnitTaskFileEncryptToStorageV1 implements UnitTaskExecutor {
 
     private final UnitTask unitTask = UnitTask.UT_FILE_ENCRYPT_TO_STORAGE_V1;
