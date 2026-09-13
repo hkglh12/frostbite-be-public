@@ -50,7 +50,7 @@ public final class TestDataFixture {
         Integer userId = jdbcTemplate.queryForObject(
                 """
                 INSERT INTO user_tb (
-                    name, email, password, phone_number, birth, create_date, uuid, account_type, status
+                    name, email, password, phone_number,  create_date, uuid, account_type, status
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 RETURNING user_id
