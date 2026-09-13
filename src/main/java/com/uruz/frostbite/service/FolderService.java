@@ -180,7 +180,7 @@ public class FolderService {
     }
 
     // 팀 폴더 컨텐츠 조회
-    public OffsetBaseListResponse<FolderContents> getTeamFolderContentsByOffsetBase(Integer userId, UUID parentFolderUuid, UUID teamUuid, Integer offset, Integer limit){
+    public OffsetBaseListResponse<FolderContents> getTeamFolderContentsByOffsetBase(Integer userId, UUID teamUuid, UUID parentFolderUuid, Integer offset, Integer limit){
         Folder parentFolder = selectTeamParentFolder(parentFolderUuid, teamUuid, userId);
 
         int totalCount = folderMapper.selectTeamFolderContentsTotalCount(teamUuid, parentFolder.getFolderId(), userId, FolderStatus.ACTIVE, FileStatus.ACTIVE);
@@ -202,10 +202,16 @@ public class FolderService {
         List<SimpleFolderTreeNode> list = folderMapper.selectTeamFolderCursorBaseByUuid(folderCondition);
 
         UUID lastUuid = null;
-        if(!list.isEmpty()) list.getLast().getUuid();
-        TeamFolderCursorBaseConditionByFolderUuid nextUuidCondition = folderCondition.nextFolderUuidCondition(lastUuid);
-        UUID nextUuid = folderMapper.selectTeamFolderCursorBaseNext(nextUuidCondition).orElse(null);
-        boolean hasNext = nextUuid != null;
+        UUID nextUuid = null;
+        boolean hasNext = false;
+
+        if(!list.isEmpty()) {
+            lastUuid = list.getLast().getUuid();
+            TeamFolderCursorBaseConditionByFolderUuid nextUuidCondition = folderCondition.nextFolderUuidCondition(lastUuid);
+            nextUuid = folderMapper.selectTeamFolderCursorBaseNext(nextUuidCondition).orElse(null);
+            hasNext = nextUuid != null;
+        }
+
 
         CursorBasePagination cursorBasePagination = new CursorBasePagination(lastUuid, nextUuid, hasNext, limit);
         return new CursorBaseListResponse<SimpleFolderTreeNode>(list, cursorBasePagination);
@@ -239,7 +245,7 @@ public class FolderService {
     public Folder selectTeamParentFolder(Integer userId, UUID parentFolderUuid, UUID teamUuid) throws RequestProcessingException {
 
         Folder parentFolder = null;
-        if(parentFolderUuid == null){
+         if(parentFolderUuid == null){
             // parentFolderUuid가 없을경우 Entry Folder가 부모
             parentFolder = folderMapper.selectAccessibleTeamEntryFolderByTeamUuid(teamUuid, userId).orElseThrow(
                     () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND));
