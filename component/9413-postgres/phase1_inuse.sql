@@ -8,7 +8,6 @@ create table user_tb(
                         email varchar(256),
                         password varchar(1024),
                         phone_number varchar(14),
-                        birth date,
                         create_date date,
                         uuid UUID,
                         account_type smallint,
@@ -21,7 +20,6 @@ comment on column user_tb.name is '사용자이름';
 comment on column user_tb.email is '이메일';
 comment on column user_tb.password is '비밀번호';
 comment on column user_tb.phone_number is '휴대전화번호';
-comment on column user_tb.birth is '생년월일';
 comment on column user_tb.create_date is '가입날짜';
 comment on column user_tb.uuid is '사용자 UUID';
 comment on column user_tb.account_type is '계정 권한 종류[관리자||사용자]';
