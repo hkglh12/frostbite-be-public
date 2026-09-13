@@ -14,6 +14,7 @@ import com.uruz.frostbite.enums.workflow.UnitTask;
 import com.uruz.frostbite.enums.workflow.WorkflowRequestStatus;
 import com.uruz.frostbite.service.unitTaskExecutor.UnitTaskExecutor;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -28,6 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class WorkflowProcessor {
     /**
      * 실제 물리 파일을 핸들링하고, 워크플로우의 흐름을 수행하는 주체
@@ -79,6 +81,7 @@ public class WorkflowProcessor {
 
     /** 등록된 워크플로우를 실행 */
     public void processWorkflow(Long workflowRequestId){
+        log.info(Thread.currentThread().getName() + " start to process async Execute");
         // 워크플로우가 실행 가능한 상태인지 확인
         WorkflowRequest workflowRequest = workflowService.getWorkflowRequest(workflowRequestId);
 
@@ -133,8 +136,6 @@ public class WorkflowProcessor {
                 // 각 UintTask는 자기 자신의 관심사 도메인의 상태값 변경까지 담당.
                 currentUnitTaskRequest = UnitTaskRequest.createCurrentUnitTask(task, workflowRequestId, workflowRequest.getWorkflowName().getUnitTaskOrder(task),
                                                                                 workflowRequest.getWorkflowDomainType(), workflowRequest.getTargetId(), workflowRequest.getCreateUserId(), LocalDateTime.now());
-
-
 
                 taskExecutor = executorMap.get(currentUnitTaskRequest.getUnitTaskName());
 
