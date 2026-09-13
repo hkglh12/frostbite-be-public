@@ -58,4 +58,5 @@ public interface FileMapper {
 
     void markFileAsActive(@Param("fileId") Long fileId, @Param("status") FileStatus status);
 
+    File selectFileMetaForInternalProcess(@Param("fileUuid")UUID fileUuid);
 }

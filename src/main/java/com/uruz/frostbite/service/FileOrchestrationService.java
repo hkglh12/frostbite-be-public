@@ -1,5 +1,6 @@
 package com.uruz.frostbite.service;
 
+import ch.qos.logback.core.model.processor.ProcessorException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uruz.frostbite.customException.RequestProcessingException;
 import com.uruz.frostbite.domain.File;
@@ -13,6 +14,7 @@ import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.enums.workflow.Workflow;
 import com.uruz.frostbite.enums.workflow.WorkflowDomainType;
 import com.uruz.frostbite.utils.TempFileUtils;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -22,6 +24,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
@@ -82,7 +85,8 @@ public class FileOrchestrationService {
         // 파일 테이블 등록 + 파일 워크플로우 상태 row 등록
         File registeringAttemptFile = fileService.registerFileMeta(request, folderUuid, createUserId);
 
-        Workflow inDevWorkflow = Workflow.WF_FILE_PROVISION_NORMAL;
+        // 현 시점 모든 파일은 동일한 흐름을 타도록
+        Workflow inDevWorkflow = Workflow.WF_FILE_REGISTER_ONLY;
 
         String requestPayloadString = null;
         try{
@@ -96,6 +100,7 @@ public class FileOrchestrationService {
         WorkflowRequest workflowRequest = workflowService.registerWaitingWorkflowRequest(WorkflowDomainType.WF_TYPE_FILE,
                 registeringAttemptFile.getFileId(), inDevWorkflow, requestPayloadString, createUserId);
 
+        log.info(Thread.currentThread().getName() + " register async synchronization process async Execute");
         /**
          * SEE : docs/analyze/transactionManager.md
          * */
@@ -115,6 +120,7 @@ public class FileOrchestrationService {
                             //  -> 추후 다시 공부하기로 하고, 현시점 execute() 호출로 변경
                             // * 유의점 : 이 execute는 "진입시" exception만 잡힘. 비동기 진입 후 Exception을 잡지는 못함을 명심할것
                             workflowExecutor.execute(() -> {
+                                System.out.println("WORKFLOW THREAD = " + Thread.currentThread().getName());
                                 workflowProcessor.processWorkflow(workflowRequest.getWorkflowRequestId());
                             });
 
@@ -161,6 +167,18 @@ public class FileOrchestrationService {
             throw e;
         }
         return draft;
+    }
+
+    public void downloadDecryptedFile(HttpServletResponse response, Integer userId, UUID folderUuid, UUID fileUuid) throws RequestProcessingException {
+        // TODO 권한 검증
+        File file = fileService.selectFileMetaForInternalProcess(fileUuid);
+        Path persistedPath = Path.of(file.getStorageFilePath() + java.io.File.separator + file.getStorageFileName());
+
+        try {
+            directFileHandleComponent.decryptToStream(persistedPath.toFile(), file.getOriginalFileName(), response);
+        }catch (Exception e){
+            throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
+        }
     }
 
 }

@@ -75,8 +75,6 @@ public class FileService {
         FileWorkflowStatus workflowStatus = FileWorkflowStatus.createWaiting(initialFile.getFileId());
         fileMapper.insertFileWorkflowStatus(workflowStatus);
 
-        // PK 외부 노출 금지
-        initialFile.setFileId(null);
         return initialFile;
     }
 
@@ -129,6 +127,10 @@ public class FileService {
         // TODO 폴더에 권한이 있는지 확인해야 한다.
         // Phase2에서 파일에 직접적인 Deny 권한이 있는지 확인해야 한다.
         fileMapper.updateForSoftDeletion(fileUuid, FileStatus.DELETED);
+    }
+
+    public File selectFileMetaForInternalProcess(UUID fileUuid) {
+        return fileMapper.selectFileMetaForInternalProcess(fileUuid);
     }
 
     /** 임시파일 테이블에 임시파일 정보 등록 */
