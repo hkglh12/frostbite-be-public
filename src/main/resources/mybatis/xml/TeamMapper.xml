@@ -110,7 +110,7 @@
         FROM
             team_tb t
         WHERE
-            team_id  = #{teamUuid}
+            uuid  = #{teamUuid}
             AND EXISTS (SELECT 1
                         FROM rel_user_team_tb rut
                         WHERE rut.team_id = t.team_id
