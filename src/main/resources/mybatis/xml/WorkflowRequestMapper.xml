@@ -20,7 +20,7 @@
         /** selectWorkflowRequest*/
         SELECT
             workflow_request_tb.workflow_request_id, workflow_request_tb.workflow_name, workflow_request_tb.workflow_domain_type,
-            workflow_request_tb.target_id, request_payload, workflow_request_tb.status
+            workflow_request_tb.target_id, request_payload, workflow_request_tb.status, workflow_request_tb.create_user_id
         FROM
             workflow_request_tb
         WHERE
