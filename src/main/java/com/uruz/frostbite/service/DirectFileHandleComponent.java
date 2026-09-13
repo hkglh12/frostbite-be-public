@@ -10,8 +10,12 @@ import com.uruz.frostbite.enums.common.ApiErrorCode;
 import com.uruz.frostbite.utils.CipherUtils;
 import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +25,8 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.spec.AlgorithmParameterSpec;
@@ -246,6 +252,62 @@ public class DirectFileHandleComponent {
             decryptFileInternal(encryptedFile, bufferedOutputStream);
         }
     }
+    // 헤더값 세팅들에 의해, 별도 메서드로 분리
+
+    public void decryptToStream(File encryptedFile, String originalName, HttpServletResponse response) throws Exception{
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+
+        String encodedFileName = URLEncoder
+                .encode(originalName, StandardCharsets.UTF_8)
+                .replace("+", "%20");
+
+        response.setHeader(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename*=UTF-8''" + encodedFileName
+        );
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
+        response.setHeader(HttpHeaders.PRAGMA, "no-cache");
+
+
+        AlgorithmParameterSpec parameterSpec = null;
+        Cipher cipher = null;
+        try( FileInputStream fileInputStream = new FileInputStream(encryptedFile);
+            DataInputStream dataInputStream = new DataInputStream(fileInputStream) ){
+            EncryptedFileMagicHeader header = CipherUtils.readEncryptedFileMagicHeader(dataInputStream);
+
+            parameterSpec = CipherUtils.createParameterSpec(header.getFormatVersion(), header.getIvBytes());
+            cipher = Cipher.getInstance(header.getFormatVersion().getCipherTransformation());
+
+            cipher.init(Cipher.DECRYPT_MODE, masterAesKey, parameterSpec);
+            OutputStream out = response.getOutputStream();
+            // CipherInputStream 으로 dataInputStream 인자 사용 : 파일 읽어서 -> CihperInputStream이 read 하는 순간 복호화, outputStream에 write
+            // dataInputStream 과 별개로 CipherOutputStream 으로 outputStream 인자 사용
+            //  : 파일을 읽어서(.read()) 암호문 획득 -> CipherOutputStream에 암호문 전달 -> 내부에서 복호화 -> outputStream에 복호화한 평문 write
+            try(CipherInputStream cipherInputStream = new CipherInputStream(dataInputStream, cipher)){
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int read;
+                while ((read = cipherInputStream.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+            }catch(Exception e){
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                // TODO 실패시 작업 필요
+                e.printStackTrace();
+                throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
+            }
+        } catch( Exception e) {
+            if(e.getClass() == RequestProcessingException.class){
+                throw e;
+            } else {
+                e.printStackTrace();
+                throw new RequestProcessingException(ApiErrorCode.INTERNAL_ERROR_FOR_RESOURCE_HANDLE);
+            }
+        }
+    }
+
+
     public void decryptFileInternal(File encryptedFile, OutputStream outputStream) throws Exception{
         try(FileInputStream fileInputStream = new FileInputStream(encryptedFile);
             DataInputStream dataInputStream = new DataInputStream(fileInputStream)){
@@ -265,13 +327,14 @@ public class DirectFileHandleComponent {
                 while ((read = cipherInputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, read);
                 }
-            }catch(Exception e){
+            } catch(Exception e){
                 // TODO 실패시 작업 필요
                 e.printStackTrace();
                 throw e;
             }
         }
     }
+
 
 
 

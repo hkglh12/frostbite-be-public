@@ -66,12 +66,13 @@
     <select id="selectFileMeta" resultType="com.uruz.frostbite.dto.file.FileMetaResponse">
         /**selectFileMeta*/
         SELECT
-            file.uuid, file.file_name, file.status, file.file_size, file.file_extension, file.mime_type,
-            folder.uuid as parentFolderUuid,
+            file.uuid, file.file_name, folder.uuid as parentFolderUuid,
+            file.file_size, file.file_extension, file.mime_type,
             (SELECT name from user_tb where user_id = file.create_user_id) as create_user_name,
-            file.create_time,
             (SELECT name from user_tb where user_id = file.modify_user_id) as modify_user_name,
-            file.modify_time
+            file.create_time,
+            file.modify_time,
+            file.status
         FROM
             file_tb file
         JOIN
@@ -164,5 +165,11 @@
         WHERE
             file_id = #{fileId}
     </update>
+
+    <select id="selectFileMetaForInternalProcess" resultType="com.uruz.frostbite.domain.File">
+        SELECT *
+        FROM file_tb
+        WHERE uuid = #{fileUuid}
+    </select>
 
 </mapper>

@@ -6,6 +6,7 @@ import com.uruz.frostbite.dto.wrapper.ApiSucceedResponse;
 import com.uruz.frostbite.enums.common.ApiSucceedCode;
 import com.uruz.frostbite.service.FileOrchestrationService;
 import com.uruz.frostbite.service.FileService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,17 @@ public class FileController {
         TempFileMetaInfoDraft tempFileDraft = fileOrchestrationService.registerTempFile(file, folderUuid, userId);
 
         return ResponseEntity.ok(new ApiSucceedResponse<>(tempFileDraft));
+    }
+
+
+    @GetMapping("/{folderUuid}/{fileUuid}/download")
+    public void downloadDecryptedFile(
+            @PathVariable(name="folderUuid") UUID folderUuid,
+            @PathVariable(name ="fileUuid") UUID fileUuid,
+            @AuthenticationPrincipal(expression = "userId") Integer userId,
+            HttpServletResponse response
+    ) throws RequestProcessingException {
+        fileOrchestrationService.downloadDecryptedFile(response, userId, folderUuid, fileUuid);
     }
 
     /** 파일 등록 포인트*/
