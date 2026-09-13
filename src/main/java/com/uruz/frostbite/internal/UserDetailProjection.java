@@ -25,8 +25,6 @@ public class UserDetailProjection {
     /** 휴대전화번호 */
     private String phoneNumber;
 
-    /** 생년월일 */
-    private LocalDate birth;
 
     /** 가입날짜 */
     private LocalDate createDate;

@@ -30,8 +30,6 @@ public class User {
     /** 휴대전화번호 */
     private String phoneNumber;
 
-    /** 생년월일 */
-    private LocalDate birth;
 
     /** 가입날짜 */
     private LocalDate createDate;
@@ -52,18 +50,18 @@ public class User {
 
      */
 
-    private User(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid, AccountType accountType, UserStatus status){
+    private User(String name, String email, String password, String phoneNumber, LocalDate createDate, UUID uuid, AccountType accountType, UserStatus status){
         this.name = name;
         this.email = email;
         this.password = password;
         this.phoneNumber = phoneNumber;
-        this.birth = birth;
+
         this.createDate = createDate;
         this.uuid = uuid;
         this.status = status;
         this.accountType = accountType;
     }
-    public static User create(String name, String email, String password, String phoneNumber, LocalDate birth, LocalDate createDate, UUID uuid, AccountType accountType){
+    public static User create(String name, String email, String password, String phoneNumber, LocalDate createDate, UUID uuid, AccountType accountType){
         if(name.length() < 2 || name.length() > 20){
             throw new IllegalArgumentException("Name constraint violated");
         }
@@ -78,7 +76,7 @@ public class User {
         }
 
         return new User(
-            name, email, password, phoneNumber, birth,createDate, uuid, accountType, UserStatus.ACTIVE
+            name, email, password, phoneNumber,createDate, uuid, accountType, UserStatus.ACTIVE
         );
     }
 }

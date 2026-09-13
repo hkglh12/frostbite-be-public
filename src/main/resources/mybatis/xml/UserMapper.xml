@@ -13,13 +13,13 @@
             SELECT nextval('user_tb_user_id_seq')
         </selectKey>
 
-        INSERT INTO USER_TB (user_id, name, email, password, phone_number, birth, create_date, uuid, account_type, status)
-        VALUES (#{userId}, #{name}, #{email}, #{password}, #{phoneNumber}, #{birth}, #{createDate}, #{uuid}, #{accountType}, #{status})
+        INSERT INTO USER_TB (user_id, name, email, password, phone_number,  create_date, uuid, account_type, status)
+        VALUES (#{userId}, #{name}, #{email}, #{password}, #{phoneNumber}, #{createDate}, #{uuid}, #{accountType}, #{status})
 
     </insert>
 
     <select id="selectSelfUser" resultType="UserSelfQueryResponse">
-        SELECT name, email, phone_number, birth, create_date, uuid, account_type
+        SELECT name, email, phone_number, create_date, uuid, account_type
         FROM user_tb
         WHERE
             user_id = #{userId}

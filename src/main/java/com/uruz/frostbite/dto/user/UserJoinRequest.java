@@ -37,9 +37,5 @@ public class UserJoinRequest {
             description = "사용자 휴대전화번호"
     )
     private String phoneNumber;
-    @NotNull
-    @Schema(
-            description = "생년월일"
-    )
-    private LocalDate birth;
+
 }

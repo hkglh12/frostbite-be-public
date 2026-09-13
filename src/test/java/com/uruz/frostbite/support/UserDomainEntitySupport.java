@@ -15,7 +15,6 @@ public final class UserDomainEntitySupport {
         request.setEmail("join-" + suffix + "@example.com");
         request.setPassword("password123");
         request.setPhoneNumber(String.format("010%08d", Math.floorMod(suffix.hashCode(), 100_000_000)));
-        request.setBirth(LocalDate.of(1990, 1, 1));
         return request;
     }
 }

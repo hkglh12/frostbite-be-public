@@ -33,11 +33,7 @@ public class UserSelfQueryResponse {
             description = "사용자 휴대전화번호"
     )
     private String phoneNumber;
-    @Schema(
-            description = "사용자 생년월일"
-    )
-    @JsonFormat(pattern = "yyyy-MM-dd", shape=JsonFormat.Shape.STRING)
-    private LocalDate birth;
+
     @Schema(
             description = "사용자 가입날짜"
     )
