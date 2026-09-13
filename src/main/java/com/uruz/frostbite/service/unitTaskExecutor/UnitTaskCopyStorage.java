@@ -46,6 +46,7 @@ public class UnitTaskCopyStorage implements UnitTaskExecutor{
 
     @Override
     public FileWorkflowDraft process(UnitTaskRequest unitTaskRequest, WorkflowRequest request, FileWorkflowDraft draft) {
+        // TODO : 현재는 파일경로가 storage_file_path 에 통으로 박히는데, 추후에는 storage_mount_point_id 로부터 가져와서 경로를 나눠서 저장해야함.
         /**
          * 실제 파일 이동
          *
