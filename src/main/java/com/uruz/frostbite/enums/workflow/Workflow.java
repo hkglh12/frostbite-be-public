@@ -7,6 +7,15 @@ import java.util.List;
 @Getter
 public enum Workflow {
 
+    WF_FILE_ENC_MOVETEMP_FOR_TESt(
+            "테스트용 파일암호화 및 저장",
+            "파일 암호화 후 파일 영속저장",
+            List.of(
+                    UnitTask.UT_FILE_ENCRYPT_TO_STORAGE_V1,
+                    UnitTask.UT_FILE_REMOVE_TEMP
+            )
+    ),
+
     WF_FILE_REGISTER_ONLY(
             "파일등록",
             "파일 이동 전용",
