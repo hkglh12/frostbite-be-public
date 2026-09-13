@@ -49,7 +49,7 @@ public class UserService {
         if(userMapper.selectUserEmailExists(request.getEmail())) {
             throw new RequestProcessingException(ApiErrorCode.USER_EMAIL_ALREADY_EXISTS);
         }
-        if(userMapper.selectUserExistsByPhoneNumber(request.getPhoneNumber())){
+        if(userMapper.selectUserPhoneNumberExists(request.getPhoneNumber())){
             throw new RequestProcessingException(ApiErrorCode.USER_PHONE_NUMBER_ALREADY_EXISTS);
         }
 
@@ -58,7 +58,6 @@ public class UserService {
                 request.getEmail(),
                 encPassword,
                 request.getPhoneNumber(),
-                request.getBirth(),
                 createDate,
                 UUID.randomUUID(),
                 AccountType.USER
@@ -76,7 +75,6 @@ public class UserService {
         return UserJoinResponse.builder()
                 .uuid(user.getUuid())
                 .phoneNumber(user.getPhoneNumber())
-                .birth(user.getBirth())
                 .email(user.getEmail())
                 .name(user.getName())
                 .createDate(user.getCreateDate())
