@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @AllArgsConstructor
 public class FileMoveCommand {
     @Schema(description = "파일 UUID")

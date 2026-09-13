@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @AllArgsConstructor
 public class InternalFileMoveCommand {
     @NotNull

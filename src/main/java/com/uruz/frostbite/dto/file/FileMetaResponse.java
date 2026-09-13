@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -19,5 +20,7 @@ public class FileMetaResponse {
     private String mimeType;
     private String createUserName;
     private String modifyUserName;
+    private LocalDateTime createTime;
+    private LocalDateTime modifyTime;
     private FileStatus status;
 }
