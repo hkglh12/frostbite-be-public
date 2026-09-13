@@ -191,7 +191,6 @@ public class SwaggerExamples {
         "name" : "홍길동",
         "email" : "confi@frostbite.com",
         "phoneNumber" : "01041211101",
-        "birth" : "1994-01-01",
         "createDate" : "2026-04-18",
         "uuid" : "a62d14fb-74a3-4d8b-99fc-ce0248c9438c",
         "status" : "ACTIVE"
@@ -217,7 +216,6 @@ public class SwaggerExamples {
               "name": "홍길동",
               "email": "confi@frostbite.com",
               "phoneNumber": "01041211101",
-              "birth": "1994-01-01",
               "createDate": "2026-04-18"
             },
         "message": "SUCCEED",
