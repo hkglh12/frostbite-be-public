@@ -53,7 +53,7 @@ public class TeamController {
     )
     @PostMapping("/")
     @Operation(summary = "팀 생성", description = "팀 생성 + 자동 팀 폴더 생성, 생성자는 팀 리더")
-    public ResponseEntity<?> createTeam(
+    public ResponseEntity<ApiSucceedResponse<TeamDetailResponse>> createTeam(
             @AuthenticationPrincipal(expression = "userId") Integer createUserId,
             @Validated @RequestBody TeamCreateRequest request
             ) throws GeneralCustomException {
@@ -78,7 +78,7 @@ public class TeamController {
     )
     @GetMapping("/list")
     @Operation(summary = "가입한 팀 리스트 조회", description = "사용자 본인 가입 팀 리스트 조회")
-    public ResponseEntity<?> getTeams(
+    public ResponseEntity<ApiSucceedResponse<List<TeamDetailResponse>>> getTeams(
             @AuthenticationPrincipal (expression = "userId") Integer userId
     ){
         List<TeamDetailResponse> teams = teamService.getTeamsByUserId(userId);
@@ -101,7 +101,7 @@ public class TeamController {
     )
     @GetMapping("/")
     @Operation(summary = "팀 상세정보 조회", description = "본인이 가입한 팀 중 특정 팀 상세정보 조회")
-    public ResponseEntity<?> getTeam(
+    public ResponseEntity<ApiSucceedResponse<TeamDetailResponse>> getTeam(
             @RequestParam(name="uuid") UUID teamUuid,
             @AuthenticationPrincipal (expression = "userId") Integer userId
     ){
@@ -125,7 +125,7 @@ public class TeamController {
     )
     @PutMapping("/")
     @Operation(summary = "팀 상세정보 수정", description = "본인이 가입한 팀 중 특정 팀 상세정보 수정")
-    public ResponseEntity<?> updateTeam(
+    public ResponseEntity<ApiSucceedResponse<TeamDetailResponse>> updateTeam(
             @Valid @RequestBody TeamModifyRequest modifyRequest,
             @AuthenticationPrincipal (expression = "userId") Integer modifyUserId
             ){
@@ -150,12 +150,12 @@ public class TeamController {
     )
     @DeleteMapping("/")
     @Operation(summary = "팀 폐쇄", description = "팀 폐쇄 (soft delete)")
-    public ResponseEntity<?> removeTeam(
+    public ResponseEntity<ApiSucceedResponse<Void>> removeTeam(
             @RequestParam(name = "uuid") UUID teamUuid,
             @AuthenticationPrincipal (expression = "userId") Integer userId
     ){
         teamService.softDeleteTeam(teamUuid, userId);
-        return ResponseEntity.ok(new ApiSucceedResponse<>(null));
+        return ResponseEntity.ok(new ApiSucceedResponse<Void>(null));
     }
 
     @PostMapping("/invitation")

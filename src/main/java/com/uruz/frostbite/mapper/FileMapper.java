@@ -1,9 +1,8 @@
 package com.uruz.frostbite.mapper;
 
 import com.uruz.frostbite.domain.*;
-import com.uruz.frostbite.dto.file.FileMetaModifyCommand;
 import com.uruz.frostbite.dto.file.FileMetaResponse;
-import com.uruz.frostbite.dto.file.FileMoveCommand;
+import com.uruz.frostbite.dto.file.internal.FileMetaModifyCommand;
 import com.uruz.frostbite.dto.file.internal.InternalFileMoveCommand;
 import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.FileTempStatus;

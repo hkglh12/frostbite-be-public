@@ -36,7 +36,7 @@
             file_id = #{fileId}
     </update>
 
-    <update id="updateFileMeta" parameterType="com.uruz.frostbite.dto.file.FileMetaModifyCommand">
+    <update id="updateFileMeta" parameterType="com.uruz.frostbite.dto.file.internal.FileMetaModifyCommand">
         /** updateFileMeta */
         UPDATE file_tb
         <set>

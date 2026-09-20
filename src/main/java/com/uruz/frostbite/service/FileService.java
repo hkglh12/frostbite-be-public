@@ -7,9 +7,10 @@ import com.uruz.frostbite.domain.FileTemp;
 import com.uruz.frostbite.domain.FileWorkflowStatus;
 import com.uruz.frostbite.domain.Folder;
 import com.uruz.frostbite.dto.file.FileCreateRequest;
-import com.uruz.frostbite.dto.file.FileMetaModifyCommand;
+import com.uruz.frostbite.dto.file.FileMetaModifyRequest;
 import com.uruz.frostbite.dto.file.FileMetaResponse;
-import com.uruz.frostbite.dto.file.FileMoveCommand;
+import com.uruz.frostbite.dto.file.FileMoveRequest;
+import com.uruz.frostbite.dto.file.internal.FileMetaModifyCommand;
 import com.uruz.frostbite.dto.file.internal.InternalFileMoveCommand;
 import com.uruz.frostbite.enums.FileStatus;
 import com.uruz.frostbite.enums.FileTempStatus;
@@ -81,26 +82,41 @@ public class FileService {
 
     /** 파일 메타 제어 */
     // 파일 메타 수정
-    public FileMetaResponse modifyFileMeta(Integer userId, FileMetaModifyCommand command){
+    public FileMetaResponse modifyFileMeta(
+            Integer userId,
+            UUID folderUuid,
+            UUID fileUuid,
+            FileMetaModifyRequest request
+    ) {
 
         //TODO 파일을 대상으로 작업하려면, 폴더에 권한이 있는지 확인해야 한다.
         // Phase2에서 파일에 직접적인 Deny 권한이 있는지 확인해야 한다.
         LocalDateTime currentTime = LocalDateTime.now();
 
-        FileMetaModifyCommand requiredArgsFilled = command.fillRequired(userId, currentTime);
-        int affectedRow = fileMapper.updateFileMeta(requiredArgsFilled);
+        FileMetaModifyCommand command = FileMetaModifyCommand.create(
+                fileUuid,
+                request.getFileName(),
+                userId,
+                currentTime
+        );
+        int affectedRow = fileMapper.updateFileMeta(command);
 
-        return fileMapper.selectFileMeta(command.getUuid());
+        return fileMapper.selectFileMeta(fileUuid);
     }
 
     // 파일 폴더 이동
-    public FileMetaResponse moveFile(Integer userId, FileMoveCommand command){
+    public FileMetaResponse moveFile(
+            Integer userId,
+            UUID originalFolderUuid,
+            UUID fileUuid,
+            FileMoveRequest request
+    ) {
 
-        Folder originalFolder = folderResolverService.resolveAccessibleFolderByFolderUuid(command.getOriginalFolderUuid(), userId).orElseThrow(
+        Folder originalFolder = folderResolverService.resolveAccessibleFolderByFolderUuid(originalFolderUuid, userId).orElseThrow(
                 () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
         );
 
-        Folder targetFolder = folderResolverService.resolveAccessibleFolderByFolderUuid(command.getTargetFolderUuid(), userId).orElseThrow(
+        Folder targetFolder = folderResolverService.resolveAccessibleFolderByFolderUuid(request.getTargetFolderUuid(), userId).orElseThrow(
                 () -> new RequestProcessingException(ApiErrorCode.NOT_FOUND)
         );
 
@@ -108,11 +124,17 @@ public class FileService {
         // Phase2에서 파일에 직접적인 Deny 권한이 있는지 확인해야 한다.
         LocalDateTime currentTime = LocalDateTime.now();
 
-        InternalFileMoveCommand requiredArgsFilled = InternalFileMoveCommand.convertInteralDto(command, originalFolder.getFolderId(), targetFolder.getFolderId(), userId, currentTime);
+        InternalFileMoveCommand command = InternalFileMoveCommand.create(
+                fileUuid,
+                originalFolder.getFolderId(),
+                targetFolder.getFolderId(),
+                userId,
+                currentTime
+        );
 
-        int affectedRow = fileMapper.moveFile(requiredArgsFilled);
+        int affectedRow = fileMapper.moveFile(command);
 
-        return fileMapper.selectFileMeta(command.getUuid());
+        return fileMapper.selectFileMeta(fileUuid);
     }
 
     // 파일 메타 조회

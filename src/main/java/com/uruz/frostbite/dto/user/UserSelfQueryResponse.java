@@ -1,6 +1,7 @@
 package com.uruz.frostbite.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.uruz.frostbite.enums.user.AccountType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -40,5 +41,5 @@ public class UserSelfQueryResponse {
     @JsonFormat(pattern = "yyyy-MM-dd", shape=JsonFormat.Shape.STRING)
     private LocalDate createDate;
 
-    private AccountType account_type;
+    private AccountType accountType;
 }

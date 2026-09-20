@@ -58,7 +58,7 @@ public class FolderController {
 
     //사용자 UUID를 기반으로 개인폴더 ROOT 생성
     @PostMapping("/private/root")
-    public ResponseEntity<?> createPrivateRootFolder(
+    public ResponseEntity<ApiSucceedResponse<SimpleFolder>> createPrivateRootFolder(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             // 내지는 코드에서 SecurityContextHolder 가져와도됌
             @RequestBody String folderName
@@ -82,7 +82,7 @@ public class FolderController {
             )
     )
     @GetMapping("/private/folder/trees")
-    public ResponseEntity<?> getPrivateFoldersByCursorBase(
+    public ResponseEntity<ApiSucceedResponse<CursorBaseListResponse<SimpleFolderTreeNode>>> getPrivateFoldersByCursorBase(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @RequestParam(required = false, name="parentFolderUuid") UUID parentFolderUuid,
             @RequestParam(required = false, name= "nextFolderUuid") UUID nextFolderUuid,
@@ -108,7 +108,7 @@ public class FolderController {
     )
     //개인폴더 컨텐츠 조회 (Root, nonRoot 병합됨)
     @GetMapping("/private/folder/contents")
-    public ResponseEntity<?> getPrivateFolderContentsByOffsetBase(
+    public ResponseEntity<ApiSucceedResponse<OffsetBaseListResponse<FolderContents>>> getPrivateFolderContentsByOffsetBase(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @Nullable @RequestParam(required = false, name="parentFolderUuid") UUID parentFolderUuid,
             @RequestParam(required = false, name="offset", defaultValue = "0") Integer offset,
@@ -135,7 +135,7 @@ public class FolderController {
     )
     // 팀 UUID를 기반으로 팀 ROOT를 만든다.
     @PostMapping("/teams/{teamUuid}/roots")
-    public ResponseEntity<?> createTeamRootFolder(
+    public ResponseEntity<ApiSucceedResponse<SimpleFolder>> createTeamRootFolder(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             // TODO Body에서 teamUUid 꺼낼것
@@ -150,14 +150,14 @@ public class FolderController {
 
     // 팀 폴더 컨텐츠 조회 (Root, nonRoot 병합됨)
     @GetMapping("/teams/{teamUuid}/folder/contents")
-    public ResponseEntity<?> getTeamRootFoldersByOffsetBase(
+    public ResponseEntity<ApiSucceedResponse<OffsetBaseListResponse<FolderContents>>> getTeamRootFoldersByOffsetBase(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @PathVariable(required = true, name="teamUuid") UUID teamUuid,
             @RequestParam(required = false, name="parentFolderUuid") UUID parentFolderUuid,
             @RequestParam(required = false, name="offset", defaultValue = "0") Integer offset,
             @RequestParam(required = false, name="limit", defaultValue = "50") Integer limit
     ) {
-        OffsetBaseListResponse response = folderService.getTeamFolderContentsByOffsetBase(userId, teamUuid, parentFolderUuid, offset, limit);
+        OffsetBaseListResponse<FolderContents> response = folderService.getTeamFolderContentsByOffsetBase(userId, teamUuid, parentFolderUuid, offset, limit);
         return ResponseEntity.ok(new ApiSucceedResponse<>(response));
     }
 
@@ -176,14 +176,14 @@ public class FolderController {
             )
     )
     @GetMapping("/teams/{teamUuid}/roots/tree")
-    public ResponseEntity<?> getTeamRootFoldersByKeysetBase(
+    public ResponseEntity<ApiSucceedResponse<CursorBaseListResponse<SimpleFolderTreeNode>>> getTeamRootFoldersByKeysetBase(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @PathVariable(name = "teamUuid") UUID teamUuid,
             @RequestParam(required = false, name="parentFolderUuid") UUID parentFolderUuid,
             @RequestParam(required = false, name="nextFolderUuid") UUID nextFolderUuid,
             @RequestParam(required = false, name="limit", defaultValue = "50") Integer limit
     ){
-        CursorBaseListResponse response = folderService.getTeamFolderByCursorBase(userId, teamUuid, parentFolderUuid, nextFolderUuid, limit);
+        CursorBaseListResponse<SimpleFolderTreeNode> response = folderService.getTeamFolderByCursorBase(userId, teamUuid, parentFolderUuid, nextFolderUuid, limit);
         return ResponseEntity.ok(new ApiSucceedResponse<>(response));
     }
 
@@ -203,7 +203,7 @@ public class FolderController {
     )
     // 부모폴더 UUID를 기준으로 서브폴더 생성
     @PostMapping("/")
-    public ResponseEntity<?> createSubFolder(
+    public ResponseEntity<ApiSucceedResponse<SimpleFolder>> createSubFolder(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @Validated  @RequestBody FolderCreateRequest request
     ){
@@ -242,7 +242,7 @@ public class FolderController {
 
     @GetMapping("/{folderUuid}/detail")
     /** 사용자가 클릭한 폴더의 UUID의 상세내역을 조회한다.*/
-    public ResponseEntity<?> getSubFolderDetail(
+    public ResponseEntity<ApiSucceedResponse<FolderDetailsResponse>> getSubFolderDetail(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @PathVariable(name = "folderUuid") UUID folderUuid
     ){
@@ -265,7 +265,7 @@ public class FolderController {
             )
     )
     @PutMapping("/{folderUuid}")
-    public ResponseEntity<?> updateFolder(
+    public ResponseEntity<ApiSucceedResponse<SimpleFolder>> updateFolder(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @PathVariable(name = "folderUuid") UUID folderUuid,
             @RequestBody @Validated FolderModifyRequest request
@@ -289,7 +289,7 @@ public class FolderController {
             )
     )
     @PutMapping("/{folderUuid}/location")
-    public ResponseEntity<?> moveFolder(
+    public ResponseEntity<ApiSucceedResponse<SimpleFolder>> moveFolder(
         @AuthenticationPrincipal(expression = "userId") Integer userId,
         @PathVariable(name="folderUuid") UUID folderUuid,
         @RequestBody @Validated FolderMoveRequest folderMoveRequest
@@ -314,7 +314,7 @@ public class FolderController {
             )
     )
     @DeleteMapping("/{folderUuid}")
-    public ResponseEntity<?> removeFolder(
+    public ResponseEntity<ApiSucceedResponse<Boolean>> removeFolder(
             @AuthenticationPrincipal(expression = "userId") Integer userId,
             @PathVariable(name="folderUuid") UUID folderUuid
     ){

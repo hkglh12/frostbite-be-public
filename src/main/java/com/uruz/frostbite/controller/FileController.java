@@ -37,7 +37,7 @@ public class FileController {
      * MultiPart(java.temp.io) -> forstbite temp까지 이동
      * */
     @PostMapping(value = "/{folderUuid}/temporal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadTemporalFile(
+    public ResponseEntity<ApiSucceedResponse<TempFileMetaInfoDraft>> uploadTemporalFile(
             @RequestPart("file") MultipartFile file,
             @PathVariable(name="folderUuid") UUID folderUuid,
             @AuthenticationPrincipal(expression = "userId") Integer userId
@@ -61,7 +61,7 @@ public class FileController {
 
     /** 파일 등록 포인트*/
     @PostMapping(value = "/{folderUuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> uploadFile(
+    public ResponseEntity<ApiSucceedResponse<SimpleFileResponse>> uploadFile(
             @Validated @RequestBody FileCreateRequest request,
             // 이미 tempFile에 UUID가 있으나, URL상에서 직관성 좋게 표현되는것도 중요하다고 판단, path variable로 유지
             @PathVariable(name="folderUuid") UUID folderUuid,
@@ -73,7 +73,7 @@ public class FileController {
 
     // 파일 메타 조회
     @GetMapping(value = "/{folderUuid}/{fileUuid}/meta")
-    public ResponseEntity<?> getFileMeta(
+    public ResponseEntity<ApiSucceedResponse<FileMetaResponse>> getFileMeta(
             @PathVariable(name="folderUuid") UUID folderUuid,
             @PathVariable(name ="fileUuid") UUID fileUuid,
             @AuthenticationPrincipal(expression = "userId") Integer userId
@@ -85,15 +85,13 @@ public class FileController {
 
     // 파일 메타 수정
     @PutMapping(value = "/{folderUuid}/{fileUuid}/meta")
-    public ResponseEntity<?> modifyFileMeta(
-            @Validated @RequestBody FileMetaModifyCommand command,
+    public ResponseEntity<ApiSucceedResponse<FileMetaResponse>> modifyFileMeta(
+            @Validated @RequestBody FileMetaModifyRequest request,
             @PathVariable(name="folderUuid") UUID folderUuid,
             @PathVariable(name ="fileUuid") UUID fileUuid,
             @AuthenticationPrincipal(expression = "userId") Integer userId
     ) throws RequestProcessingException {
-        // 리펙터링 시, httpRequest 수신용 -> command 전환용 DTO 따로만드는건 어떨지?
-        command = command.fillPathVariables(fileUuid, folderUuid);
-        FileMetaResponse response = fileService.modifyFileMeta(userId, command);
+        FileMetaResponse response = fileService.modifyFileMeta(userId, folderUuid, fileUuid, request);
 
         return ResponseEntity.ok(new ApiSucceedResponse<>(response, ApiSucceedCode.REQUEST_SUCCEED));
 
@@ -101,15 +99,13 @@ public class FileController {
 
     // 파일 이동
     @PutMapping(value = "/{originalFolderUuid}/{fileUuid}/parentFolder")
-    public ResponseEntity<?> moveFile(
-            @Validated @RequestBody FileMoveCommand command,
+    public ResponseEntity<ApiSucceedResponse<FileMetaResponse>> moveFile(
+            @Validated @RequestBody FileMoveRequest request,
             @PathVariable(name="originalFolderUuid") UUID originalFolderUuid,
             @PathVariable(name ="fileUuid") UUID fileUuid,
             @AuthenticationPrincipal(expression = "userId") Integer userId
     ) throws RequestProcessingException {
-        // 리펙터링 시, httpRequest 수신용 -> command 전환용 DTO 따로만드는건 어떨지?
-        command = command.fillPathVariables(fileUuid, originalFolderUuid);
-        FileMetaResponse response = fileService.moveFile(userId, command);
+        FileMetaResponse response = fileService.moveFile(userId, originalFolderUuid, fileUuid, request);
 
         return ResponseEntity.ok(new ApiSucceedResponse<>(response, ApiSucceedCode.REQUEST_SUCCEED));
 
@@ -117,14 +113,14 @@ public class FileController {
 
     // 파일 soft delete
     @DeleteMapping(value = "/{folderUuid}/{fileUuid}")
-    public ResponseEntity<?> softDeleteFile(
+    public ResponseEntity<ApiSucceedResponse<Void>> softDeleteFile(
             @PathVariable(name="folderUuid") UUID folderUuid,
             @PathVariable(name ="fileUuid") UUID fileUuid,
             @AuthenticationPrincipal(expression = "userId") Integer userId
     ) throws RequestProcessingException {
         fileService.softDeleteFile(userId, folderUuid, fileUuid);
 
-        return ResponseEntity.ok(new ApiSucceedResponse<>(null, ApiSucceedCode.REQUEST_SUCCEED));
+        return ResponseEntity.ok(new ApiSucceedResponse<Void>(null, ApiSucceedCode.REQUEST_SUCCEED));
 
     }
 }
