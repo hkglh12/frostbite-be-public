@@ -1,7 +1,6 @@
 package com.uruz.frostbite.dto.folder.internal;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.uruz.frostbite.enums.AccessPolicy;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,8 +33,6 @@ public class FolderAclTargetProjection {
     private Integer resourceScopeUserId;
     @Schema(description = "실 관리 사용자 식별자")
     private Integer resourceOwnerId;
-    @Schema(description = "접근정책")
-    private AccessPolicy accessPolicy;
 
     private String folderIdPath;
     private String folderNamePath;

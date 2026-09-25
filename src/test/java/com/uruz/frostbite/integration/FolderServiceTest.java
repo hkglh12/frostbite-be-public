@@ -78,7 +78,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder createdFolder = jdbcTemplate.queryForObject("""
                 SELECT
-                    uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                    uuid, folder_id, folder_name, folder_type, resource_scope_user_id, parent_folder_id, create_user_id
                 FROM
                     folder_tb
                 WHERE
@@ -95,7 +95,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder parentEntryFolder = jdbcTemplate.queryForObject("""
                     SELECT
-                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                        uuid, folder_id, folder_name, folder_type, resource_scope_user_id, parent_folder_id, create_user_id
                     FROM
                         folder_tb
                     WHERE
@@ -107,14 +107,12 @@ class FolderServiceTest extends IntegrationTestSupport {
         assertThat(parentEntryFolder).isNotNull();
 
         Assertions.assertAll(
-                () -> assertThat(createdFolder.getAccessPolicy()).isEqualTo(AccessPolicy.USER),
                 () -> assertThat(createdFolder.getCreateUserId()).isEqualTo(userId),
                 () -> assertThat(createdFolder.getResourceScopeUserId()).isEqualTo(userId),
                 () -> assertThat(createdFolder.getFolderName()).isEqualTo(folderName),
                 () -> assertThat(createdFolder.getFolderType()).isEqualTo(FolderType.PRIVATE),
                 () -> assertThat(parentEntryFolder.getParentFolderId()).isNull(),
                 () -> assertThat(parentEntryFolder.getResourceScopeUserId()).isEqualTo(userId),
-                () -> assertThat(parentEntryFolder.getAccessPolicy()).isEqualTo(AccessPolicy.USER),
                 () -> assertThat(parentEntryFolder.getFolderType()).isEqualTo(FolderType.PRIVATE)
         );
     }
@@ -132,7 +130,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder createdFolder = jdbcTemplate.queryForObject("""
                 SELECT
-                    uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                    uuid, folder_id, folder_name, folder_type, resource_scope_user_id, parent_folder_id, create_user_id
                 FROM
                     folder_tb
                 WHERE
@@ -148,7 +146,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder parentEntryFolder = jdbcTemplate.queryForObject("""
                     SELECT
-                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                        uuid, folder_id, folder_name, folder_type, resource_scope_user_id, parent_folder_id, create_user_id
                     FROM
                         folder_tb
                     WHERE
@@ -185,9 +183,6 @@ class FolderServiceTest extends IntegrationTestSupport {
         folder.setFolderType(
                 FolderType.fromValue(rs.getInt("folder_type"))
         );
-        folder.setAccessPolicy(
-                AccessPolicy.fromValue(rs.getInt("access_policy"))
-        );
 
         folder.setResourceScopeUserId(
                 rs.getObject("resource_scope_user_id", Integer.class)
@@ -212,7 +207,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder parentEntryFolder = jdbcTemplate.queryForObject("""
                     SELECT
-                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                        uuid, folder_id, folder_name, folder_type, resource_scope_user_id, parent_folder_id, create_user_id
                     FROM
                         folder_tb
                     WHERE
@@ -224,7 +219,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder firstFolder = jdbcTemplate.queryForObject("""
                     SELECT
-                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                        uuid, folder_id, folder_name, folder_type, resource_scope_user_id, parent_folder_id, create_user_id
                     FROM
                         folder_tb
                     WHERE
@@ -239,7 +234,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder nextFolder = jdbcTemplate.query("""
                     SELECT
-                        uuid, folder_id, folder_name, folder_type, access_policy,
+                        uuid, folder_id, folder_name, folder_type,
                         resource_scope_user_id, parent_folder_id, create_user_id
                     FROM folder_tb
                     WHERE resource_scope_user_id = ?
@@ -285,7 +280,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder parentEntryFolder = jdbcTemplate.queryForObject("""
                     SELECT
-                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                        uuid, folder_id, folder_name, folder_type, resource_scope_user_id, parent_folder_id, create_user_id
                     FROM
                         folder_tb
                     WHERE
@@ -297,7 +292,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder startFolder = jdbcTemplate.queryForObject("""
                     SELECT
-                        uuid, folder_id, folder_name, folder_type, access_policy, resource_scope_user_id, parent_folder_id, create_user_id
+                        uuid, folder_id, folder_name, folder_type, resource_scope_user_id, parent_folder_id, create_user_id
                     FROM
                         folder_tb
                     WHERE
@@ -312,7 +307,7 @@ class FolderServiceTest extends IntegrationTestSupport {
 
         Folder nextFolder = jdbcTemplate.query("""
                     SELECT
-                        uuid, folder_id, folder_name, folder_type, access_policy,
+                        uuid, folder_id, folder_name, folder_type,
                         resource_scope_user_id, parent_folder_id, create_user_id
                     FROM folder_tb
                     WHERE resource_scope_user_id = ?

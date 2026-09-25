@@ -36,10 +36,6 @@
   - PRIVATE: 개인 폴더
   - TEAM: 팀 폴더
 
-- accessPolicy는 접근 판단 기준을 의미한다.
-  - USER: 사용자 ACL 기준으로 접근 판단
-  - TEAM: 팀 ACL 기준으로 접근 판단
-
 - resourceOwnerId와 createUserId는 서로 다른 의미를 가진다.
   - createUserId는 최초 생성자 메타데이터다.
   - resourceOwnerId는 현재 폴더 관리 권한을 가진 사용자다.
@@ -62,7 +58,6 @@
         - folderType = PRIVATE이면 resourceScopeUserId만 값을 가진다.
 
     - resourceOwnerId : 폴더 자원 실제 관리 사용자 ID (소유권, 관리권)
-    - accessPolicy : 폴더 자원의 접근 정책 (TEAM || USER)
 
     - folderIdPath : 폴더 ID Path
     - folderNamePath : 폴더 Name Path
@@ -82,7 +77,6 @@
 
 - folderType = PRIVATE + resourceScopeTeamId NOT NULL
 - folderType = TEAM + resourceScopeUserId NOT NULL
-- folderType = PRIVATE + accessPolicy = TEAM
 - resourceScopeTeamId와 resourceScopeUserId가 둘 다 NULL
 - resourceScopeTeamId와 resourceScopeUserId가 둘 다 NOT NULL
 

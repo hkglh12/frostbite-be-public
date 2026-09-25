@@ -110,7 +110,7 @@ create table folder_tb
     resource_scope_team_id integer,
     resource_scope_user_id integer,
     resource_owner_id      integer,
-    access_policy           integer,
+
     folder_id_path         varchar,
     folder_name_path       varchar,
     render_sequence        integer,
@@ -133,7 +133,7 @@ comment on column folder_tb.parent_folder_id is '부모 폴더 식별자';
 comment on column folder_tb.resource_scope_team_id is '소유 팀 식별자';
 comment on column folder_tb.resource_scope_user_id is '소유 사용자식별자';
 comment on column folder_tb.resource_owner_id is '폴더 실제 관리 사용자 (UserPK)';
-comment on column folder_tb.access_policy is '폴더접근정책(USER||TEAM)';
+
 comment on column folder_tb.folder_id_path is ' 폴더 식별자 경로 ';
 comment on column folder_tb.folder_name_path is '폴더 이름 경로';
 comment on column folder_tb.render_sequence is '출력순서';

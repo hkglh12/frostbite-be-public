@@ -1,6 +1,5 @@
 package com.uruz.frostbite.support;
 
-import com.uruz.frostbite.enums.AccessPolicy;
 import com.uruz.frostbite.enums.AclEffectType;
 import com.uruz.frostbite.enums.AclStatus;
 import com.uruz.frostbite.enums.AclSubjectType;
@@ -107,19 +106,19 @@ public final class TestDataFixture {
     }
 
     public TestFolder createPrivateEntryFolder(Integer userId) {
-        return createFolder(FolderType.PRIVATE, null, null, userId, userId, AccessPolicy.USER, userId);
+        return createFolder(FolderType.PRIVATE, null, null, userId, userId, userId);
     }
 
     public TestFolder createTeamEntryFolder(Integer teamId, Integer createUserId) {
-        return createFolder(FolderType.TEAM, null, teamId, null, createUserId, AccessPolicy.TEAM, createUserId);
+        return createFolder(FolderType.TEAM, null, teamId, null, createUserId, createUserId);
     }
 
     public TestFolder createPrivateFolder(Long parentFolderId, Integer userId) {
-        return createFolder(FolderType.PRIVATE, parentFolderId, null, userId, userId, AccessPolicy.USER, userId);
+        return createFolder(FolderType.PRIVATE, parentFolderId, null, userId, userId, userId);
     }
 
     public TestFolder createTeamFolder(Long parentFolderId, Integer teamId, Integer createUserId) {
-        return createFolder(FolderType.TEAM, parentFolderId, teamId, null, createUserId, AccessPolicy.TEAM, createUserId);
+        return createFolder(FolderType.TEAM, parentFolderId, teamId, null, createUserId, createUserId);
     }
 
     public Long createUserAllowAcl(Long folderId, Integer userId, PermissionBitMask... permissions) {
@@ -164,32 +163,20 @@ public final class TestDataFixture {
             Integer scopeTeamId,
             Integer scopeUserId,
             Integer ownerId,
-            AccessPolicy accessPolicy,
             Integer createUserId
     ) {
         Long folderId = jdbcTemplate.queryForObject("SELECT nextval('folder_tb_folder_id_seq')", Long.class);
         UUID uuid = UUID.randomUUID();
         String name = "test-folder-" + uuid.toString().substring(0, 8);
 
-        String parentIdPath = parentFolderId == null ? "/" : jdbcTemplate.queryForObject(
-                "SELECT folder_id_path FROM folder_tb WHERE folder_id = ?",
-                String.class,
-                parentFolderId
-        );
-        String parentNamePath = parentFolderId == null ? "/" : jdbcTemplate.queryForObject(
-                "SELECT folder_name_path FROM folder_tb WHERE folder_id = ?",
-                String.class,
-                parentFolderId
-        );
-        String folderIdPath = parentIdPath + folderId + "/";
-        String folderNamePath = parentNamePath + name + "/";
+
 
         jdbcTemplate.update(
                 """
                 INSERT INTO folder_tb (
-                    uuid, folder_id, name, folder_type, parent_folder_id,
+                    uuid, folder_id, folder_name, folder_type, parent_folder_id,
                     resource_scope_team_id, resource_scope_user_id, resource_owner_id,
-                    access_policy, folder_id_path, folder_name_path, render_sequence,
+                    render_sequence,
                     status, create_user_id, create_time
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -202,9 +189,6 @@ public final class TestDataFixture {
                 scopeTeamId,
                 scopeUserId,
                 ownerId,
-                accessPolicy.getValue(),
-                folderIdPath,
-                folderNamePath,
                 0,
                 FolderStatus.ACTIVE.getValue(),
                 createUserId,

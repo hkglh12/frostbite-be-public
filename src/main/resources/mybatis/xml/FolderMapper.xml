@@ -15,12 +15,12 @@
 
         INSERT INTO FOLDER_TB (
         uuid, folder_id, folder_name, folder_type, parent_folder_id, resource_scope_team_id, resource_scope_user_id,
-        resource_owner_id, access_policy, render_sequence, status,
+        resource_owner_id, render_sequence, status,
         create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
         )
         VALUES (
         #{uuid}, #{folderId}, #{folderName}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
-        #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy}, #{renderSequence}, #{status}, #{createUserId}, #{createTime},
+        #{resourceScopeUserId}, #{resourceOwnerId}, #{renderSequence}, #{status}, #{createUserId}, #{createTime},
         #{modifyUserId}, #{modifyTime}, #{deleteUserId}, #{deleteTime}
         )
     </insert>
@@ -32,12 +32,12 @@
 
         INSERT INTO FOLDER_TB (
         uuid, folder_id, folder_name, folder_type, parent_folder_id, resource_scope_team_id, resource_scope_user_id,
-        resource_owner_id, access_policy, render_sequence, status,
+        resource_owner_id, render_sequence, status,
         create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
         )
         VALUES (
         #{uuid}, #{folderId}, #{folderName}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
-        #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy},
+        #{resourceScopeUserId}, #{resourceOwnerId},
         #{renderSequence}, #{status}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
         #{deleteUserId}, #{deleteTime}
         )
@@ -50,12 +50,12 @@
 
         INSERT INTO FOLDER_TB (
         uuid, folder_id, folder_name, folder_type, parent_folder_id, resource_scope_team_id, resource_scope_user_id,
-        resource_owner_id, access_policy, render_sequence, status,
+        resource_owner_id, render_sequence, status,
         create_user_id, create_time, modify_user_id, modify_time, delete_user_id, delete_time
         )
         VALUES (
         #{uuid}, #{folderId}, #{folderName}, #{folderType}, #{parentFolderId}, #{resourceScopeTeamId},
-        #{resourceScopeUserId}, #{resourceOwnerId}, #{accessPolicy},
+        #{resourceScopeUserId}, #{resourceOwnerId},
         #{renderSequence}, #{status}, #{createUserId}, #{createTime}, #{modifyUserId}, #{modifyTime},
         #{deleteUserId}, #{deleteTime}
         )
@@ -65,7 +65,7 @@
     <select id="selectPrivateEntryFolderByUserId" resultType="com.uruz.frostbite.domain.Folder">
         /** selectPrivateEntryFolderByUserId */
         SELECT
-            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid
         FROM
             folder_tb
         WHERE
@@ -83,7 +83,7 @@
     <select id="_selectTeamEntryFolderByTeamId" resultType="com.uruz.frostbite.domain.Folder">
         /** selectTeamEntryFolderByTeamId */
         SELECT
-            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid
         FROM
             folder_tb
         WHERE
@@ -124,7 +124,7 @@
     <select id="selectFolderByFolderId" resultType="com.uruz.frostbite.domain.Folder" parameterType="long">
         /** selectFolderByFolderId */
         SELECT
-            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid
         FROM
             folder_tb
         WHERE
@@ -135,7 +135,7 @@
     <select id="selectFolderByFolderUuId" resultType="com.uruz.frostbite.domain.Folder" parameterType="java.util.UUID">
         /** selectFolderByFolderUuId */
         SELECT
-            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid
         FROM
             folder_tb
         WHERE
@@ -146,7 +146,7 @@
     <select id="selectAccessiblePrivateFolder" resultType="com.uruz.frostbite.domain.Folder" parameterType="com.uruz.frostbite.dto.folder.internal.PrivateFolderCondition">
         /** selectAccessiblePrivateFolder */
         SELECT
-            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid
+            folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid
         FROM
             folder_tb
         <where>
@@ -171,7 +171,7 @@
     <select id="selectAccessibleTeamFolder" resultType="com.uruz.frostbite.domain.Folder" parameterType="com.uruz.frostbite.dto.folder.internal.TeamFolderCondition">
         /** selectAccessibleTeamFolder */
         SELECT
-        folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, access_policy, parent_folder_id, uuid
+        folder_id, folder_name, create_user_id, create_time, folder_type, resource_scope_user_id, resource_owner_id, parent_folder_id, uuid
         FROM
         folder_tb folder
         <where>
@@ -211,7 +211,7 @@
         SELECT
             folder.folder_id, folder.folder_name, folder.create_user_id, folder.create_time, folder.folder_type,
             folder.resource_scope_user_id, folder.resource_scope_team_id,
-            folder.resource_owner_id, access_policy, parent_folder_id, uuid
+            folder.resource_owner_id, parent_folder_id, uuid
         FROM
             folder_tb folder
         <where>
@@ -231,7 +231,7 @@
         SELECT
         folder.folder_id, folder.folder_name, folder.create_user_id, folder.create_time, folder.folder_type,
         folder.resource_scope_user_id, folder.resource_scope_team_id,
-        folder.resource_owner_id, access_policy, parent_folder_id, uuid
+        folder.resource_owner_id, parent_folder_id, uuid
         FROM
         folder_tb folder
         <where>
@@ -659,7 +659,7 @@
     <select id="selectFolderDetails" resultType="com.uruz.frostbite.dto.folder.internal.FolderDetailsDraft">
         /** selectFolderDetails */
         SELECT
-            folder.uuid, folder.folder_name, folder.folder_type, folder.resource_scope_team_id, folder.resource_scope_user_id, folder.resource_owner_id, folder.access_policy, folder.create_user_id,
+            folder.uuid, folder.folder_name, folder.folder_type, folder.resource_scope_team_id, folder.resource_scope_user_id, folder.resource_owner_id, folder.create_user_id,
             folder.create_time, folder.modify_user_id, folder.modify_time, folder.render_sequence,
             parent.uuid as parent_folder_uuid, folder.status
         FROM
@@ -741,7 +741,7 @@
         /** selectFolderWithAccessControlResources */
         SELECT
             folder.uuid, folder.folder_id, folder.folder_type, folder.parent_folder_id, folder.resource_scope_user_id,
-            folder.resource_scope_team_id, folder.resource_owner_id, folder.access_policy
+            folder.resource_scope_team_id, folder.resource_owner_id
         FROM
             folder_tb folder
         WHERE

@@ -1,6 +1,5 @@
 package com.uruz.frostbite.domain;
 
-import com.uruz.frostbite.enums.AccessPolicy;
 import com.uruz.frostbite.enums.FolderStatus;
 import com.uruz.frostbite.enums.FolderType;
 import lombok.AllArgsConstructor;
@@ -37,8 +36,6 @@ public class Folder {
     private Integer resourceScopeUserId;
     /** 폴더 실제 관리자 (USER PK) */
     private Integer resourceOwnerId;
-    /** 폴더 접근 정책 (USER || TEAM) */
-    private AccessPolicy accessPolicy;
 
     private String folderIdPath;
     private String folderNamePath;
@@ -74,7 +71,7 @@ public class Folder {
         }
 
         return new Folder(UUID.randomUUID(),null, name, FolderType.PRIVATE, null , null, ownerId,
-                ownerId, AccessPolicy.USER, null, null, 0, FolderStatus.ACTIVE,
+                ownerId, null, null, 0, FolderStatus.ACTIVE,
                 ownerId, LocalDateTime.now(), ownerId, LocalDateTime.now(), null, null);
     }
 
@@ -84,14 +81,14 @@ public class Folder {
         }
 
         return new Folder(UUID.randomUUID(),null, name, FolderType.TEAM, null ,teamId,null
-                , createUserId, AccessPolicy.TEAM, null, null, 0, FolderStatus.ACTIVE,
+                , createUserId, null, null, 0, FolderStatus.ACTIVE,
                 createUserId, LocalDateTime.now(), createUserId, LocalDateTime.now(), null, null);
     }
 
     /** 개인 루트폴더 생성용 엔티티 생성 */
     public static Folder createPrivateRootFolder(String name, Long parentFolderId, Integer ownerId){
         return new Folder( UUID.randomUUID(),null, name, FolderType.PRIVATE, parentFolderId,null,
-                ownerId, ownerId, AccessPolicy.USER, null, null, null, FolderStatus.ACTIVE,
+                ownerId, ownerId, null, null, null, FolderStatus.ACTIVE,
                 ownerId, LocalDateTime.now(), null, null, null, null
                 );
     }
@@ -99,7 +96,7 @@ public class Folder {
     /** 팀 루트 폴더 생성용 엔티티 생성 */
     public static Folder createTeamRootFolder(String name, Long parentFolderId, Integer resourceScopeTeamId, Integer createUserId){
         return new Folder( UUID.randomUUID(),null, name, FolderType.TEAM, parentFolderId, resourceScopeTeamId, null,
-                createUserId, AccessPolicy.TEAM, null, null,null, FolderStatus.ACTIVE,
+                createUserId, null, null,null, FolderStatus.ACTIVE,
                 createUserId, LocalDateTime.now(), null, null, null, null
                 );
     }
@@ -107,7 +104,7 @@ public class Folder {
     /** 개인 서브 폴더 생성용 엔티티 생성 */
     public static Folder createPrivateSubFolder(String name, Long parentFolderId, Integer createUserId){
         return new Folder( UUID.randomUUID(),null, name, FolderType.PRIVATE, parentFolderId, null,
-                createUserId, createUserId, AccessPolicy.USER, null, null, null, FolderStatus.ACTIVE,
+                createUserId, createUserId, null, null, null, FolderStatus.ACTIVE,
                 createUserId, LocalDateTime.now(), null, null, null, null
                 );
     }
@@ -115,7 +112,7 @@ public class Folder {
     /** 팀 서브폴더 생성용 엔티티 생성*/
     public static Folder createTeamSubFolder(String name, Long parentFolderId, Integer teamId, Integer createUserId){
         return new Folder( UUID.randomUUID(),null, name, FolderType.TEAM, parentFolderId, teamId, null,
-                createUserId, AccessPolicy.TEAM, null, null,  null, FolderStatus.ACTIVE
+                createUserId, null, null,  null, FolderStatus.ACTIVE
                 , createUserId, LocalDateTime.now(), null, null, null, null
                 );
     }

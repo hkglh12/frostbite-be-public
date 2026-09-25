@@ -1,7 +1,6 @@
 package com.uruz.frostbite.dto.folder.internal;
 
 
-import com.uruz.frostbite.enums.AccessPolicy;
 import com.uruz.frostbite.enums.FolderType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +23,4 @@ public class FolderTargetAccessControlProjection {
     private Integer resourceScopeUserId;
     /** 폴더 실제 관리자 (USER PK) */
     private Integer resourceOwnerId;
-    /** 폴더 접근 정책 (USER || TEAM) */
-    private AccessPolicy accessPolicy;
 }
