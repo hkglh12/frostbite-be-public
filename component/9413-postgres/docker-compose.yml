@@ -6,7 +6,6 @@ services:
       - ./data:/var/lib/postgresql/data
     ports:
       - 9413:5432
-    environment:
-      - POSTGRES_PASSWORD=***REMOVED***
-      - POSTGRES_USER=frostbite
-      - POSTGRES_DB=frostbite
+    env_file:
+      - .env
+#    environment:

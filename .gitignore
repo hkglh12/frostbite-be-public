@@ -37,3 +37,5 @@ out/
 
 ### Secret ###
 application-secret.properties
+.env
+!.env.example
